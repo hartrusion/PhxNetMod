@@ -1,0 +1,195 @@
+/*
+ * The MIT License
+ *
+ * Copyright 2025 Viktor Alexander Hartung.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package com.hartrusion.modeling.general;
+
+import com.hartrusion.modeling.general.ClosedOrigin;
+import com.hartrusion.modeling.general.FlowSource;
+import com.hartrusion.modeling.general.GeneralNode;
+import com.hartrusion.modeling.general.LinearDissipator;
+import com.hartrusion.modeling.PhysicalDomain;
+import com.hartrusion.modeling.exceptions.ModelErrorException;
+import static org.testng.Assert.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+/**
+ *
+ * @author Viktor Alexander Hartung
+ */
+public class FlowSourceNGTest {
+
+    FlowSource instance;
+    LinearDissipator r;
+    ClosedOrigin z;
+    GeneralNode p1, p2;
+
+    public FlowSourceNGTest() {
+    }
+
+    @BeforeMethod
+    public void setUpMethod() throws Exception {
+        instance = new FlowSource(PhysicalDomain.ELECTRICAL);
+        instance.setFlow(0.02);
+
+        r = new LinearDissipator(PhysicalDomain.ELECTRICAL);
+        r.setResistanceParameter(800);
+        r.setName("Resistor");
+
+        z = new ClosedOrigin(PhysicalDomain.ELECTRICAL);
+        z.setName("Zero");
+        p1 = new GeneralNode(PhysicalDomain.ELECTRICAL);
+        p1.setName("node1");
+        p2 = new GeneralNode(PhysicalDomain.ELECTRICAL);
+        p2.setName("node2");
+
+        z.connectTo(p1);
+        instance.connectTo(p1);
+        instance.connectTo(p2);
+        r.connectTo(p2);
+        r.connectTo(p1);
+    }
+
+    @AfterMethod
+    public void tearDownMethod() throws Exception {
+        instance = null;
+        r = null;
+        z = null;
+        p1 = null;
+        p2 = null;
+    }
+
+    /**
+     * Test of getEffort method, of class EffortSource.
+     */
+    @Test
+    public void testSourceAndResistor() {
+        System.out.println("sourceAndResistor");
+        /*
+         *          p2            
+         *   --------o--------    The flow is expecte to to be a positive value
+         * 1 |            0  |    according to convention, so p2 is expected to
+         *   |               X    be at 16 Volts (U = 800 Ohms * 0.02 A = 16 V).
+         *  (-) I            X R  
+         *   |  0.02 A       X  800 Ohms
+         * 0 |            1  |
+         *   o---------------- 
+         *   |  p1
+         *  _|_ z
+         *
+         */
+
+        r.prepareCalculation();
+        instance.prepareCalculation();
+
+        z.doCalculation();
+        instance.doCalculation();
+        r.doCalculation();
+
+        // calculation must be finished
+        assertEquals(instance.isCalculationFinished(), true);
+        assertEquals(r.isCalculationFinished(), true);
+
+        assertEquals(p2.getEffort(), 16.0, 1e-12, "Voltage not as expected");
+        assertEquals(r.getFlow(), 0.02, 0.000001);
+    }
+
+    /**
+     * Open flow source is not valid and not allowed. This must not work.
+     */
+    @Test
+    public void testOpenSource() {
+        System.out.println("openSource");
+        /*
+         *          p2          
+         *   --------o-------- 
+         * 1 |            0  |   
+         *   |                   
+         *  (-) I              R  
+         *   |  0.02 A        inf Ohms
+         * 0 |            1  |
+         *   o---------------- 
+         *   |  p1
+         *  _|_ z
+         *
+         */
+
+        r.setOpenConnection();
+
+        r.prepareCalculation();
+        instance.prepareCalculation();
+
+        try {
+            z.doCalculation();
+            instance.doCalculation();
+            r.doCalculation();
+            instance.doCalculation();
+        } catch (ModelErrorException e) {
+            // its okay to fail like this
+        }
+        
+        // Check that the calculation did not finish
+        assertEquals(instance.isCalculationFinished(), false,
+                "Calculation can not be finished.");
+    }
+
+    /**
+     * A shortcut of a flow source is valid, it will generate a current without
+     * a voltage drop.
+     */
+    @Test
+    public void testBridgedSource() {
+        System.out.println("bridgedSource");
+        /*
+         *          p2            
+         *   --------o--------    The flow is expecte to to be a positive value
+         * 1 |            0  |    according to convention. As the source is 
+         *   |         R    |||   Shotened, it is expected for the current to
+         *  (-) I    0 Ohms |||   flow and the voltage on p1 and p2 to be same.
+         *   |  0.02 A      ||| 
+         * 0 |            1  |
+         *   o---------------- 
+         *   |  p1
+         *  _|_ z
+         *
+         */
+        r.setBridgedConnection();
+
+        r.prepareCalculation();
+        instance.prepareCalculation();
+
+        z.doCalculation();
+        instance.doCalculation();
+        r.doCalculation();
+
+        // calculation must be finished
+        assertEquals(instance.isCalculationFinished(), true);
+        assertEquals(r.isCalculationFinished(), true);
+
+        assertEquals(r.getFlow(), 0.02, 1e-12, "Flow not as expected");
+        assertEquals(p2.getEffort(), 0.0, 1e-12, "Voltage not as expected");
+        assertEquals(p1.getEffort(), 0.0, 1e-12, "Voltage not as expected");
+    }
+
+}
