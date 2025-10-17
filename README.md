@@ -1,4 +1,4 @@
-# Domain Analogy Modeling
+# PhxNetMod - Physical Complex Network Modeling
 
 This modeling library is designed to describe and solve complex physical 
 networks by using the analogy between physical domains. As the time 
