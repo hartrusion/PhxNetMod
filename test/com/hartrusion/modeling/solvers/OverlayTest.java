@@ -46,7 +46,7 @@ import org.testng.annotations.Test;
  * 
  * @author Viktor Alexander Hartung
  */
-public class OverlayNGTest {
+public class OverlayTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -57,7 +57,7 @@ public class OverlayNGTest {
         }
     }
 
-    public OverlayNGTest() {
+    public OverlayTest() {
     }
 
     /**

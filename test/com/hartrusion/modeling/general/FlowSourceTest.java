@@ -23,10 +23,6 @@
  */
 package com.hartrusion.modeling.general;
 
-import com.hartrusion.modeling.general.ClosedOrigin;
-import com.hartrusion.modeling.general.FlowSource;
-import com.hartrusion.modeling.general.GeneralNode;
-import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import static org.testng.Assert.*;
@@ -38,14 +34,14 @@ import org.testng.annotations.Test;
  *
  * @author Viktor Alexander Hartung
  */
-public class FlowSourceNGTest {
+public class FlowSourceTest {
 
     FlowSource instance;
     LinearDissipator r;
     ClosedOrigin z;
     GeneralNode p1, p2;
 
-    public FlowSourceNGTest() {
+    public FlowSourceTest() {
     }
 
     @BeforeMethod

@@ -23,10 +23,6 @@
  */
 package com.hartrusion.modeling.general;
 
-import com.hartrusion.modeling.general.ClosedOrigin;
-import com.hartrusion.modeling.general.EffortSource;
-import com.hartrusion.modeling.general.GeneralNode;
-import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
@@ -39,14 +35,14 @@ import org.testng.annotations.Test;
  *
  * @author Viktor Alexander Hartung
  */
-public class EffortSourceNGTest {
+public class EffortSourceTest {
 
     EffortSource instance;
     LinearDissipator r;
     ClosedOrigin z;
     GeneralNode p1, p2;
 
-    public EffortSourceNGTest() {
+    public EffortSourceTest() {
     }
 
     @BeforeMethod

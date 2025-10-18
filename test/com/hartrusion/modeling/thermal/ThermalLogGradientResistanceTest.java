@@ -38,7 +38,7 @@ import org.testng.annotations.Test;
  *
  * @author Viktor Alexander Hartung
  */
-public class ThermalLogGradientResistanceNGTest {
+public class ThermalLogGradientResistanceTest {
 
     ThermalLogGradientResistance instance;
     HeatThermalExchanger oilSide;
@@ -50,7 +50,7 @@ public class ThermalLogGradientResistanceNGTest {
 
     SimpleIterator solver;
 
-    public ThermalLogGradientResistanceNGTest() {
+    public ThermalLogGradientResistanceTest() {
     }
 
     @BeforeMethod

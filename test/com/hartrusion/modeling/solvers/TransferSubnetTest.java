@@ -24,7 +24,6 @@
 package com.hartrusion.modeling.solvers;
 
 // import static org.testng.Assert.*;
-import com.hartrusion.modeling.solvers.TransferSubnet;
 import com.hartrusion.modeling.PhysicalDomain;
 import org.testng.annotations.Test;
 import com.hartrusion.modeling.general.Capacitance;
@@ -42,7 +41,7 @@ import org.testng.annotations.BeforeClass;
  *
  * @author Viktor Alexander Hartung
  */
-public class TransferSubnetNGTest {
+public class TransferSubnetTest {
     
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -53,7 +52,7 @@ public class TransferSubnetNGTest {
         }
     }
 
-    public TransferSubnetNGTest() {
+    public TransferSubnetTest() {
     }
 
     /**

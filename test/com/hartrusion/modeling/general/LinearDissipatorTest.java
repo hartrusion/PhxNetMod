@@ -16,9 +16,9 @@ import org.testng.annotations.Test;
  *
  * @author Viktor Alexander Hartung
  */
-public class LinearDissipatorNGTest {
+public class LinearDissipatorTest {
 
-    public LinearDissipatorNGTest() {
+    public LinearDissipatorTest() {
     }
 
     /**

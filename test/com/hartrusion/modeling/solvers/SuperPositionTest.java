@@ -23,7 +23,6 @@
  */
 package com.hartrusion.modeling.solvers;
 
-import com.hartrusion.modeling.solvers.SuperPosition;
 import com.hartrusion.modeling.PhysicalDomain;
 import static org.testng.Assert.*;
 import org.testng.annotations.BeforeClass;
@@ -44,7 +43,7 @@ import com.hartrusion.modeling.general.LinearDissipator;
  *
  * @author Viktor Alexander Hartung
  */
-public class SuperPositionNGTest {
+public class SuperPositionTest {
     
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -55,7 +54,7 @@ public class SuperPositionNGTest {
         }
     }
 
-    public SuperPositionNGTest() {
+    public SuperPositionTest() {
     }
 
     /**

@@ -23,11 +23,6 @@
  */
 package com.hartrusion.modeling.general;
 
-import com.hartrusion.modeling.general.ClosedOrigin;
-import com.hartrusion.modeling.general.EffortSource;
-import com.hartrusion.modeling.general.GeneralNode;
-import com.hartrusion.modeling.general.MutualCapacitance;
-import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.solvers.SimpleIterator;
 import static org.testng.Assert.*;
@@ -40,7 +35,7 @@ import org.testng.annotations.Test;
  *
  * @author Viktor Alexander Hartung
  */
-public class MutualCapacitanceNGTest {
+public class MutualCapacitanceTest {
 
     /*   n1      r       n2                  tau = R * C
      *   o-----XXXXXX-----o                  After time tau has passed, the
@@ -60,7 +55,7 @@ public class MutualCapacitanceNGTest {
     GeneralNode[] n = new GeneralNode[3];
     SimpleIterator solver;
 
-    public MutualCapacitanceNGTest() {
+    public MutualCapacitanceTest() {
     }
 
     @BeforeMethod

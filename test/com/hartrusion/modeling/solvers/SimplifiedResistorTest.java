@@ -23,7 +23,6 @@
  */
 package com.hartrusion.modeling.solvers;
 
-import com.hartrusion.modeling.solvers.RecursiveSimplifier;
 import com.hartrusion.modeling.PhysicalDomain;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
@@ -49,7 +48,7 @@ import org.testng.annotations.BeforeMethod;
  *
  * @author Viktor Alexander Hartung
  */
-public class SimplifiedResistorNGTest {
+public class SimplifiedResistorTest {
 
     RecursiveSimplifier instance;
     GeneralNode[] p;
@@ -66,7 +65,7 @@ public class SimplifiedResistorNGTest {
         }
     }
 
-    public SimplifiedResistorNGTest() {
+    public SimplifiedResistorTest() {
         p = new GeneralNode[3];
         r = new LinearDissipator[2];
     }

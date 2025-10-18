@@ -23,7 +23,6 @@
  */
 package com.hartrusion.modeling.solvers;
 
-import com.hartrusion.modeling.solvers.TwoSeriesSolver;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
@@ -36,9 +35,9 @@ import org.testng.annotations.Test;
  *
  * @author Viktor Alexander Hartung
  */
-public class TwoSeriesSolverNGTest {
+public class TwoSeriesSolverTest {
 
-    public TwoSeriesSolverNGTest() {
+    public TwoSeriesSolverTest() {
     }
 
     /**

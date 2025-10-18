@@ -37,7 +37,7 @@ import org.testng.annotations.BeforeClass;
  *
  * @author Viktor Alexander Hartung
  */
-public class RecursiveSimplifierNGTest {
+public class RecursiveSimplifierTest {
     
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -48,7 +48,7 @@ public class RecursiveSimplifierNGTest {
         }
     }
 
-    public RecursiveSimplifierNGTest() {
+    public RecursiveSimplifierTest() {
     }
 
     /**

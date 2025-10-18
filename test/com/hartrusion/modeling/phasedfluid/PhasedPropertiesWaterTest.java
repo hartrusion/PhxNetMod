@@ -23,7 +23,6 @@
  */
 package com.hartrusion.modeling.phasedfluid;
 
-import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -33,11 +32,11 @@ import org.testng.annotations.Test;
  *
  * @author Viktor Alexander Hartung
  */
-public class PhasedPropertiesWaterNGTest {
+public class PhasedPropertiesWaterTest {
 
     PhasedPropertiesWater instance;
 
-    public PhasedPropertiesWaterNGTest() {
+    public PhasedPropertiesWaterTest() {
     }
 
     @BeforeClass
