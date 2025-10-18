@@ -37,7 +37,7 @@ import org.testng.annotations.Test;
 
 /**
  * This integration test models a heat exchanger from literature and checks the
- * results. Its basically an oil cooler with very low flow, it will take very
+ * results. It's basically an oil cooler with very low flow, it will take very
  * long to change its temperature due to the high mass and the low flows. It
  * starts in stationary state.
  *
@@ -175,7 +175,7 @@ public class ThermalLogGradientResistanceTest {
                 assertEquals(waterSide.getHeatHandler().getTemperature(),
                         316.2, 0.5);
             }
-            // At t=1000s, make an incease in oil flow by 10 %
+            // At t=1000s, make an increase in oil flow by 10 %
             if (cycle == (int) (1000.0 / stepTime)) {
                 oilPump.setFlow(0.152777777778); // increase by 10 %
             }
@@ -185,7 +185,7 @@ public class ThermalLogGradientResistanceTest {
                 assertEquals(waterSide.getHeatHandler().getTemperature(),
                         317.8, 0.5);
             }
-            if (cycle == (int) (5000.0 / stepTime)) { // 5000 Secods
+            if (cycle == (int) (5000.0 / stepTime)) { // 5000 Seconds
                 // increase oil inlet temperature to 125 deg C
                 oilSource.setOriginTemperature(273.15 + 125);
             }

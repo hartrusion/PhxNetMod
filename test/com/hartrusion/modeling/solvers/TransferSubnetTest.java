@@ -57,7 +57,7 @@ public class TransferSubnetTest {
 
     /**
      * This is the uttermost basic simple thing that the transfer subnet can be
-     * supplied with. It makes no sense using the transfer subnet for this but
+     * supplied with. It makes no sense using the transfer subnet for this, but
      * it represents the total bare minimum that must be able to be solved.
      */
     @Test
@@ -116,8 +116,8 @@ public class TransferSubnetTest {
 
     /**
      * Another very simple network with a small part outside the transfer net.
-     * This will test basic setup behaviour if there are elmenents present in
-     * the model but they are not considered to be part of the transfer subnet.
+     * This will test basic setup behaviour if there are elements present in
+     * the model, but they are not considered to be part of the transfer subnet.
      * It has, however, two origins, so it will trigger the handling of multiple
      * origins.
      */
@@ -208,7 +208,7 @@ public class TransferSubnetTest {
        o n2        o n5     
        |           |          This represents a network which will occur if two
       (|) U0      (|) U1      pumps (represented with U0 and U1) will fill up 
-       |   15      |   15     a tank (C1) which is also drained (represendet by
+       |   15      |   15     a tank (C1) which is also drained (represented by
        o n1        o n4       R5 and Z2.
        |           |          The subnet can consist of all elements except
        X           X          Z2 and R5, as these can be solved by the effort
@@ -309,7 +309,7 @@ public class TransferSubnetTest {
     }
 
     /**
-     * If no origin is present, the transfersubnet has to generate a ground
+     * If no origin is present, the transferSubnet has to generate a ground
      * origin and connect the capacitance boundaries to it. This came up on
      * later use of the solver and was added here to test this scenario.
      */
@@ -499,9 +499,9 @@ public class TransferSubnetTest {
 
     /**
      * This test is a simplified model of the dual main circulation pumps of the
-     * rbmk unit, during development, some issues occured here. The network
+     * rbmk unit, during development, some issues occurred here. The network
      * consists of two loops each connected to one self capacitance with 2 ports
-     * each (could be done with one port but it needs to work with 2 also) and
+     * each (could be done with one port, but it needs to work with 2 also) and
      * both loops are connected with a resistor. Having a voltage set on one
      * pump should just circulate one loop but at the time of writing something
      * went wrong with the superposition solver that has to deal with this
@@ -682,15 +682,15 @@ public class TransferSubnetTest {
 
         // Nodes connected to the capacitances have to have same efforts
         assertEquals(n[10].getEffort(), c[0].getEffort(), 1e-12,
-                "Forced effort from capacitnce not present");
+                "Forced effort from capacitance not present");
         assertEquals(n[21].getEffort(), c[1].getEffort(), 1e-12,
-                "Forced effort from capacitnce not present");
+                "Forced effort from capacitance not present");
     }
 
     /**
      * Same as test case mainCirculationPumps but with an additional connection
      * between the two capacitances on top. Representing the steam output valves
-     * connected to the drum separators. This didnt work during development of
+     * connected to the drum separators. This didn't work during development of
      * chornobly sim but the test works fine, we will keep it here.
      */
     @Test
@@ -874,14 +874,14 @@ public class TransferSubnetTest {
 
         // Nodes connected to the capacitances have to have same efforts
         assertEquals(n[10].getEffort(), c[0].getEffort(), 1e-12,
-                "Forced effort from capacitnce not present");
+                "Forced effort from capacitance not present");
         assertEquals(n[21].getEffort(), c[1].getEffort(), 1e-12,
-                "Forced effort from capacitnce not present");
+                "Forced effort from capacitance not present");
     }
 
     /**
      * Another example that comes from the chernobyl model during development.
-     * This is the thermal heat distribution model between both reactor sides
+     * This is the thermal heat distribution model between both reactor sides,
      * and it failed to solve, mostly because during development the flow source
      * was barely used and considered to be kind of optional, which it clearly
      * is not. This lead to the implementation of checkForShortcutsByMerging in

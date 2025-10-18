@@ -44,12 +44,11 @@ public class StarDeltaTransformTest {
     /**
      * Simple bridge network with load. This so called wheatstone bridge with a
      * resistor as a load cannot be simplified using parallels and series
-     * simplification. It either requires either mesh or nodal analysis or some
+     * simplification. It either requires mesh or nodal analysis or some
      * equations which will be solved.
-     *
      * <p>
      * The recursive simplifier will apply a star delta transform to solve it,
-     * making series an paralell simplifications possible after that transform.
+     * making series a parallel simplifications possible after that transform.
      * This integration test will therefore require the star delta transform to
      * work properly.
      */
@@ -121,12 +120,12 @@ public class StarDeltaTransformTest {
         r[3].connectTo(node[0]);
         r[4].connectTo(node[0]);
 
-        // Register ports - fails with exeption if not possible
+        // Register ports - fails with exception if not possible
         for (GeneralNode n : node) {
             instance.registerNode(n);
         }
 
-        // Register elements - fails with exeption if not possible
+        // Register elements - fails with exception if not possible
         for (LinearDissipator res : r) {
             instance.registerElement(res);
         }
@@ -140,17 +139,17 @@ public class StarDeltaTransformTest {
 
         instance.prepareRecursiveCalculation();
 
-        // After method call, whole network must be in fully caculated state.
+        // After method call, whole network must be in fully calculated state.
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished());
 
         // Check expected flow value through whole circuit to
         assertEquals(u.getFlow(), 0.197, 0.001,
-                "Calulation result on resistor is wrong.");
+                "Calculation result on resistor is wrong.");
     }
 
     /**
-     * The weatstone example above is quite easy to solve and all ports will be
+     * The Wheatstone example above is quite easy to solve and all ports will be
      * considered in the star delta transform. However, adding another port and
      * resistor will make the integration of star delta much more complicated.
      *
@@ -172,7 +171,7 @@ public class StarDeltaTransformTest {
          *       X R5       X R1         X R2        Expected flow on U is 
          *       X          X            X           therefore I = U/R = 0.117 A
          *       |          |     R0     |
-         * node4 o    node2 o---XXXXXX---o node3     The example didnt include
+         * node4 o    node2 o---XXXXXX---o node3     The example didn't include
          *       |          |    45 Ohms |           R6 first, therefore numbers
          *       |          X 60 Ohms    X 50 Ohms   and names of elements and
          *  U   (|)         X R3         X R4        ports are not sorted.
@@ -232,12 +231,12 @@ public class StarDeltaTransformTest {
         r[3].connectTo(node[0]);
         r[4].connectTo(node[0]);
 
-        // Register ports - fails with exeption if not possible
+        // Register ports - fails with exception if not possible
         for (GeneralNode n : node) {
             instance.registerNode(n);
         }
 
-        // Register elements - fails with exeption if not possible
+        // Register elements - fails with exception if not possible
         for (LinearDissipator res : r) {
             instance.registerElement(res);
         }
@@ -251,7 +250,7 @@ public class StarDeltaTransformTest {
 
         instance.prepareRecursiveCalculation();
 
-        // After method call, whole network must be in fully caculated state.
+        // After method call, whole network must be in fully calculated state.
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished());
 
@@ -263,14 +262,14 @@ public class StarDeltaTransformTest {
 
     /**
      * Another case from chernobyl which could not be solved. This circuit was
-     * occuring with those values somewhere deep in all those layers and failed
+     * occurring with those values somewhere deep in all those layers and failed
      * to solve, therefore it ended up as a test case here.
-     * 
+     * <p>
      * There is an if (openElements == 1) in calculateStarValuesFromDelta in
      * class StarDeltaTransform which is required to work properly to provide
      * a network solution. At the time of writing this test, the method was
-     * not yet finished but it turned out it was unnecessary. However, this test
-     * is kept as it tests something providing a result.
+     * not yet finished, but it turned out it was unnecessary. However, this
+     * test is kept as it tests something providing a result.
      */
     @Test
     public void testStarWithOneOpenConnection() {
@@ -314,7 +313,7 @@ public class StarDeltaTransformTest {
         ClosedOrigin gnd = new ClosedOrigin(PhysicalDomain.ELECTRICAL);
         gnd.setName("GND");
         
-        // All elements will be connected exactly as occured in the debugged
+        // All elements will be connected exactly as occurred in the debugged
         // case, sometime the connection order made differences (what it should
         // never do)
         gnd.connectTo(n[0]);
@@ -348,7 +347,7 @@ public class StarDeltaTransformTest {
         instance.doRecursiveCalculation();
         
         // After calling the calculation, model must be in full calulated
-        // state, this was not the case and test replicated it sucessfully.
+        // state, this was not the case and test replicated it successfully.
         assertTrue(instance.isCalculationFinished());
         // All efforts must be zero:
         assertEquals(n[1].getEffort(), 0.0, 1e-12, "Effort not as expected");

@@ -86,7 +86,7 @@ public class SuperPositionTest {
          * 
          * This network can be solved using superposition. The expected current
          * which flows through R2 is 0.0785 amps. This result requires all other
-         * calculations to be correct and therefore other checks are obsolte.
+         * calculations to be correct and therefore other checks are obsolete.
          */
         // Set up network components
         GeneralNode[] node;
@@ -168,10 +168,10 @@ public class SuperPositionTest {
 
     /**
      * Integration test for a more complicated network which was provided in
-     * summer term test exam in 2010 duing my studies. It is a rather simple
+     * summer term test exam in 2010 during my studies. It is a rather simple
      * network which has both flow and effort sources, therefore requiring the
      * class "Overlay" to work properly.
-     *
+     * <p>
      * Not yet fully supported.
      *
      */
@@ -198,7 +198,7 @@ public class SuperPositionTest {
          *
          * Unfortunately, there was no solution provided and no solving was
          * necessary as the exam was only about nodal analysis and getting the
-         * node-voltage equation matix.
+         * node-voltage equation matrix.
          */
         GeneralNode[] node = new GeneralNode[4]; // allocate
         for (int idx = 0; idx < node.length; idx++) { // init

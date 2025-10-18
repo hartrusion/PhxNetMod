@@ -37,15 +37,15 @@ public class LinearDissipatorTest {
     }
 
     /**
-     * This test will connect a linear dissipator with an effor source. Its the
-     * most basic ohms law thingy.
+     * This test will connect a linear dissipator with an effort source. It's 
+     * the most basic ohms law thingy.
      */
     @Test
     public void testBasicOhmsLaw() {
         System.out.println("basicOhmsLaw");
         /*
          *          p1            It is expected for the flow to be 0.02 Ampere.
-         *   --------o--------    The flow is expecte to to be a positive value
+         *   --------o--------    The flow is expected to be a positive value
          * 1 |            0  |    according to convention (positive: into 0, out
          *   |               X    of 1).
          *  (|) U            X R  

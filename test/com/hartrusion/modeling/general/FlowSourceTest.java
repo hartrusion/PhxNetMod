@@ -84,7 +84,7 @@ public class FlowSourceTest {
         System.out.println("sourceAndResistor");
         /*
          *          p2            
-         *   --------o--------    The flow is expecte to to be a positive value
+         *   --------o--------    The flow is expected to be a positive value
          * 1 |            0  |    according to convention, so p2 is expected to
          *   |               X    be at 16 Volts (U = 800 Ohms * 0.02 A = 16 V).
          *  (-) I            X R  
@@ -159,9 +159,9 @@ public class FlowSourceTest {
         System.out.println("bridgedSource");
         /*
          *          p2            
-         *   --------o--------    The flow is expecte to to be a positive value
+         *   --------o--------    The flow is expected to be a positive value
          * 1 |            0  |    according to convention. As the source is 
-         *   |         R    |||   Shotened, it is expected for the current to
+         *   |         R    |||   shortened, it is expected for the current to
          *  (-) I    0 Ohms |||   flow and the voltage on p1 and p2 to be same.
          *   |  0.02 A      ||| 
          * 0 |            1  |

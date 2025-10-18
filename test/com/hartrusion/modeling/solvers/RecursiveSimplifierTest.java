@@ -89,8 +89,8 @@ public class RecursiveSimplifierTest {
          *     | node 0
          *    _|_  origin
          *
-         * The simplified network will look like this. It has less ports and 
-         * elements so there is an assignment beteween all those indexes which 
+         * The simplified network will look like this. It has fewer ports and
+         * elements so there is an assignment between all those indexes which
          * is basically what this class will also organize.
          * 
          *   .-------XXXXXX--------.
@@ -112,7 +112,7 @@ public class RecursiveSimplifierTest {
          *  _|_  origin
          *
          * R6 is represented by element[6] and will be childElement[0]. 
-         * Therefore elementOfChildelement[0] = 6 and 
+         * Therefore, elementOfChildelement[0] = 6 and
          * childElementOfElement[6] = 0.
          *
          * The next recursion will further simplify R0-2, R3-5 and R6 as series 
@@ -120,9 +120,9 @@ public class RecursiveSimplifierTest {
          * node which has an origin port, they can not be simplified as one 
          * resistor. However, this is believed to be a very common case and as 
          * its no problem to solve this by hand, there is a method 
-         * twoSerialResistorsCalulation in superclass LinearNetwork which was 
+         * twoSerialResistorsCalculation in superclass LinearNetwork which was
          * written to solve exactly this common issue. It will be invoked if 
-         * there is no manual calulation possible.
+         * there is no manual calculation possible.
          * 
          */
         RecursiveSimplifier instance = new RecursiveSimplifier();
@@ -146,7 +146,7 @@ public class RecursiveSimplifierTest {
 
         u.setEffort(16); // 16 Volts allow easy calculation
 
-        // Connect elements to create the netwok described
+        // Connect elements to create the network described
         zero.connectTo(node[0]);
         r[7].connectTo(node[0]);
         r[7].connectTo(node[1]);
@@ -167,12 +167,12 @@ public class RecursiveSimplifierTest {
         r[6].connectTo(node[6]);
         r[6].connectTo(node[0]);
 
-        // Register ports - fails with exeption if not possible
+        // Register ports - fails with exception if not possible
         for (GeneralNode n : node) {
             instance.registerNode(n);
         }
 
-        // Register elements - fails with exeption if not possible
+        // Register elements - fails with exception if not possible
         for (LinearDissipator res : r) {
             instance.registerElement(res);
         }
@@ -188,7 +188,7 @@ public class RecursiveSimplifierTest {
 
         instance.prepareRecursiveCalculation();
 
-        // After method call, whole network must be in fully caculated state.
+        // After method call, whole network must be in fully calculated state.
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished());
 
@@ -232,7 +232,7 @@ public class RecursiveSimplifierTest {
     }
 
     /**
-     * Another test that occured during the chernobyl simulation, this is a
+     * Another test that occurred during the chernobyl simulation, this is a
      * small part of a network that did not provide a full solution. It is
      * however obvious why there is no solution, as R2 is floating alone.
      */
@@ -353,7 +353,7 @@ public class RecursiveSimplifierTest {
         }
         // r[1].setOpenConnection(); <- this works easier as its detected.
 
-        // connect somehow similar like in falied example
+        // connect somehow similar like in failed example
         zero.connectTo(node[5]);
         u.connectTo(node[5]);
         r[0].connectTo(node[0]);
@@ -394,7 +394,7 @@ public class RecursiveSimplifierTest {
      * Another case which came up in the chornobyl development from the main
      * circulation pumps network. This can be solved quite easy by just ignoring
      * the R4, R7 and R8 values, making some series-parallel-simplifications
-     * afterwards. However, at the time of writing this, the solver is yet not
+     * afterward. However, at the time of writing this, the solver is yet not
      * able to solve it so it is
      */
     @Test
@@ -432,7 +432,7 @@ public class RecursiveSimplifierTest {
             r[idx].setName("R" + idx);
         }
 
-        // connect somehow similar like in falied example
+        // connect somehow similar like in failed example
         zero.connectTo(node[1]);
         u.connectTo(node[1]);
         u.connectTo(node[2]);
@@ -475,10 +475,10 @@ public class RecursiveSimplifierTest {
     }
 
     /**
-     * And another test situation that has to be debugged as it occured in the
-     * main cirulation pump circuit. The solver did not provide a proper
-     * solution, even if its clear by just looking at the circuit that there are
-     * two loops that will have zero flow.
+     * And another test situation that has to be debugged as it occurred in the
+     * main circulation pump circuit. The solver did not provide a proper
+     * solution, even if it's clear by just looking at the circuit that there
+     * are two loops that will have zero flow.
      */
     @Test
     public void testTwoLoopsWithSource() {
@@ -583,9 +583,9 @@ public class RecursiveSimplifierTest {
 
     /**
      * A rather easy looking thing that failed to solve in another attempt of
-     * solving the rbmk network. Its chacaterized by having a bridged and an
-     * open resistor beeing used to simply connect a resistor to a source. While
-     * not beeing complicated, it triggered some validation check during the
+     * solving the rbmk network. It's characterized by having a bridged and an
+     * open resistor being used to simply connect a resistor to a source. While
+     * not being complicated, it triggered some validation check during the
      * calculation run, it failed to have the same effort on the bridged nodes.
      */
     @Test
@@ -635,7 +635,7 @@ public class RecursiveSimplifierTest {
         r[4].setOpenConnection();
         u.setEffort(111198);
 
-        // Connect extactly with same orders as described
+        // Connect exactly with same orders as described
         node[3].registerElement(zero);
         zero.registerNode(node[3]);
         node[3].registerElement(u);
@@ -687,7 +687,7 @@ public class RecursiveSimplifierTest {
 
     /**
      * This situation has three parallel resistors connected to one node and if
-     * you would merge them, a dead end restistor will be the result. But
+     * you would merge them, a dead end resistor will be the result. But
      * somehow it ended up triggering the star delta solver which is some not
      * intended behaviour and an internal check will be triggered.
      */
@@ -755,14 +755,14 @@ public class RecursiveSimplifierTest {
 
         instance.prepareRecursiveCalculation();
 
-        // After method call, whole network must be in fully caculated state.
+        // After method call, whole network must be in fully calculated state.
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished());
 
     }
 
     /**
-     * Occured during solving of the more large chronobyl model, somehow this
+     * Occurred during solving of the more large chronobyl model, somehow this
      * network could not be further solved. This kind of network is hard to draw
      * in the comments so we won't have a nice sketch here. It contains four
      * nodes that have 4 connections and no further simplification is possible.
@@ -874,13 +874,13 @@ public class RecursiveSimplifierTest {
         instance.registerElement(u);
         instance.registerElement(zero);
 
-        // setup the solver, creating the layers
+        // set up the solver, creating the layers
         int numberOfLayers;
         numberOfLayers = instance.recursiveSimplificationSetup(0);
 
         instance.prepareRecursiveCalculation();
 
-        // After method call, whole network must be in fully caculated state.
+        // After method call, whole network must be in fully calculated state.
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished());
     }

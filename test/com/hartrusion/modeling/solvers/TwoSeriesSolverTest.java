@@ -44,7 +44,7 @@ public class TwoSeriesSolverTest {
      * Tests the behaviour of an open, not connected effort source. This is a
      * case that can happen if for example in a hydraulic network when a pump is
      * connected between two closed valves. The corresponding electronics
-     * circuit is represented by resistors with elementtype OPEN.
+     * circuit is represented by resistors with elementType OPEN.
      */
     @Test
     public void testStandardBehaviour() {
@@ -224,7 +224,7 @@ public class TwoSeriesSolverTest {
      * Tests the behaviour of an open, not connected effort source. This is a
      * case that can happen if for example in a hydraulic network when a pump is
      * connected between two closed valves. The corresponding electronics
-     * circuit is represented by resistors with elementtype OPEN.
+     * circuit is represented by resistors with elementType OPEN.
      */
     @Test
     public void testIsolatedEffortSource() {
@@ -274,7 +274,7 @@ public class TwoSeriesSolverTest {
         r2.connectTo(p0);
 
         // A special solver is needed for this circuit. Usually this is
-        // selected automatically by the solving network but we will add
+        // selected automatically by the solving network, but we will add
         // it here manually, since no network solver is used.
         TwoSeriesSolver solver = new TwoSeriesSolver();
         solver.addElement(z);
@@ -316,7 +316,7 @@ public class TwoSeriesSolverTest {
      * Tests the behaviour of an open, not connected effort source. This is a
      * case that can happen if for example in a hydraulic network when a pump is
      * connected between two closed valves. The corresponding electronics
-     * circuit is represented by resistors with elementtype OPEN.
+     * circuit is represented by resistors with elementType OPEN.
      */
     @Test
     public void testBridgeAndShortcut() {
@@ -366,7 +366,7 @@ public class TwoSeriesSolverTest {
         r2.connectTo(p0);
 
         // A special solver is needed for this circuit. Usually this is
-        // selected automatically by the solving network but we will add
+        // selected automatically by the solving network, but we will add
         // it here manually, since no network solver is used.
         TwoSeriesSolver solver = new TwoSeriesSolver();
         solver.addElement(z);

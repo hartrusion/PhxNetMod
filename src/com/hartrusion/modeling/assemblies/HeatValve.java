@@ -61,7 +61,7 @@ public class HeatValve implements Runnable {
     }
 
     /**
-     * Initializes the valves characterisitc.
+     * Initializes the valves characteristic.
      *
      * @param resistanceFullOpen Flow resistance on 100 % opening state, given
      * in Pa/kg*s
@@ -94,20 +94,20 @@ public class HeatValve implements Runnable {
     }
 
     /**
-     * Allows proessing received events by the class itself. The Property name
-     * must beginn with the same name as this classes elements, which was
+     * Allows processing received events by the class itself. The Property name
+     * must begin with the same name as this classes elements, which was
      * initialized with the initName function call.
      *
-     * @param ac
+     * @param ac ActionCommand, will be further checked if it's matching.
      * @return true if event was processed by this instance.
      */
     public boolean updateProperty(ActionCommand ac) {
         if (!ac.getPropertyName().equals(valve.toString())) {
             return false;
         }
-        // Int values are sent from so called Integral swichtes, as long as they
+        // Int values are sent from so-called Integral switches, as long as they
         // are pressed, value integrates. The press sends a +1 or -1 and the
-        // release of the button sents a 0, but this is done with default.
+        // release of the button sends a 0, but this is done with default.
         if (ac.getValue() instanceof Integer) {
             switch ((int) ac.getValue()) {
                 case -1 ->

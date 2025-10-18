@@ -87,7 +87,7 @@ public class PhasedPropertiesWaterTest {
         // 95 degrees celsius with 1 bar ambient pressure:
         assertEquals(instance.getVapourFraction(liquidHeatEnergy, 1e5),
                 0.0, 0.0);
-        // Add the vaporization energy at 100 deg celsius, expect X = 1.0
+        // Add the vaporization energy at 100 deg Celsius, expect X = 1.0
         liquidHeatEnergy = (273.5 + 100.5)
                 * instance.getSpecificHeatCapacity()
                 + instance.getVaporizationHeatEnergy();
