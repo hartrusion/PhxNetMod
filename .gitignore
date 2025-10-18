@@ -7,6 +7,7 @@
 # Build configuration, source code only here.
 build.xml
 manifest.mf
+/META-INF/
 
 # IDE: IntelliJ IDEA
 /.idea/
