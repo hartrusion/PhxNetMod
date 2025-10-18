@@ -1,50 +1,15 @@
-# Build outputs
-/target/
-/build/
-/out/
-/dist/
-
-# Build configuration, source code only here.
-build.xml
-manifest.mf
-/META-INF/
-
 # IDE: IntelliJ IDEA
-/.idea/
+/.idea
+/lib
+/META-INF
+/out
 /*.iml
-/.idea_modules/
-/workspace.xml
-/usage.statistics.xml
-/compiler.xml
+/build.xml
 
 # IDE: NetBeans
-/nbproject/
-/nbbuild/
-/nbdist/
-/nbdist*/
-/var/
-build/
-nbactions.xml
-private/
-
-# Eclipse and generic Java IDE files
-/.classpath
-/.project
-/.settings/
-
-# Gradle
-/.gradle/
-gradle-app.setting
-gradle-wrapper.jar
-gradle-wrapper.properties
-
-# Maven
-/logs/
-dependency-reduced-pom.xml
-release.properties
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
+/build
+/dist
+/nbproject
 
 # Operating system
 .DS_Store
