@@ -30,6 +30,8 @@ import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import static org.testng.Assert.*;
+
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
@@ -45,6 +47,15 @@ import org.testng.annotations.Test;
  * @author Viktor Alexander Hartung
  */
 public class OverlayNGTest {
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // Remove all loggers
+        java.util.logging.Logger root = java.util.logging.Logger.getLogger("");
+        for (java.util.logging.Handler h : root.getHandlers()) {
+            root.removeHandler(h);
+        }
+    }
 
     public OverlayNGTest() {
     }
