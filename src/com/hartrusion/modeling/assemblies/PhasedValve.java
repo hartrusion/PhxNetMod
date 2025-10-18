@@ -22,6 +22,7 @@ import java.beans.PropertyChangeSupport;
 import com.hartrusion.control.SetpointIntegrator;
 import com.hartrusion.control.ValveActuatorMonitor;
 import com.hartrusion.modeling.phasedfluid.PhasedLinearValve;
+import com.hartrusion.mvc.ActionCommand;
 
 /**
  * HeatLinearValve with SetpointIntegrator as actuator and a Monitor for firing
@@ -124,4 +125,37 @@ public class PhasedValve implements Runnable {
         return valve;
     }
 
+    /**
+     * Allows processing received events by the class itself. The Property name
+     * must begin with the same name as this classes elements, which was
+     * initialized with the initName function call.
+     *
+     * @param ac ActionCommand, will be further checked if it's matching.
+     * @return true if event was processed by this instance.
+     */
+    public boolean updateProperty(ActionCommand ac) {
+        if (!ac.getPropertyName().equals(valve.toString())) {
+            return false;
+        }
+        // Int values are sent from so-called Integral switches, as long as they
+        // are pressed, value integrates. The press sends a +1 or -1 and the
+        // release of the button sends a 0, but this is done with default.
+        if (ac.getValue() instanceof Integer) {
+            switch ((int) ac.getValue()) {
+                case -1 ->
+                        operateCloseValve();
+                case +1 ->
+                        operateOpenValve();
+                default ->
+                        stopValve();
+            }
+        } else if (ac.getValue() instanceof Boolean) {
+            if ((boolean) ac.getValue()) {
+                operateOpenValve();
+            } else {
+                operateCloseValve();
+            }
+        }
+        return true;
+    }
 }
