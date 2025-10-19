@@ -87,6 +87,21 @@ public class HeatNode extends GeneralNode {
     public void setTemperature(double temperature, AbstractElement source) {
         tempProps.get(connectedElements.indexOf(source))
                 .setTemperatureValue(temperature);
+        // In case of a node with 2 elements set the temperature to the other
+        // node instantly without waiting for a solver.
+        if (connectedElements.size() == 2) {
+            int idx = -1;
+            if (connectedElements.get(0) == source) {
+                idx = 1;
+            } else if (connectedElements.get(1) == source) {
+                idx = 0;
+            } else {
+                throw new ModelErrorException("Unable to get other Element?");
+            }
+            if (!tempProps.get(idx).isTemperatureUpdated()) {
+                tempProps.get(idx).setTemperatureValue(temperature);
+            }
+        }
     }
 
     /**
@@ -132,6 +147,21 @@ public class HeatNode extends GeneralNode {
     public void setNoTemperature(AbstractElement source) {
         tempProps.get(connectedElements.indexOf(source))
                 .setNoTemperatureValue();
+        // In case of a node with 2 elements set the no temperature property
+        // instantly instead of relying on a solver to do this.
+        if (connectedElements.size() == 2) {
+            int idx = -1;
+            if (connectedElements.get(0) == source) {
+                idx = 1;
+            } else if (connectedElements.get(1) == source) {
+                idx = 0;
+            } else {
+                throw new ModelErrorException("Unable to get other Element?");
+            }
+            if (!tempProps.get(idx).isTemperatureUpdated()) {
+                tempProps.get(idx).setNoTemperatureValue();
+            }
+        }
     }
 
     /**

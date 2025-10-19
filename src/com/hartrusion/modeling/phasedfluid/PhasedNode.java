@@ -90,6 +90,21 @@ public class PhasedNode extends GeneralNode {
     public void setHeatEnergy(double heatEnergy, AbstractElement source) {
         heatProps.get(connectedElements.indexOf(source))
                 .setHeatEnergyValue(heatEnergy);
+        // In case of a node with 2 elements set the heat energy to the oter 
+        // node instantly instead of relying on a solver to do this.
+        if (connectedElements.size() == 2) {
+            int idx = -1;
+            if (connectedElements.get(0) == source) {
+                idx = 1;
+            } else if (connectedElements.get(1) == source) {
+                idx = 0;
+            } else {
+                throw new ModelErrorException("Unable to get other Element?");
+            }
+            if (!heatProps.get(idx).isHeatEnergyUpdated()) {
+                heatProps.get(idx).setHeatEnergyValue(heatEnergy);
+            }
+        }
     }
 
     /**
@@ -135,6 +150,21 @@ public class PhasedNode extends GeneralNode {
     public void setNoHeatEnergy(AbstractElement source) {
         heatProps.get(connectedElements.indexOf(source))
                 .setNoHeatEnergyValue();
+        // In case of a node with 2 elements set the no phased property
+        // instantly instead of relying on a solver to do this.
+        if (connectedElements.size() == 2) {
+            int idx = -1;
+            if (connectedElements.get(0) == source) {
+                idx = 1;
+            } else if (connectedElements.get(1) == source) {
+                idx = 0;
+            } else {
+                throw new ModelErrorException("Unable to get other Element?");
+            }
+            if (!heatProps.get(idx).isHeatEnergyUpdated()) {
+                heatProps.get(idx).setNoHeatEnergyValue();
+            }
+        }
     }
 
     /**
