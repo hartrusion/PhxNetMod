@@ -24,65 +24,65 @@
 package com.hartrusion.modeling.phasedfluid;
 
 import com.hartrusion.modeling.PhysicalDomain;
+import com.hartrusion.modeling.general.FlowSource;
 import com.hartrusion.modeling.general.GeneralNode;
-import com.hartrusion.modeling.hydraulic.HydraulicLinearValve;
 
 /**
  *
  * @author Viktor Alexander Hartung
  */
-public class PhasedLinearValve extends HydraulicLinearValve
-        implements PhasedElement {
+public class PhasedFlowSource extends FlowSource implements PhasedElement {
 
     private final PhasedSimpleHandler phasedHandler;
 
-    public PhasedLinearValve() {
+    public PhasedFlowSource() {
+        super(PhysicalDomain.PHASEDFLUID);
         this.phasedHandler = new PhasedSimpleHandler(this);
-        physicalDomain = PhysicalDomain.PHASEDFLUID;
     }
-    
+
     @Override
     public void prepareCalculation() {
         super.prepareCalculation();
         phasedHandler.preparePhasedCalculation();
     }
-    
+
     @Override
     public boolean doCalculation() {
-        boolean didSomething;
-        PhasedNode  pn;
-        
-        // call super, this either sets directly zero flow if closes
-        // or calls resistor calculation.
-        didSomething = super.doCalculation();
-        
-        // Add call for thermalHandler calculation
+        boolean didSomething = super.doCalculation();
+        PhasedNode tp;
+
+        // Add call for thermalhandler calculation
         didSomething = didSomething || phasedHandler.doPhasedCalculation();
 
-        // call calculation on heat nodes - contrary to flow, it is not
+        // call calulation on phased nodes - contrary to flow, it is not
         // possible to do this with the set-method of this class as it is 
         // unknown when that calculation will be possible.
         for (GeneralNode p : nodes) {
-            pn = (PhasedNode) p;
-            didSomething = didSomething || pn.doCalculateHeatEnergy();
+            tp = (PhasedNode) p;
+            didSomething = didSomething || tp.doCalculateHeatEnergy();
         }
 
         return didSomething;
     }
-    
+
     @Override
     public boolean isCalculationFinished() {
         // Add call for phasedHandler isCalculationFinished
         return super.isCalculationFinished()
                 && phasedHandler.isPhasedCalulationFinished();
     }
-    
+
     @Override
-    public void registerNode(GeneralNode p) {
-        super.registerNode(p);
-        // Node must be of extended type PhasedNode, therefore it is possible
+    public void registerNode(GeneralNode n) {
+        super.registerNode(n);
+        // Node must be of extendet type PhasedNode, therefore it is possible
         // to cast it and register it here during configuration.
-        phasedHandler.registerPhasedNode((PhasedNode) p);
+        phasedHandler.registerPhasedNode((PhasedNode) n);
+    }
+
+    @Override
+    public PhasedHandler getPhasedHandler() {
+        return phasedHandler;
     }
 
     @Override
@@ -92,17 +92,11 @@ public class PhasedLinearValve extends HydraulicLinearValve
 
     @Override
     public void setFlow(double flow, PhasedNode source) {
-        setFlow(flow, (GeneralNode) source);
+        setFlow(flow, (GeneralNode) source); // this might trigger except :)
     }
-
-    @Override
-    public PhasedHandler getPhasedHandler() {
-        return phasedHandler;
-    }
-
+    
     @Override
     public PhasedFluidProperties getPhasedFluidProperties() {
         return null;
     }
-
 }
