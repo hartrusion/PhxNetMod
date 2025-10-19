@@ -28,7 +28,7 @@ import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 
 /**
- * Ideal effort source extended by heat handling capapabilities without heat
+ * Ideal effort source extended by heat handling capabilities without heat
  * volume. Can be used as ideal pump component to model real pump.
  *
  * @author Viktor Alexander Hartung
@@ -53,10 +53,10 @@ public class HeatEffortSource extends EffortSource implements HeatElement {
         boolean didSomething = super.doCalculation();
         HeatNode tp;
 
-        // Add call for thermalhandler calculation
+        // Add call for thermalHandler calculation
         didSomething = didSomething || heatHandler.doThermalCalculation();
 
-        // call calulation on heat nodes - contrary to flow, it is not
+        // call calculation on heat nodes - contrary to flow, it is not
         // possible to do this with the set-method of this class as it is 
         // unknown when that calculation will be possible.
         for (GeneralNode p : nodes) {
@@ -77,7 +77,7 @@ public class HeatEffortSource extends EffortSource implements HeatElement {
     @Override
     public void registerNode(GeneralNode n) {
         super.registerNode(n);
-        // Node must be of extendet type HeatNode, therefore it is possible
+        // Node must be of extended type HeatNode, therefore it is possible
         // to cast it and register it here during configuration.
         heatHandler.registerHeatNode((HeatNode) n);
     }
