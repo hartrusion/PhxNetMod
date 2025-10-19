@@ -55,11 +55,11 @@ public class PhasedPropertiesWaterTest {
     @Test
     public void testGetSaturationEffort() {
         System.out.println("getSaturationEffort");
-        // 0 degree celsius = 0 Pa
+        // 0 degree Celsius = 0 Pa
         assertEquals(instance.getSaturationEffort(273.15), 0.0, 1.0);
-        // 100 degree celsius = 1e5 Pa with some error
+        // 100 degree Celsius = 1e5 Pa with some error
         assertEquals(instance.getSaturationEffort(373.15), 1e5, 2e4);
-        // 275.5 degree celsius = 60e5 Pa with some error
+        // 275.5 degree Celsius = 60e5 Pa with some error
         assertEquals(instance.getSaturationEffort(549.0), 60e5, 5e5);
     }
 
@@ -69,9 +69,9 @@ public class PhasedPropertiesWaterTest {
     @Test
     public void testGetSaturationTemperature() {
         System.out.println("getSaturationTemperature");
-        // 1 bar must be 100 Degree celsius
+        // 1 bar must be 100 Degree Celsius
         assertEquals(instance.getSaturationTemperature(1e5), 373.15, 5.0);
-        // 60 bar must be around 275.5 degree celsius
+        // 60 bar must be around 275.5 degree Celsius
         assertEquals(instance.getSaturationTemperature(60e5), 549.0, 5.0);
     }
 
@@ -84,7 +84,7 @@ public class PhasedPropertiesWaterTest {
         // Heat energy for 95 Deg Celsius without evaporation
         double liquidHeatEnergy = (273.5 + 95)
                 * instance.getSpecificHeatCapacity();
-        // 95 degrees celsius with 1 bar ambient pressure:
+        // 95 degrees Celsius with 1 bar ambient pressure:
         assertEquals(instance.getVapourFraction(liquidHeatEnergy, 1e5),
                 0.0, 0.0);
         // Add the vaporization energy at 100 deg Celsius, expect X = 1.0
@@ -139,7 +139,7 @@ public class PhasedPropertiesWaterTest {
         double heatEnergyRoom = (273.5 + 20)
                 * instance.getSpecificHeatCapacity();
 
-        // With vaporization energy at 100 deg celsius for X=0.7 at 1 bar
+        // With vaporization energy at 100 deg Celsius for X=0.7 at 1 bar
         double heatEnergyPartialSteam = (273.5 + 100.5)
                 * instance.getSpecificHeatCapacity()
                 + instance.getVaporizationHeatEnergy() * 0.7;
