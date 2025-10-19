@@ -58,6 +58,9 @@ public class HeatOrigin extends OpenOrigin implements HeatElement {
                 ((HeatNode) nodes.get(0))
                         .setTemperature(originTemperature, this);
                 didSomething = true;
+            } else if (nodes.get(0).getFlow(this) == 0.0) {
+                ((HeatNode) nodes.get(0)).setNoTemperature(this);
+                didSomething = true;
             }
         }
         return didSomething;

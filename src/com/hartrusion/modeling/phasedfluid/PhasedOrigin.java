@@ -58,6 +58,9 @@ public class PhasedOrigin extends OpenOrigin implements PhasedElement {
                 ((PhasedNode) nodes.get(0))
                         .setHeatEnergy(originHeatEnergy, this);
                 didSomething = true;
+            } else if (nodes.get(0).getFlow(this) == 0.0) {
+                ((PhasedNode) nodes.get(0)).setNoHeatEnergy(this);
+                didSomething = true;
             }
         }
         return didSomething;
