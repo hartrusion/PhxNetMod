@@ -122,22 +122,22 @@ public class HeatClosedSteamedReservoir extends HeatFluidTank
         boolean didSomething = false;
         HeatNode tp;
         
-        didSomething = didSomething
-                || setEffortValueOnNodes(stateValue + steamPressure);
+        didSomething = setEffortValueOnNodes(stateValue + steamPressure) 
+                || didSomething;
 
         // Sum up all incoming flows like its done in SelfCapacitance class.
         // This will call the .integrate() method from EnergyStorage.
-        didSomething = didSomething || calculateNewDeltaValue();
+        didSomething = calculateNewDeltaValue() || didSomething;
 
         // Add call for thermalhandler calculation
-        didSomething = didSomething || heatHandler.doThermalCalculation();
+        didSomething = heatHandler.doThermalCalculation() || didSomething;
 
         // call calulation on thermal nodes - contrary to flow, it is not
         // possible to do this with the set-operation as it is unknown when 
         // that calculation will be possible.
         for (GeneralNode p : nodes) {
             tp = (HeatNode) p;
-            didSomething = didSomething || tp.doCalculateTemperature();
+            didSomething = tp.doCalculateTemperature() || didSomething;
         }
 
         return didSomething;

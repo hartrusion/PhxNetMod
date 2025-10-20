@@ -132,8 +132,8 @@ public class SimplifiedResistor extends LinearDissipator {
     public boolean doCalculation() {
         boolean didSomething = false;
         if (!floatingLoop) {
-            didSomething = didSomething || super.doCalculation();
-            didSomething = didSomething || assignResultsToParents();
+            didSomething = super.doCalculation() || didSomething;
+            didSomething = assignResultsToParents() || didSomething;
         } else {
             throw new ModelErrorException("doCalculation called on floating "
                     + "loop type simplified resistor.");

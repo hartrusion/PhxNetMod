@@ -96,7 +96,7 @@ public class SimpleIterator {
         while (true) {
             didSomething = false;
             for (int idx = 0; idx <= lastNonResistanceIndex; idx++) {
-                didSomething = didSomething || calc.get(idx).doCalculation();
+                didSomething = calc.get(idx).doCalculation() || didSomething;
             }
             iterations++;
             if (iterations >= 1000) {
@@ -118,7 +118,7 @@ public class SimpleIterator {
         while (true) {
             didSomething = false;
             for (CalculationStep calcStep : calc) {
-                didSomething = didSomething || calcStep.doCalculation();
+                didSomething = calcStep.doCalculation() || didSomething;
             }
             iterations++;
             if (iterations >= 1000) {

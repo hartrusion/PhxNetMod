@@ -89,17 +89,17 @@ public class PhasedThermalExchanger extends FlowThrough
             didSomething = thermalOrigin.doCalculation();
         }
 
-        didSomething = didSomething || thermalEffortSource.doCalculation();
+        didSomething = thermalEffortSource.doCalculation() || didSomething;
 
         // Call heathandler calculation
-        didSomething = didSomething || phasedHandler.doPhasedCalculation();
+        didSomething = phasedHandler.doPhasedCalculation() || didSomething;
 
         // call calulation on heat nodes - contrary to flow, it is not
         // possible to do this with the set-operation as it is unknown when 
         // that calculation will be possible.
         for (GeneralNode p : nodes) {
             pn = (PhasedNode) p;
-            didSomething = didSomething || pn.doCalculateHeatEnergy();
+            didSomething = pn.doCalculateHeatEnergy() || didSomething;
         }
 
         return didSomething;

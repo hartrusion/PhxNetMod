@@ -126,18 +126,18 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
         }
 
         // Call phasedHandler calculation
-        didSomething = didSomething || phasedHandler.doPhasedCalculation();
+        didSomething = phasedHandler.doPhasedCalculation() || didSomething;
 
         for (GeneralNode p : nodes) {
             pn = (PhasedNode) p;
-            didSomething = didSomething || pn.doCalculateHeatEnergy();
+            didSomething = pn.doCalculateHeatEnergy() || didSomething;
         }
 
         if (thermalOrigin != null) {
-            didSomething = didSomething || thermalOrigin.doCalculation()
-                    || thermalEffortSource.doCalculation();
+            didSomething = thermalOrigin.doCalculation() || didSomething;
+            didSomething = thermalEffortSource.doCalculation() || didSomething;
         } else {
-            didSomething = didSomething || thermalEffortSource.doCalculation();
+            didSomething = thermalEffortSource.doCalculation() || didSomething;
         }
 
         return didSomething;

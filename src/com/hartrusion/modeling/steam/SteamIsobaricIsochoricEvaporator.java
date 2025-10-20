@@ -138,14 +138,14 @@ public class SteamIsobaricIsochoricEvaporator extends AbstractElement
                 && nodes.get(0).effortUpdated()) {
             // calling this without known effort and flow will
             // not do anything
-            didSomething = didSomething || steamHandler.doSteamCalculation();
+            didSomething = steamHandler.doSteamCalculation() || didSomething;
         }
         // Call thermal elements part from here too
         if (thermalOrigin != null) {
-            didSomething = didSomething || thermalOrigin.doCalculation()
-                    || thermalEffortSource.doCalculation();
+            didSomething = thermalOrigin.doCalculation() || didSomething;
+            didSomething = thermalEffortSource.doCalculation() || didSomething;
         } else {
-            didSomething = didSomething || thermalEffortSource.doCalculation();
+            didSomething = thermalEffortSource.doCalculation() || didSomething;
         }
 
         return didSomething;

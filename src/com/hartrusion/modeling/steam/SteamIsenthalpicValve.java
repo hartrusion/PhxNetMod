@@ -57,14 +57,14 @@ public class SteamIsenthalpicValve
         SteamNode sn;
 
         // Add call for steamHandler calculation
-        didSomething = didSomething || steamHandler.doSteamCalculation();
+        didSomething = steamHandler.doSteamCalculation() || didSomething;
 
         // call calulation on heat nodes - contrary to flow, it is not
         // possible to do this with the set-method of this class as it is 
         // unknown when that calculation will be possible.
         for (GeneralNode n : nodes) {
             sn = (SteamNode) n;
-            didSomething = didSomething || sn.doCalculateSteamProperties();
+            didSomething = sn.doCalculateSteamProperties() || didSomething;
         }
 
         return didSomething;

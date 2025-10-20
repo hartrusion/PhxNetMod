@@ -63,14 +63,15 @@ public abstract class HeatPassive extends FlowThrough implements HeatElement {
         HeatNode tp;
 
         // Call heathandler calculation
-        didSomething = didSomething || heatHandlerInterface.doThermalCalculation();
+        didSomething = heatHandlerInterface.doThermalCalculation() 
+                || didSomething;
 
         // call calulation on heat nodes - contrary to flow, it is not
         // possible to do this with the set-operation as it is unknown when 
         // that calculation will be possible.
         for (GeneralNode p : nodes) {
             tp = (HeatNode) p;
-            didSomething = didSomething || tp.doCalculateTemperature();
+            didSomething = tp.doCalculateTemperature() || didSomething;
         }
 
         return didSomething;

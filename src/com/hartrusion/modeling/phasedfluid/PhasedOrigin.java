@@ -40,6 +40,9 @@ public class PhasedOrigin extends OpenOrigin implements PhasedElement {
         super(PhysicalDomain.PHASEDFLUID);
     }
 
+    /**
+     * Initial value: Water at 25 °C
+     */
     private double originHeatEnergy = 1252230;
 
     @Override

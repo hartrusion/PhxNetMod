@@ -52,14 +52,14 @@ public class PhasedFlowSource extends FlowSource implements PhasedElement {
         PhasedNode tp;
 
         // Add call for thermalhandler calculation
-        didSomething = didSomething || phasedHandler.doPhasedCalculation();
+        didSomething = phasedHandler.doPhasedCalculation() || didSomething;
 
         // call calulation on phased nodes - contrary to flow, it is not
         // possible to do this with the set-method of this class as it is 
         // unknown when that calculation will be possible.
         for (GeneralNode p : nodes) {
             tp = (PhasedNode) p;
-            didSomething = didSomething || tp.doCalculateHeatEnergy();
+            didSomething = tp.doCalculateHeatEnergy() || didSomething;
         }
 
         return didSomething;

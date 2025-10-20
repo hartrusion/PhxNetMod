@@ -57,14 +57,14 @@ public class PhasedLinearValve extends HydraulicLinearValve
         didSomething = super.doCalculation();
         
         // Add call for thermalHandler calculation
-        didSomething = didSomething || phasedHandler.doPhasedCalculation();
+        didSomething = phasedHandler.doPhasedCalculation() || didSomething;
 
         // call calculation on heat nodes - contrary to flow, it is not
         // possible to do this with the set-method of this class as it is 
         // unknown when that calculation will be possible.
         for (GeneralNode p : nodes) {
             pn = (PhasedNode) p;
-            didSomething = didSomething || pn.doCalculateHeatEnergy();
+            didSomething = pn.doCalculateHeatEnergy() || didSomething;
         }
 
         return didSomething;

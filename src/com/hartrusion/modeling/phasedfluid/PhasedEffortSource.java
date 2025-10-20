@@ -21,47 +21,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.hartrusion.modeling.heatfluid;
+package com.hartrusion.modeling.phasedfluid;
 
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 
+
 /**
- * Ideal effort source extended by heat handling capabilities without heat
- * volume. Can be used as ideal pump component to model real pump.
  *
  * @author Viktor Alexander Hartung
  */
-public class HeatEffortSource extends EffortSource implements HeatElement {
+public class PhasedEffortSource extends EffortSource implements PhasedElement {
 
-    private final HeatSimpleHandler heatHandler;
+    private final PhasedSimpleHandler phasedHandler;
 
-    public HeatEffortSource() {
-        super(PhysicalDomain.HEATFLUID);
-        this.heatHandler = new HeatSimpleHandler(this);
+    public PhasedEffortSource() {
+        super(PhysicalDomain.PHASEDFLUID);
+        this.phasedHandler = new PhasedSimpleHandler(this);
     }
 
     @Override
     public void prepareCalculation() {
         super.prepareCalculation();
-        heatHandler.prepareHeatCalculation();
+        phasedHandler.preparePhasedCalculation();
     }
 
     @Override
     public boolean doCalculation() {
         boolean didSomething = super.doCalculation();
-        HeatNode tp;
+        PhasedNode pn;
 
         // Add call for thermalHandler calculation
-        didSomething = heatHandler.doThermalCalculation() || didSomething;
+        didSomething = phasedHandler.doPhasedCalculation() || didSomething;
 
-        // call calculation on heat nodes - contrary to flow, it is not
+        // call calculation on phased nodes - contrary to flow, it is not
         // possible to do this with the set-method of this class as it is 
         // unknown when that calculation will be possible.
         for (GeneralNode p : nodes) {
-            tp = (HeatNode) p;
-            didSomething = tp.doCalculateTemperature() || didSomething;
+            pn = (PhasedNode) p;
+            didSomething = pn.doCalculateHeatEnergy() || didSomething;
         }
 
         return didSomething;
@@ -69,31 +68,36 @@ public class HeatEffortSource extends EffortSource implements HeatElement {
 
     @Override
     public boolean isCalculationFinished() {
-        // Add call for heatHandler isCalculationFinished
+        // Add call for phasedHandler isCalculationFinished
         return super.isCalculationFinished()
-                && heatHandler.isHeatCalulationFinished();
+                && phasedHandler.isPhasedCalulationFinished();
     }
 
     @Override
     public void registerNode(GeneralNode n) {
         super.registerNode(n);
-        // Node must be of extended type HeatNode, therefore it is possible
+        // Node must be of extended type PhasedNode, therefore it is possible
         // to cast it and register it here during configuration.
-        heatHandler.registerHeatNode((HeatNode) n);
+        phasedHandler.registerPhasedNode((PhasedNode) n);
     }
 
     @Override
-    public HeatHandler getHeatHandler() {
-        return heatHandler;
+    public PhasedHandler getPhasedHandler() {
+        return phasedHandler;
     }
 
     @Override
-    public void setEffort(double effort, HeatNode source) {
+    public PhasedFluidProperties getPhasedFluidProperties() {
+        return null;
+    }
+
+    @Override
+    public void setEffort(double effort, PhasedNode source) {
         setEffort(effort, (GeneralNode) source);
     }
 
     @Override
-    public void setFlow(double flow, HeatNode source) {
+    public void setFlow(double flow, PhasedNode source) {
         setFlow(flow, (GeneralNode) source);
     }
 }

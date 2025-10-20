@@ -85,7 +85,7 @@ public class SteamSource extends Enforcer implements SteamElement {
     public boolean doCalculation() {
         boolean didSomething;
         didSomething = super.doCalculation();
-        didSomething = didSomething || steamPort.doCalculateSteamProperties();
+        didSomething = steamPort.doCalculateSteamProperties() || didSomething;
 
         if (!steamPort.steamPropertiesUpdated(this)
                 && steamPort.flowUpdated(this)) {

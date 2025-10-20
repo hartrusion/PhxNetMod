@@ -99,10 +99,10 @@ public class PhasedHeatFluidConverter extends FlowThrough
         // handler but since we have two one-port handlers here, a few things
         // are handled here and the doHandlerCalculation methods will only get
         // called if needed.
-        didSomething = didSomething || converterCalculation();
+        didSomething = converterCalculation() || didSomething;
 
-        didSomething = didSomething || phasedNode.doCalculateHeatEnergy();
-        didSomething = didSomething || heatNode.doCalculateTemperature();
+        didSomething = phasedNode.doCalculateHeatEnergy() || didSomething;
+        didSomething = heatNode.doCalculateTemperature() || didSomething;
 
         return didSomething;
     }

@@ -144,10 +144,10 @@ public class SteamHeatFluidConverter extends FlowThrough
         // handler but since we have two one-port handlers here, a few things
         // are handled here and the doHandlerCalculation methods will only get
         // called if needed.
-        didSomething = didSomething || converterCalculation();
+        didSomething = converterCalculation() || didSomething;
 
-        didSomething = didSomething || steamNode.doCalculateSteamProperties();
-        didSomething = didSomething || heatNode.doCalculateTemperature();
+        didSomething = steamNode.doCalculateSteamProperties() || didSomething;
+        didSomething = heatNode.doCalculateTemperature() || didSomething;
 
         return didSomething;
     }
@@ -204,7 +204,7 @@ public class SteamHeatFluidConverter extends FlowThrough
                 // should be finished now but we cant say we wont change the
                 // implementation later, so lets still request the state
                 // from handler.
-                return didSomething || steamHandler.isSteamCalulationFinished();
+                return steamHandler.isSteamCalulationFinished() || didSomething;
             }
         } else if (heatNode.getFlow(this) < 0.0
                 && steamNode.getFlow(this) > 0.0

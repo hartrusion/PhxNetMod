@@ -121,7 +121,7 @@ public class SteamSaturatedReservoir
         }
 
         // Add call for steamHandler calculation
-        didSomething = didSomething || steamHandler.doSteamCalculation();
+        didSomething = steamHandler.doSteamCalculation() || didSomething;
 
         // We will get the next stateValue, which is the pressure, from the
         // steamHandler as its defined by the enthalpy of the saturated steam.
@@ -135,7 +135,7 @@ public class SteamSaturatedReservoir
 
         for (GeneralNode n : nodes) {
             sn = (SteamNode) n;
-            didSomething = didSomething || sn.doCalculateSteamProperties();
+            didSomething = sn.doCalculateSteamProperties() || didSomething;
         }
 
         return didSomething;

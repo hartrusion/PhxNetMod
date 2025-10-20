@@ -115,14 +115,14 @@ public class HeatFluidTank extends SelfCapacitance implements HeatElement {
         }
 
         // Add call for thermalhandler calculation
-        didSomething = didSomething || heatHandler.doThermalCalculation();
+        didSomething = heatHandler.doThermalCalculation() || didSomething;
 
         // call calulation on thermal nodes - contrary to flow, it is not
         // possible to do this with the set-operation as it is unknown when 
         // that calculation will be possible.
         for (GeneralNode p : nodes) {
             tp = (HeatNode) p;
-            didSomething = didSomething || tp.doCalculateTemperature();
+            didSomething = tp.doCalculateTemperature() || didSomething;
         }
 
         return didSomething;

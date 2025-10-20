@@ -60,14 +60,14 @@ public class HeatLinearValve extends HydraulicLinearValve implements HeatElement
         didSomething = super.doCalculation();
 
         // Add call for thermalhandler calculation
-        didSomething = didSomething || heatHandler.doThermalCalculation();
+        didSomething = heatHandler.doThermalCalculation() || didSomething;
 
         // call calculation on heat nodes - contrary to flow, it is not
         // possible to do this with the set-method of this class as it is 
         // unknown when that calculation will be possible.
         for (GeneralNode p : nodes) {
             tp = (HeatNode) p;
-            didSomething = didSomething || tp.doCalculateTemperature();
+            didSomething = tp.doCalculateTemperature() || didSomething;
         }
 
         return didSomething;

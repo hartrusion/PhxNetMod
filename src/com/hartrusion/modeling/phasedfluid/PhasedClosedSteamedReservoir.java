@@ -137,22 +137,22 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         boolean didSomething = false;
         PhasedNode pn;
 
-        didSomething = didSomething
-                || setEffortValueOnNodes(absoluteFluidPressure);
+        didSomething = setEffortValueOnNodes(absoluteFluidPressure) 
+                || didSomething;
 
         // Sum up all incoming flows like its done in SelfCapacitance class.
         // This will call the .integrate() method from EnergyStorage.
-        didSomething = didSomething || calculateNewDeltaValue();
+        didSomething = calculateNewDeltaValue() || didSomething;
 
         // Add call for thermalhandler calculation
-        didSomething = didSomething || phasedHandler.doPhasedCalculation();
+        didSomething = phasedHandler.doPhasedCalculation() || didSomething;
 
         // call calulation on thermal nodes - contrary to flow, it is not
         // possible to do this with the set-operation as it is unknown when 
         // that calculation will be possible.
         for (GeneralNode p : nodes) {
             pn = (PhasedNode) p;
-            didSomething = didSomething || pn.doCalculateHeatEnergy();
+            didSomething = pn.doCalculateHeatEnergy() || didSomething;
         }
 
         return didSomething;
