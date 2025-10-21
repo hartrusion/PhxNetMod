@@ -142,6 +142,7 @@ public class PhasedExpandingThermalExchangerTest {
     @Test
     public void testNoFlow() {
         System.out.println("noFlow");
+        origin.setOriginHeatEnergy(1252230); // default value
         flowSource.setFlow(0.0); // no fluid flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
@@ -151,7 +152,30 @@ public class PhasedExpandingThermalExchangerTest {
 
         // Expect nothing to happen:
         assertEquals(nodeOut.getFlow(instance), 0.0, 1e-5);
+    }
 
+    /**
+     * No thermal energy transfer with same initial conditions. If there is no
+     * thermal energy transfered and water with 25 deg Celsius is inside and
+     * water with 25 deg celsius is flowing in, it must have 25 deg celsius out
+     * (or the heat energy representing the 25 which is 1252230) and the same
+     * flow out as it has in.
+     */
+    @Test
+    public void testFlushThrough() {
+        System.out.println("noFlow");
+        origin.setOriginHeatEnergy(1252230); // default value
+        flowSource.setFlow(10.0); // 10 kg/s in flow
+        thForceFlow.setFlow(0.0); // no thermal flow
+        effortSource.setEffort(1e5); // ambient pressure
+        instance.setInitialState(1.0, 1e5, 298.15, 298.15);
+
+        run();
+
+        // Expect exactly 10 kg/s going out of the element
+        assertEquals(nodeOut.getFlow(instance), -10.0, 1e-5);
+        // Heat energy must be the same as from initial conditions
+        assertEquals(nodeOut.getHeatEnergy(), 1252230, 1e-2);
     }
 
     private void run() {
@@ -172,6 +196,8 @@ public class PhasedExpandingThermalExchangerTest {
         instance.doCalculation(); // sets effort to nodeIn where flowSource is
         origin.doCalculation(); // sets effort to the other side of flowSc.
         flowSource.doCalculation(); // sets flow to nodes
+        origin.doCalculation(); // sets the heat energy value over the flow
+        flowSource.doCalculation(); // sets the heat energy value over the flow
 
         instance.doCalculation(); // main calculation or first reverse-flow step
 
