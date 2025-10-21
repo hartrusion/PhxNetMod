@@ -41,25 +41,26 @@ import org.testng.annotations.Test;
  * cases in the solvers already.
  * <p>
  * This test tests all scenarios by enforcing a flow rate through the element.
- * No solver is used, instead a method will invoke the calculation runs in a 
+ * No solver is used, instead a method will invoke the calculation runs in a
  * specific order that is also expected to happen like this if a solver would
  * call it but this allows easier debugging here.
- * 
+ *
  * @author Viktor Alexander Hartung
  */
 public class PhasedExpandingThermalExchangerTest {
-    
+
     PhasedExpandingThermalExchanger instance;
     PhasedOrigin origin, sink;
     PhasedFlowSource flowSource;
-    PhasedNode nodeOrigin, nodeIn, nodeOut;
+    PhasedEffortSource effortSource;
+    PhasedNode nodeOrigin, nodeIn, nodeOut, nodeSink;
 
     GeneralNode thNodeInstance, thNodeOrigin;
     OpenOrigin thOrigin;
     FlowSource thForceFlow;
 
     SimpleIterator thSolver;
-    
+
     public PhasedExpandingThermalExchangerTest() {
     }
 
@@ -71,19 +72,30 @@ public class PhasedExpandingThermalExchangerTest {
     @BeforeMethod
     public void setUpMethod() throws Exception {
         PhasedFluidProperties fp = new PhasedPropertiesWater();
-        
+
         instance = new PhasedExpandingThermalExchanger(fp);
 
         nodeOrigin = new PhasedNode();
         nodeIn = new PhasedNode();
         nodeOut = new PhasedNode();
+        nodeSink = new PhasedNode();
         flowSource = new PhasedFlowSource();
+        effortSource = new PhasedEffortSource();
         origin = new PhasedOrigin();
         sink = new PhasedOrigin();
 
+        // On node 0 of instance a flow will be induced, so we connect a flow
+        // source. node 1 will have an effort induced which will be set on
+        // all nodes backwards through instance as instance does not have an
+        // effort drop. As the effort is the pressure of the phased fluid, we
+        // need to put a certain value on it.
+        // From origin with flow source into instance:
         origin.connectToVia(flowSource, nodeOrigin);
         flowSource.connectToVia(instance, nodeIn);
-        instance.connectToVia(sink, nodeOut);
+
+        // Pressure built up from other side:
+        sink.connectToVia(effortSource, nodeSink);
+        effortSource.connectToVia(instance, nodeOut);
 
         // Thermal part, simply force a thermal flow here.
         thNodeInstance = new GeneralNode(PhysicalDomain.THERMAL);
@@ -111,7 +123,9 @@ public class PhasedExpandingThermalExchangerTest {
         nodeOrigin = null;
         nodeIn = null;
         nodeOut = null;
+        nodeSink = null;
         flowSource = null;
+        effortSource = null;
         origin = null;
         sink = null;
         thNodeInstance = null;
@@ -121,14 +135,25 @@ public class PhasedExpandingThermalExchangerTest {
         thSolver = null;
     }
 
+    /**
+     * Tests the idle or no-flow behaviour. if nothing goes in and no thermal
+     * enrgy is transfered, the out flow of the element must also be 0,0.
+     */
     @Test
     public void testNoFlow() {
         System.out.println("noFlow");
-        flowSource.setFlow(0.0);
+        flowSource.setFlow(0.0); // no fluid flow
+        thForceFlow.setFlow(0.0); // no thermal flow
+        effortSource.setEffort(1e5); // ambient pressure
+        instance.setInitialState(1.0, 1e5, 298.15, 298.15);
+
         run();
 
+        // Expect nothing to happen:
+        assertEquals(nodeOut.getFlow(instance), 0.0, 1e-5);
+
     }
-    
+
     private void run() {
         thSolver.prepareCalculation();
         origin.prepareCalculation();
@@ -141,10 +166,22 @@ public class PhasedExpandingThermalExchangerTest {
         assertEquals(thSolver.isCalculationFinished(), true,
                 "Thermal subsystem is not in calculated state.");
         // Call the doCalculation method in the direction of the availability
-        // of the solution.
-        origin.doCalculation();
-        flowSource.doCalculation();
-        instance.doCalculation();
+        // of the solution to provide solution for the exp thermal exchanger.
+        sink.doCalculation(); // sets effort = 0 to sink node
+        effortSource.doCalculation(); // sets the effort to nodeOut
+        instance.doCalculation(); // sets effort to nodeIn where flowSource is
+        origin.doCalculation(); // sets effort to the other side of flowSc.
+        flowSource.doCalculation(); // sets flow to nodes
+
+        instance.doCalculation(); // main calculation or first reverse-flow step
+
+        // In case of reverse-flow, this will set the requested in heat props,
+        // otherwise this will finish the calculation:
+        effortSource.doCalculation(); // sets the effort to nodeOut
+        sink.doCalculation();
+
+        instance.doCalculation(); // main calculation for reverse flow
+        effortSource.doCalculation(); // sets flow finally
         sink.doCalculation();
 
         // Check that all auxiliary elements are fully calculated
@@ -160,5 +197,5 @@ public class PhasedExpandingThermalExchangerTest {
         assertEquals(instance.isCalculationFinished(), true,
                 "Element not in calculated state.");
     }
-    
+
 }
