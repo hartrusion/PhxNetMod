@@ -5,6 +5,7 @@
 /out
 /*.iml
 /build.xml
+/manifest.mf
 
 # IDE: NetBeans
 /build
