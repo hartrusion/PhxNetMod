@@ -187,7 +187,7 @@ public class HeatFluidPump implements Runnable {
      * @param ac
      * @return true if event was processed by this instance.
      */
-    public boolean updateProperty(ActionCommand ac) {
+    public boolean handleAction(ActionCommand ac) {
         if (!ac.getPropertyName().startsWith(name)) {
             return false;
         } else if (ac.getPropertyName().equals(suctionValve.toString())) {

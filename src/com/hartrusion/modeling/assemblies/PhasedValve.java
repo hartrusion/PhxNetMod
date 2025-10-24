@@ -133,7 +133,7 @@ public class PhasedValve implements Runnable {
      * @param ac ActionCommand, will be further checked if it's matching.
      * @return true if event was processed by this instance.
      */
-    public boolean updateProperty(ActionCommand ac) {
+    public boolean handleAction(ActionCommand ac) {
         if (!ac.getPropertyName().equals(valve.toString())) {
             return false;
         }

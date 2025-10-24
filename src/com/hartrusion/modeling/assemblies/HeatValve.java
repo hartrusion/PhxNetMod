@@ -16,7 +16,6 @@
  */
 package com.hartrusion.modeling.assemblies;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import com.hartrusion.control.SetpointIntegrator;
@@ -27,22 +26,40 @@ import com.hartrusion.mvc.ActionCommand;
 /**
  * HeatLinearValve with SetpointIntegrator as actuator and a Monitor for firing
  * state change properties.
+ * <p>
+ * Received ActionCommands with the set name (to be set with initName) will be
+ * used to control the value. Depending on the type, integers can be used to
+ * perfom opening or closing until a int 0 value is send. Boolean values will
+ * either fully open or fully close the valve.
+ * <p>
+ * The attached monitor will fire property changes to all registered listeners
+ * which are defined in
  *
  * @author Viktor Alexander Hartung
  */
 public class HeatValve implements Runnable {
 
+    /**
+     * The valve element of the model itself.
+     */
     private final HeatLinearValve valve = new HeatLinearValve();
+    
+    /**
+     * Generates limited values to mimic motor drive behaviour.
+     */
     private final SetpointIntegrator swControl
             = new SetpointIntegrator();
+    
+    
     private final ValveActuatorMonitor monitor
             = new ValveActuatorMonitor();
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
+    protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     public HeatValve() {
         swControl.setMaxRate(25);
         swControl.setUpperLimit(100);
-        swControl.setLowerLimit(-5.0);
+        swControl.setLowerLimit(-5.0); // safe closing
     }
 
     public void initName(String name) {
@@ -101,7 +118,7 @@ public class HeatValve implements Runnable {
      * @param ac ActionCommand, will be further checked if it's matching.
      * @return true if event was processed by this instance.
      */
-    public boolean updateProperty(ActionCommand ac) {
+    public boolean handleAction(ActionCommand ac) {
         if (!ac.getPropertyName().equals(valve.toString())) {
             return false;
         }
