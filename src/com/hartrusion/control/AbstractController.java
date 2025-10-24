@@ -30,7 +30,7 @@ import java.beans.PropertyChangeSupport;
  *
  * @author Viktor Alexander Hartung
  */
-public class AbstractController {
+public abstract class AbstractController implements Runnable {
 
     protected double eInput;
     protected double uFollowUp;

@@ -24,12 +24,17 @@
 package com.hartrusion.modeling.assemblies;
 
 import com.hartrusion.control.AbstractController;
+import com.hartrusion.control.ControlCommand;
+import com.hartrusion.control.PControl;
+import com.hartrusion.mvc.ActionCommand;
 import java.beans.PropertyChangeListener;
 
 /**
  * Extends the Heat valve to a controlled heat valve by providing a controller
  * instance and means of accessing it, running it and process events that
  * control the controller.
+ * <p>
+ *
  *
  * @author Viktor Alexander Hartung
  */
@@ -37,16 +42,65 @@ public class HeatValveControlled extends HeatValve {
 
     private AbstractController controller;
 
+    private String componentControlCommand;
+    private String componentControlState;
+    private String componentControlUpdateU;
+
+    private ControlCommand controlState;
+    private ControlCommand oldControlState;
+
     @Override
     public void initName(String name) {
         super.initName(name);
         controller.setName(name);
+
+        // Strings that will be sent
+        componentControlCommand = name + "ControlCommand";
+        componentControlState = name + "ControlState";
+        componentControlUpdateU = name + "ControlUpdateU";
     }
-    
+
     @Override
     public void initSignalListener(PropertyChangeListener signalListener) {
         super.initSignalListener(signalListener);
         controller.addPropertyChangeListener(signalListener);
+    }
+
+    public void initControllerProportional() {
+        controller = new PControl();
+    }
+
+    @Override
+    public void run() {
+        controller.run(); // updates controller output
+        super.run(); // sets value to SWI b4 valves and runs monitor
+
+        if (controller.isManualMode()) {
+            controlState = ControlCommand.MANUAL_OPERATION;
+        } else {
+            controlState = ControlCommand.AUTOMATIC;
+        }
+        
+        if (controlState != oldControlState) {
+            // Send Manual/Auto state on change.
+            pcs.firePropertyChange(componentControlState,
+                    oldControlState, controlState);
+            oldControlState = controlState;
+        }
+    }
+
+    @Override
+    public boolean handleAction(ActionCommand ac) {
+        return super.handleAction(ac);
+    }
+
+    /**
+     * Sets the feedback input value which is to be controlled by this instance.
+     *
+     * @param input
+     */
+    public void setInput(double input) {
+        controller.setInput(input);
     }
 
 }

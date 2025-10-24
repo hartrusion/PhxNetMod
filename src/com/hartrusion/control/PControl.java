@@ -24,28 +24,37 @@
 package com.hartrusion.control;
 
 /**
- * Extends the threshold monitor to monitor a valves state (0 to 100 %) and fire
- * PropertyChangeEvent with _Pos for describing valve position
  *
  * @author Viktor Alexander Hartung
  */
-public class ValveActuatorMonitor extends ThresholdMonitor {
+public class PControl extends AbstractController {
 
-    ValveState valveState, oldValveState;
+    private double kR = 1.0;
 
     @Override
-    protected void checkNewValue() {
-        if (value >= 80.0) {
-            valveState = ValveState.OPEN;
-        } else if (value <= 5) {
-            valveState = ValveState.CLOSED;
+    public void run() {
+        double uControl = eInput * kR;
+
+        if (manualMode) { // overwrite output value
+            uControl = uFollowUp;
+        }
+
+        // Limit output
+        if (uControl > uMax) {
+            uOutput = uMax;
+        } else if (uControl < uMin) {
+            uOutput = uMin;
         } else {
-            valveState = ValveState.INTERMEDIATE;
+            uOutput = uControl;
         }
-        if (valveState != oldValveState) {
-            pcs.firePropertyChange(monitorName + "_Pos",
-                    oldValveState, valveState);
-            oldValveState = valveState;
-        }
+
+    }
+
+    public double getParameterK() {
+        return kR;
+    }
+
+    public void setParameterK(double kR) {
+        this.kR = kR;
     }
 }

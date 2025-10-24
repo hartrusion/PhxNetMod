@@ -27,7 +27,7 @@ package com.hartrusion.control;
  *
  * @author Viktor Alexander Hartung
  */
-public class PIControl extends AbstractController implements Runnable {
+public class PIControl extends AbstractController {
 
     private double kR = 1.0;
     private double TN = 10;
