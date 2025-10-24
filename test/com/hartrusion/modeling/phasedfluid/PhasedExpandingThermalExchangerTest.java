@@ -177,6 +177,19 @@ public class PhasedExpandingThermalExchangerTest {
         // Heat energy must be the same as from initial conditions
         assertEquals(nodeOut.getHeatEnergy(), 1252230, 1e-2);
     }
+    
+    @Test
+    public void testHeatUp() {
+        System.out.println("heatUp");
+        origin.setOriginHeatEnergy(1252230); // default value
+        flowSource.setFlow(10.0); // 10 kg/s in flow
+        thForceFlow.setFlow(0.0); // no thermal flow
+        effortSource.setEffort(1e5); // ambient pressure
+        instance.setInitialState(1.0, 1e5, 298.15, 298.15);
+
+        run();
+
+    }
 
     private void run() {
         thSolver.prepareCalculation();
