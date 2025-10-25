@@ -27,12 +27,17 @@ import java.beans.PropertyChangeEvent;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import com.hartrusion.mvc.UpdateReceiver;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Viktor Alexander Hartung
  */
 public class ParameterHandler implements ParameterReceiver {
+    
+    private static final Logger LOGGER = Logger.getLogger(
+            ParameterHandler.class.getName() );
 
     private final Map<String, PrimitiveBooleanParameter> parametersBoolean = new ConcurrentHashMap<>();
     private final Map<String, PrimitiveDoubleParameter> parametersDouble = new ConcurrentHashMap<>();
@@ -62,6 +67,7 @@ public class ParameterHandler implements ParameterReceiver {
             param.setComponent(component);
             param.setValue(value);
             parametersBoolean.put(component, param);
+            LOGGER.log(Level.INFO, "New boolean parameter: " + component);
         }
     }
 
@@ -74,6 +80,7 @@ public class ParameterHandler implements ParameterReceiver {
             param.setComponent(component);
             param.setValue(value);
             parametersDouble.put(component, param);
+            LOGGER.log(Level.INFO, "New double parameter: " + component);
         }
     }
 
@@ -86,6 +93,7 @@ public class ParameterHandler implements ParameterReceiver {
             param.setComponent(component);
             param.setValue(value);
             parametersInt.put(component, param);
+            LOGGER.log(Level.INFO, "New int parameter: " + component);
         }
     }
 
