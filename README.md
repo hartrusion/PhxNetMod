@@ -8,6 +8,12 @@ differential equations, the circuit analysis can be used on networks of
 hydraulic systems as it would be used in electronic circuits calculation. This 
 is also addressed by a theory called bond graphs.
 
+**Please note: This is work in progess. It's propably not good code and only
+published to have easy access to it and disclose source code of my projects
+for security reasons.** I strongly believe that beeing able to disclose the 
+full source and allow people to complile and build projects themselves is
+a proper way to prove that an application does not pose any risks.
+
 It was designed as the core of the chornobyl RBMK simulator project.
 
 The usual academic  approach is to generate a state space representation of 
