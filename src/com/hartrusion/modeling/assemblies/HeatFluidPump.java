@@ -23,7 +23,6 @@
  */
 package com.hartrusion.modeling.assemblies;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import com.hartrusion.control.SetpointIntegrator;
