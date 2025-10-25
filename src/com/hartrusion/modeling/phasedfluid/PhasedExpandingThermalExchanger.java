@@ -145,7 +145,7 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
 
     @Override
     public boolean isCalculationFinished() {
-        // Add call for thermalhandler calculationfinished
+        // Add call for thermalHandler calculationFinished
         return super.isCalculationFinished()
                 && phasedHandler.isPhasedCalulationFinished();
     }
