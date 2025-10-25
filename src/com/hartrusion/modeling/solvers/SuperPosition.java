@@ -73,6 +73,9 @@ import com.hartrusion.modeling.general.LinearDissipator;
  */
 public class SuperPosition extends LinearNetwork {
 
+    private static final Logger LOGGER = Logger.getLogger(
+            SuperPosition.class.getName());
+
     /**
      * Holds references for all created nodes on all layers. [layer
      * number][index in nodes list]. The array has paired nodes to the nodes
@@ -238,11 +241,9 @@ public class SuperPosition extends LinearNetwork {
                     f.get(); // Exceptions abfangen
                 }
             } catch (InterruptedException ex) {
-                System.getLogger(SuperPosition.class.getName()).log(
-                        System.Logger.Level.ERROR, (String) null, ex);
+                LOGGER.log(Level.SEVERE, (String) null, ex);
             } catch (ExecutionException ex) {
-                System.getLogger(SuperPosition.class.getName()).log(
-                        System.Logger.Level.ERROR, (String) null, ex);
+                LOGGER.log(Level.SEVERE, (String) null, ex);
             }
 
         } else {
@@ -256,9 +257,7 @@ public class SuperPosition extends LinearNetwork {
         for (idx = 0; idx < numberOfSources; idx++) {
             if (!zeroValue[idx]) {
                 if (!layer[idx].isCalculationFinished()) {
-                    Logger.getLogger(RecursiveSimplifier.class.getName()).log(
-                            Level.WARNING,
-                            "Superposition layer index " + idx
+                    LOGGER.log(Level.WARNING, "Superposition layer index " + idx
                             + " failed to provide full solution.");
                 }
             }
@@ -323,8 +322,7 @@ public class SuperPosition extends LinearNetwork {
         iterativeSolver.doCalculation();
 
         if (!iterativeSolver.isCalculationFinished()) {
-            Logger.getLogger(SuperPosition.class.getName()).log(
-                    Level.WARNING,
+            LOGGER.log(Level.WARNING,
                     "Iterative solver did not finish with full solution.");
         }
 
@@ -342,16 +340,14 @@ public class SuperPosition extends LinearNetwork {
                 // if (flow > 1e-11 || flow < -1e-11) {
                 // with growing model, it was set to 1e-2. This is not good.
                 if (flow > 1e-3 || flow < -1e-3) {
-                    Logger.getLogger(SuperPosition.class.getName()).log(
-                        Level.WARNING,
-                        "High deviation on expected flow sum on node.");
+                    LOGGER.log(Level.WARNING,
+                            "High deviation on expected flow sum on node.");
                 }
             } else {
-                Logger.getLogger(SuperPosition.class.getName()).log(
-                        Level.WARNING,
+                LOGGER.log(Level.WARNING,
                         "No full solution, missing flow on node!");
             }
-                
+
         }
     }
 
@@ -402,7 +398,7 @@ public class SuperPosition extends LinearNetwork {
         }
 
         if (numberOfSources >= 1) {
-            Logger.getLogger(SuperPosition.class.getName()).log(Level.INFO,
+            LOGGER.log(Level.INFO,
                     "Setting up SuperPosition solver...");
         }
 
@@ -514,8 +510,8 @@ public class SuperPosition extends LinearNetwork {
             layer[idx].overlaySetup();
         } // end for idx all layers
 
-        Logger.getLogger(SuperPosition.class.getName()).log(Level.INFO,
-                "... SuperPosition set up with "+ numberOfSources + " layers.");
+        LOGGER.log(Level.INFO, "... SuperPosition set up with "
+                + numberOfSources + " layers.");
 
         // Generate optinal callables for mutltithreading as list
         for (idx = 0; idx < numberOfSources; idx++) {

@@ -71,6 +71,9 @@ import com.hartrusion.modeling.general.ClosedOrigin;
  */
 public class RecursiveSimplifier extends ChildNetwork {
 
+    private static final Logger LOGGER = Logger.getLogger(
+            RecursiveSimplifier.class.getName());
+
     private RecursiveSimplifier parent; // from what this instance is simplified
     private RecursiveSimplifier child; // the simplified instance created here
 
@@ -687,8 +690,8 @@ public class RecursiveSimplifier extends ChildNetwork {
             childNodeOfNode[nodes.indexOf(starSquare.getStarNode(idx))] = idx;
             nodeOfChildNode[idx] = nodes.indexOf(starSquare.getStarNode(idx));
         }
-        Logger.getLogger(RecursiveSimplifier.class.getName()).log(
-                Level.INFO, "Complex network: StarSquare transform necessary.");
+        LOGGER.log(Level.INFO,
+                "Complex network: StarSquare transform necessary.");
 
     }
 
@@ -845,12 +848,12 @@ public class RecursiveSimplifier extends ChildNetwork {
         }
 
         if (elements.size() <= 5) {
-            Logger.getLogger(RecursiveSimplifier.class.getName()).log(
+            LOGGER.log(
                     Level.INFO, (parentLayers + 1)
                     + " layers created, last layer containing "
                     + elements.size() + " elements.");
         } else {
-            Logger.getLogger(RecursiveSimplifier.class.getName()).log(
+            LOGGER.log(
                     Level.WARNING, (parentLayers + 1)
                     + " layers created, last layer still containing "
                     + elements.size() + " elements. No solution guaranteed.");
@@ -1006,10 +1009,8 @@ public class RecursiveSimplifier extends ChildNetwork {
         // throw a warning here in case that did not happen. This warning most
         // times resulted in additional solver coding work.
         if (!isCalculationFinished()) {
-            Logger.getLogger(RecursiveSimplifier.class
-                    .getName()).log(
-                            Level.WARNING, "Network solving not finished "
-                            + "on child layer no. " + childLayer);
+            LOGGER.log(Level.WARNING, "Network solving not finished "
+                    + "on child layer no. " + childLayer);
         }
     }
 }

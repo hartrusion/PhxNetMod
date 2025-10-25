@@ -37,6 +37,8 @@ import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.SelfCapacitance;
 import com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchanger;
 import com.hartrusion.modeling.steam.SteamIsobaricIsochoricEvaporator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Holds a full dynamic model, provides means to solve it and some other neat
@@ -44,8 +46,8 @@ import com.hartrusion.modeling.steam.SteamIsobaricIsochoricEvaporator;
  * <p>
  * This class is used to do all the work after a model was set up. It will
  * initialize itself by calling addNetwork with any node that is part of the
- * model, starting a traverse algorithm that will scan the whole network and
- * set up the solvers.
+ * model, starting a traverse algorithm that will scan the whole network and set
+ * up the solvers.
  * <p>
  * The prepareCalculation and doCalculation methods can be called and those
  * calls will be redirected to the used solving objects.
@@ -53,6 +55,9 @@ import com.hartrusion.modeling.steam.SteamIsobaricIsochoricEvaporator;
  * @author Viktor Alexander Hartung
  */
 public class DomainAnalogySolver {
+
+    private static final Logger LOGGER = Logger.getLogger(
+            DomainAnalogySolver.class.getName());
 
     private final List<GeneralNode> modelNodes = new ArrayList<>();
 
@@ -546,15 +551,13 @@ public class DomainAnalogySolver {
 
         for (GeneralNode n : modelNodes) {
             if (!n.allFlowsUpdated()) {
-                System.getLogger(SuperPosition.class.getName()).log(
-                        System.Logger.Level.WARNING,
+                LOGGER.log(Level.WARNING,
                         "Missing flow on node " + n.toString());
             }
         }
         for (AbstractElement e : modelElements) {
             if (!e.isCalculationFinished()) {
-                System.getLogger(SuperPosition.class.getName()).log(
-                        System.Logger.Level.WARNING,
+                LOGGER.log(Level.WARNING,
                         "No full solution for element " + e.toString());
             }
         }

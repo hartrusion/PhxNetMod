@@ -26,6 +26,8 @@ package com.hartrusion.modeling.phasedfluid;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -33,6 +35,9 @@ import com.hartrusion.modeling.general.EffortSource;
  */
 public class PhasedExpandingThermalVolumeHandler
         extends PhasedAbstractVolumizedHandler {
+
+    private static final Logger LOGGER = Logger.getLogger(
+            PhasedExpandingThermalVolumeHandler.class.getName());
 
     /**
      * Reference to the effort source representing the temperature for the
@@ -439,9 +444,7 @@ public class PhasedExpandingThermalVolumeHandler
 //                    aElement, true);
 //            
 //            waitForReverseOutProperties = true;
-            System.getLogger(PhasedExpandingThermalVolumeHandler.class.getName()
-            ).log(
-                    System.Logger.Level.WARNING,
+            LOGGER.log(Level.WARNING,
                     "Reverse Flow on Thermal Expanding Handler occured, "
                     + "this is not yet implemented properly.");
 

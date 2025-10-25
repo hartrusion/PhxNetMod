@@ -130,6 +130,9 @@ import static com.hartrusion.util.ArraysExt.*;
  * @author Viktor Alexander Hartung
  */
 public class TransferSubnet extends LinearNetwork {
+    
+    private static final Logger LOGGER = Logger.getLogger(
+            TransferSubnet.class.getName());
 
     /**
      * Holds a list of all nodes from the subnet that are to be considered by
@@ -373,8 +376,7 @@ public class TransferSubnet extends LinearNetwork {
         AbstractElement le;
         boolean additionalGroundNode = false; // if theres no origin in subnet
 
-        Logger.getLogger(TransferSubnet.class.getName()).log(
-                Level.INFO, "Start TransferSubnet setup...");
+        LOGGER.log(Level.INFO, "Start TransferSubnet setup...");
 
         // Perform another check to validate data, each added node has to be
         // used with at least one element. We already checked the elements
@@ -736,8 +738,7 @@ public class TransferSubnet extends LinearNetwork {
 
         // and, finally, let the solver set up itself
         solverNumberOfLayers = solver.superPositionSetup();
-        Logger.getLogger(TransferSubnet.class.getName()).log(
-                Level.INFO, "... generated TransferSubnet.");
+        LOGGER.log(Level.INFO, "... generated TransferSubnet.");
     }
 
     @Override
@@ -856,8 +857,7 @@ public class TransferSubnet extends LinearNetwork {
         // Check that all efforts are now available:
         for (GeneralNode n : linkedNodes) {
             if (!n.effortUpdated()) {
-                Logger.getLogger(TransferSubnet.class.getName()).log(
-                        Level.WARNING, "Missing effort on " + n.toString());
+                LOGGER.log(Level.WARNING, "Missing effort on " + n.toString());
             }
             if (!n.allFlowsUpdated()) {
                 // All flows of the subnet must be calculated, at least for 
@@ -877,8 +877,7 @@ public class TransferSubnet extends LinearNetwork {
                 if (noNoFlowCheck) {
                     continue;
                 }
-                Logger.getLogger(TransferSubnet.class.getName()).log(
-                            Level.WARNING, "Missing flow on " + n.toString());
+                LOGGER.log(Level.WARNING, "Missing flow on " + n.toString());
             }
         }
     }

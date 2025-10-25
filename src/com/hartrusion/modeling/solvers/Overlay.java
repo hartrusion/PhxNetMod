@@ -70,6 +70,9 @@ import com.hartrusion.modeling.general.ClosedOrigin;
  */
 public class Overlay extends ChildNetwork {
 
+    private static final Logger LOGGER = Logger.getLogger(
+            Overlay.class.getName());
+
     /**
      * Marks the element on [index] of elements list which was an effort source
      * and is no longer a soure in this network. It was replaced with a shortcut
@@ -189,7 +192,7 @@ public class Overlay extends ChildNetwork {
         if (!resultAlwaysZeroFlow) {
             solver.doRecursiveCalculation(); // solve child network
         }
-        
+
         // transfer results back
         for (int idx = 0; idx < elements.size(); idx++) {
             if (elements.get(idx).getElementType() == ElementType.ORIGIN) {
@@ -256,8 +259,7 @@ public class Overlay extends ChildNetwork {
         iterativeSolver.doCalculation();
 
         if (!iterativeSolver.isCalculationFinished()) {
-            Logger.getLogger(RecursiveSimplifier.class.getName()).log(
-                    Level.WARNING,
+            LOGGER.log(Level.WARNING,
                     "Iterative solver did not finish with full solution.");
         }
     }
