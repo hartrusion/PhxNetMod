@@ -37,7 +37,7 @@ public abstract class AbstractController implements Runnable {
     protected double uOutput;
     protected double uMax = 100;
     protected double uMin = 100;
-    protected boolean manualMode;
+    protected boolean manualMode = true;
     protected double stepTime = 0.1;
 
     private String controllerName;

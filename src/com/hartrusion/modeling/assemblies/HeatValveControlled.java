@@ -26,6 +26,7 @@ package com.hartrusion.modeling.assemblies;
 import com.hartrusion.control.AbstractController;
 import com.hartrusion.control.ControlCommand;
 import com.hartrusion.control.PControl;
+import com.hartrusion.control.ParameterHandler;
 import com.hartrusion.mvc.ActionCommand;
 import java.beans.PropertyChangeListener;
 
@@ -34,7 +35,7 @@ import java.beans.PropertyChangeListener;
  * instance and means of accessing it, running it and process events that
  * control the controller.
  * <p>
- *
+ * To get the
  *
  * @author Viktor Alexander Hartung
  */
@@ -42,22 +43,38 @@ public class HeatValveControlled extends HeatValve {
 
     private AbstractController controller;
 
-    private String componentControlCommand;
+    private String actionCommand;
     private String componentControlState;
-    private String componentControlUpdateU;
 
     private ControlCommand controlState;
     private ControlCommand oldControlState;
+
+    private boolean outputOverride;
+
+    /**
+     * Updated output values (valve position) will be set to this parameter
+     * handler.
+     */
+    private ParameterHandler outputValues;
 
     @Override
     public void initName(String name) {
         super.initName(name);
         controller.setName(name);
 
-        // Strings that will be sent
-        componentControlCommand = name + "ControlCommand";
+        // Strings that will be sent or 
+        actionCommand = name + "ControlCommand";
         componentControlState = name + "ControlState";
-        componentControlUpdateU = name + "ControlUpdateU";
+    }
+
+    /**
+     * Sets a ParameterHandler that will get the valve position on each run
+     * call.
+     *
+     * @param h reference to ParameterHandler
+     */
+    public void initParameterHandler(ParameterHandler h) {
+        outputValues = h;
     }
 
     @Override
@@ -66,32 +83,75 @@ public class HeatValveControlled extends HeatValve {
         controller.addPropertyChangeListener(signalListener);
     }
 
-    public void initControllerProportional() {
+    public void initPControl() {
         controller = new PControl();
     }
 
     @Override
     public void run() {
         controller.run(); // updates controller output
-        super.run(); // sets value to SWI b4 valves and runs monitor
+
+        if (!controller.isManualMode()) {
+            swControl.setInput(controller.getOutput());
+        }
+
+        super.run(); // sets value to SWI, update SWI, set valve value.
 
         if (controller.isManualMode()) {
             controlState = ControlCommand.MANUAL_OPERATION;
+            // For non-jump behaviour of output
+            controller.setFollowUp(swControl.getOutput());
         } else {
             controlState = ControlCommand.AUTOMATIC;
         }
-        
-        if (controlState != oldControlState) {
-            // Send Manual/Auto state on change.
+
+        if ((controlState != oldControlState) && !outputOverride) {
+            // Send Manual/Auto state on change, but not during temporary overr
             pcs.firePropertyChange(componentControlState,
                     oldControlState, controlState);
             oldControlState = controlState;
+        }
+
+        // Send valve position as parameter value for monitoring
+        if (outputValues != null) {
+            outputValues.setParameterValue(valve.toString(),
+                    valve.getOpening());
         }
     }
 
     @Override
     public boolean handleAction(ActionCommand ac) {
-        return super.handleAction(ac);
+        // no super call, valve cannot be operated with the non-controller
+        // commands.
+        if (!ac.getPropertyName().equals(actionCommand)) {
+            return false;
+        }
+        switch ((ControlCommand) ac.getValue()) {
+            case AUTOMATIC ->
+                controller.setManualMode(false);
+            case MANUAL_OPERATION -> {
+                controller.setManualMode(true);
+                stopValve();
+            }
+            case OUTPUT_INCREASE -> {
+                // remember state to have the correct state at the end
+                // of this user operation.
+                outputOverride = !controller.isManualMode();
+                operateOpenValve(); // set swi to max
+            }
+            case OUTPUT_DECREASE -> {
+                outputOverride = !controller.isManualMode();
+                operateCloseValve(); // set swi to max
+            }
+            case OUTPUT_CONTINUE -> {
+                stopValve(); // set SWI to current value
+                if (outputOverride) {
+                    controller.setManualMode(false);
+                    outputOverride = false;
+                }
+            }
+        }
+        return true;
     }
 
     /**

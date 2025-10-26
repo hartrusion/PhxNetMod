@@ -42,12 +42,12 @@ public class HeatValve implements Runnable {
     /**
      * The valve element of the model itself.
      */
-    private final HeatLinearValve valve = new HeatLinearValve();
+    protected final HeatLinearValve valve = new HeatLinearValve();
     
     /**
      * Generates limited values to mimic motor drive behaviour.
      */
-    private final SetpointIntegrator swControl
+    protected final SetpointIntegrator swControl
             = new SetpointIntegrator();
     
     
