@@ -35,7 +35,7 @@ public class SetpointIntegrator implements Runnable {
     private double stepTime = 0.1; // assume 100 ms as default
     private double maxRate = 1; // rate per timeunit (seconds, usually...)
     private double targetValue = 0;
-    private double value;
+    protected double value;
     private double maxDelta = 0.1; // rate per step, pre init for maxRate = 1
     private double posLim = 100;
     private double negLim = 0;

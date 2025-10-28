@@ -68,6 +68,7 @@ public class HeatValve implements Runnable {
     }
 
     /**
+     * Makes the signal listener instance known to this class.
      *
      * @param signalListener Instance that will receive the event changes from
      * valves and pumps.
