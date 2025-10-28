@@ -35,7 +35,7 @@ import com.hartrusion.mvc.ActionCommand;
 /**
  * Represents an assembly of a pump with suction and discharge valves. A working
  * point has to be specified as well as the total head (all in SI units), the
- * assembly wil generate a linear characteristic by those values.
+ * assembly will generate a linear characteristic by those values.
  * <p>
  * It has some methods to allow controlling it and can process events itself.
  *
