@@ -24,39 +24,13 @@
 package com.hartrusion.control;
 
 /**
+ * A simple interface used to implement a method that generates a value. Used to
+ * define input function of a control system controller.
  *
- * @author Viktor Alexander Hartung
+ * @author viktor
  */
-public class PControl extends AbstractController {
+@FunctionalInterface
+public interface DataProvider {
 
-    private double kR = 1.0;
-
-    @Override
-    public void run() {
-        super.run();
-        
-        double uControl = eInput * kR;
-
-        if (manualMode) { // overwrite output value
-            uControl = uFollowUp;
-        }
-
-        // Limit output
-        if (uControl > uMax) {
-            uOutput = uMax;
-        } else if (uControl < uMin) {
-            uOutput = uMin;
-        } else {
-            uOutput = uControl;
-        }
-
-    }
-
-    public double getParameterK() {
-        return kR;
-    }
-
-    public void setParameterK(double kR) {
-        this.kR = kR;
-    }
+    public double retrieveValue();
 }

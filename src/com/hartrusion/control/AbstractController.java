@@ -27,6 +27,9 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 /**
+ * Common functionality of control systems controller classes, can be further
+ * extended to be a PID, P or whatever control. Provides common methods and
+ * values used by all controllers.
  *
  * @author Viktor Alexander Hartung
  */
@@ -40,6 +43,8 @@ public abstract class AbstractController implements Runnable {
     protected boolean manualMode = true;
     protected double stepTime = 0.1;
 
+    protected DataProvider gatherInput;
+
     private String controllerName;
 
     /**
@@ -52,12 +57,23 @@ public abstract class AbstractController implements Runnable {
         this.stepTime = stepTime;
     }
 
+    @Override
+    public void run() {
+        if (gatherInput != null) {
+            setInput(gatherInput.retrieveValue());
+        }
+    }
+
     public double getInput() {
         return eInput;
     }
 
     public void setInput(double eInput) {
         this.eInput = eInput;
+    }
+
+    public void addGaterInput(DataProvider gatherInput) {
+        this.gatherInput = gatherInput;
     }
 
     public double getFollowUp() {
@@ -94,6 +110,10 @@ public abstract class AbstractController implements Runnable {
 
     public void setManualMode(boolean hnd) {
         this.manualMode = hnd;
+    }
+
+    public void gatherInput() {
+
     }
 
     /**

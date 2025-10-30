@@ -37,6 +37,8 @@ public class PIControl extends AbstractController {
 
     @Override
     public void run() {
+        super.run();
+        
         double dIntegral;
 
         if (stopIntegrator) {
