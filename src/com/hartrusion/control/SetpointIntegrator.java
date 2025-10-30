@@ -43,7 +43,6 @@ public class SetpointIntegrator implements Runnable {
     /**
      * Performs one calculation step and updates value, considers the set min
      * and max values.
-     *
      * <p>
      * There is no check of how often this is getting called, the invoking
      * architecture has to make sure this is only called once per cyclic run.
@@ -60,9 +59,9 @@ public class SetpointIntegrator implements Runnable {
             value = Math.min(posLim, Math.max(negLim, value));
         }
     }
-    
+
     /**
-     * Causes the current value to be frozen by internally setting the 
+     * Causes the current value to be frozen by internally setting the
      * targetValue to the output value.
      */
     public void setStop() {
@@ -85,14 +84,14 @@ public class SetpointIntegrator implements Runnable {
     public void setInput(double value) {
         targetValue = value;
     }
-    
+
     /**
      * Set the output to move to the highest allowed value.
      */
     public void setInputMax() {
         targetValue = posLim;
     }
-    
+
     /**
      * Set the output to move to the lowest allowed value.
      */
@@ -110,7 +109,8 @@ public class SetpointIntegrator implements Runnable {
     }
 
     /**
-     * Set the maximum change of output value per time.
+     * Set the maximum change of output value per time. Default: 1.0 (units per
+     * second).
      *
      * @param rate Rate in units per time
      */
