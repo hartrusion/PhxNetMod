@@ -27,6 +27,7 @@ import com.hartrusion.control.AbstractController;
 import com.hartrusion.control.ControlCommand;
 import com.hartrusion.control.PControl;
 import com.hartrusion.control.ParameterHandler;
+import com.hartrusion.control.Setpoint;
 import com.hartrusion.mvc.ActionCommand;
 import java.beans.PropertyChangeListener;
 
@@ -161,6 +162,15 @@ public class HeatValveControlled extends HeatValve {
      */
     public void setInput(double input) {
         controller.setInput(input);
+    }
+    
+    /**
+     * Returns the instance of the used controller.
+     * 
+     * @return AbstractController
+     */
+    public AbstractController getController() {
+        return controller;
     }
 
 }
