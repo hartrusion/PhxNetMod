@@ -25,20 +25,29 @@ package com.hartrusion.control;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * 
+ *
  * @author Viktor Alexander Hartung
  */
 public class SerialRunner {
+
+    private static final Logger LOGGER = Logger.getLogger(
+            SerialRunner.class.getName());
+
     private final List<Runnable> step = new ArrayList<>();
-    
+
     public void submit(Runnable s) {
         if (!step.contains(s)) {
             step.add(s);
+        } else {
+            LOGGER.log(Level.WARNING, "Tried to add an object that is "
+                    + "already present.");
         }
     }
-    
+
     public void invokeAll() {
         for (Runnable s : step) {
             s.run();
