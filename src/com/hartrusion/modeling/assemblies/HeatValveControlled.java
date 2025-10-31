@@ -26,6 +26,7 @@ package com.hartrusion.modeling.assemblies;
 import com.hartrusion.control.AbstractController;
 import com.hartrusion.control.ControlCommand;
 import com.hartrusion.control.PControl;
+import com.hartrusion.control.PIControl;
 import com.hartrusion.control.ParameterHandler;
 import com.hartrusion.control.Setpoint;
 import com.hartrusion.mvc.ActionCommand;
@@ -86,6 +87,10 @@ public class HeatValveControlled extends HeatValve {
 
     public void initPControl() {
         controller = new PControl();
+    }
+    
+    public void initPIControl() {
+        controller = new PIControl();
     }
 
     @Override

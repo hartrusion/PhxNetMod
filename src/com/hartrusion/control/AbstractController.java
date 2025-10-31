@@ -39,11 +39,11 @@ public abstract class AbstractController implements Runnable {
     protected double uFollowUp;
     protected double uOutput;
     protected double uMax = 100;
-    protected double uMin = 100;
+    protected double uMin = 0;
     protected boolean manualMode = true;
     protected double stepTime = 0.1;
 
-    protected DataProvider gatherInput;
+    protected DataProvider inputProvider;
 
     private String controllerName;
 
@@ -59,8 +59,10 @@ public abstract class AbstractController implements Runnable {
 
     @Override
     public void run() {
-        if (gatherInput != null) {
-            setInput(gatherInput.retrieveValue());
+        // If there is an input provider set, use it to set the controller
+        // difference input by the class itself.
+        if (inputProvider != null) {
+            setInput(inputProvider.retrieveValue());
         }
     }
 
@@ -72,8 +74,8 @@ public abstract class AbstractController implements Runnable {
         this.eInput = eInput;
     }
 
-    public void addGaterInput(DataProvider gatherInput) {
-        this.gatherInput = gatherInput;
+    public void addInputProvider(DataProvider inputProvider) {
+        this.inputProvider = inputProvider;
     }
 
     public double getFollowUp() {
@@ -92,6 +94,11 @@ public abstract class AbstractController implements Runnable {
         return uMax;
     }
 
+    /**
+     * Set the maximum value limitation for the output value. Default: 100
+     *
+     * @param uMax
+     */
     public void setMaxOutput(double uMax) {
         this.uMax = uMax;
     }
@@ -100,6 +107,11 @@ public abstract class AbstractController implements Runnable {
         return uMin;
     }
 
+    /**
+     * Set the minimum value limitation for the output value. Default: 0
+     *
+     * @param uMax
+     */
     public void setMinOutput(double uMin) {
         this.uMin = uMin;
     }
