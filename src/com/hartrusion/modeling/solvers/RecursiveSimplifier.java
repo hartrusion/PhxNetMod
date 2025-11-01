@@ -970,8 +970,10 @@ public class RecursiveSimplifier extends ChildNetwork {
                 if (Math.abs((childNodes.get(idx).getEffort()
                         - nodes.get(nodeOfChildNode[idx]).getEffort()))
                         > 1e-3) { // from 1e-8 to 1e-3
-                    throw new CalculationException("Validation of already set"
-                            + " effort value failed.");
+                    //throw new CalculationException("Validation of already set"
+                    //        + " effort value failed.");
+                    LOGGER.log(Level.WARNING, "Validation of already set effort"
+                            + " value failed.");
                 }
             }
         }

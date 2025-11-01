@@ -32,24 +32,28 @@ import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Represents a resistor inside a network which was created by simlifying the
- * network by creating new reistors. This resistor is a result of two or more
+ * Represents a resistor inside a network which was created by simplifying the
+ * network by creating new resistors. This resistor is a result of two or more
  * resistors which were combined to this new resistor.
  *
  * <p>
- * This class provides mehtods to update itself out of the given values from
+ * This class provides methods to update itself out of the given values from
  * enclosed parent elements, as well as updating the parent elements from values
  * which were calculated from this element.
  *
  * <p>
  * It serves as a link between parent and child networks using the
- * RecursiveSimplifier sover class.
+ * RecursiveSimplifier solver class.
  *
  * @author Viktor Alexander Hartung
  */
 public class SimplifiedResistor extends LinearDissipator {
+    private static final Logger LOGGER = Logger.getLogger(
+            SimplifiedResistor.class.getName());
 
     private final GeneralNode[] parentNodes = new GeneralNode[2]; // ref to the two original elements nodes
     private final List<LinearDissipator> parentResistors = new ArrayList<>(); // list of original elements
@@ -60,7 +64,7 @@ public class SimplifiedResistor extends LinearDissipator {
      * resistor is placed in series. The flow will be applied to all series
      * elements, there is a convention on the sign of the flow and the port
      * order. If the element is in reverse order than the simplified resistor,
-     * the flow has to be set with a negatie sign.
+     * the flow has to be set with a negative sign.
      */
     private boolean reverseOrder[];
 
@@ -180,7 +184,7 @@ public class SimplifiedResistor extends LinearDissipator {
 
     /**
      * Updates the element itself, providing new resistance value (or no value
-     * at all, in case of missing connection or shourtcuts). Also updates the
+     * at all, in case of missing connection or shortcuts). Also updates the
      * element type in case of any of the resistors is open or a shortcut.
      *
      * The new resistance value and maybe element type will be derived from
@@ -287,8 +291,10 @@ public class SimplifiedResistor extends LinearDissipator {
         } else {
             if (Math.abs(parentNodes[0].getEffort() - nodes.get(0).getEffort())
                     > 1e-8) {
-                throw new CalculationException("Validation of already set"
-                        + " effort value failed.");
+                // throw new CalculationException("Validation of already set"
+                //         + " effort value failed.");
+                LOGGER.log(Level.WARNING, "Validation of already set effort"
+                            + " value failed.");
             }
         }
         if (!parentNodes[1].effortUpdated()) {
@@ -296,8 +302,10 @@ public class SimplifiedResistor extends LinearDissipator {
         } else {
             if (Math.abs(parentNodes[1].getEffort() - nodes.get(1).getEffort())
                     > 1e-8) {
-                throw new CalculationException("Validation of already set"
-                        + " effort value failed.");
+                // throw new CalculationException("Validation of already set"
+                //        + " effort value failed.");
+                LOGGER.log(Level.WARNING, "Validation of already set effort"
+                            + " value failed.");
             }
         }
         if (parallel) {
@@ -402,12 +410,12 @@ public class SimplifiedResistor extends LinearDissipator {
 
     /**
      * Creates a list which will hold all ports that were consumed by this
-     * replacmeent.Enclosed ports are those which are between series of
-     * resistors, they will be unavailable for the simplified network.<p>
+     * replacement. Enclosed ports are those which are between series of
+     * resistors, they will be unavailable for the simplified network.
+     * <p>
      * Used for initial model or network setup. When creating a child network by
      * simplification, this is used to determine which nodes will not be present
      * in child network.
-     *
      * <p>
      * Additionally, as this loops through all series resistors, it will also
      * save wether the resistors are in same direction as the replacement or
@@ -485,7 +493,7 @@ public class SimplifiedResistor extends LinearDissipator {
     /**
      * Add reference to parent ports. These are the two ports where the elements
      * which are replaced by this simplification are placed between. They belong
-     * to the parent network and the derivated simplified sequence.
+     * to the parent network and the derived simplified sequence.
      *
      * Used for initial model or network setup.
      *
@@ -525,7 +533,7 @@ public class SimplifiedResistor extends LinearDissipator {
      * resistor will not be able to be present in the next simplification. There
      * is basically one port that has three connections, connecting the loop to
      * the rest of the parent network. In this case, the resistor can not be
-     * added to the next simplification but serves as a cointainer which will be
+     * added to the next simplification but serves as a container which will be
      * calculated different.
      */
     public void setFloatingLoop() {

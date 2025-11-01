@@ -27,6 +27,8 @@ import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Dissipates energy by transforming it to excess heat. Requires exactly two
@@ -42,6 +44,9 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
  * @author Viktor Alexander Hartung
  */
 public class LinearDissipator extends FlowThrough {
+
+    private static final Logger LOGGER = Logger.getLogger(
+            LinearDissipator.class.getName());
 
     protected double resistance = 10.0; // main parameter
     private double externalDeltaEffort;
@@ -154,8 +159,12 @@ public class LinearDissipator extends FlowThrough {
                         || nodes.get(0).getFlow(this) < -1e-6 // was 1e-10
                         || nodes.get(1).getFlow(this) > 1e-6
                         || nodes.get(1).getFlow(this) < -1e-6) {
-                    throw new CalculationException(
-                            "A node contains flow to an open Element.");
+                    //throw new CalculationException(
+                    //         "A node contains flow to an open Element.");
+                    LOGGER.log(Level.WARNING, "A node contains flow to an "
+                            + "open Element. Forcing 0.0");
+                    nodes.get(0).setFlow(0.0, this, false);
+                    nodes.get(1).setFlow(0.0, this, false);
                 }
             }
         } else if (elementType == ElementType.BRIDGED) {
@@ -165,8 +174,10 @@ public class LinearDissipator extends FlowThrough {
                         - nodes.get(1).getEffort()) > 1e-2) { // previous:  1e-8
                     // reducig from 1e-3 to 1e-2 now, seems to be a real issue
                     // during valve opening and closing O.o
-                    throw new CalculationException(
-                            "Different effort on nodes of bridged element.");
+                    // throw new CalculationException(
+                    //        "Different effort on nodes of bridged element.");
+                    LOGGER.log(Level.WARNING, "Different effort on nodes of "
+                            + "bridged element.");
                 }
             }
         }

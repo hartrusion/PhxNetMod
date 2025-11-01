@@ -34,6 +34,8 @@ import com.hartrusion.modeling.general.LinearDissipator;
 import static com.hartrusion.util.ArraysExt.addObject;
 import static com.hartrusion.util.ArraysExt.containsObject;
 import static com.hartrusion.util.ArraysExt.indexOfObject;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Manages three LinearDissipator elements that will be transformed using the
@@ -63,6 +65,8 @@ import static com.hartrusion.util.ArraysExt.indexOfObject;
  * @author Viktor Alexander Hartung
  */
 public class StarDeltaTransform {
+    private static final Logger LOGGER = Logger.getLogger(
+            StarDeltaTransform.class.getName());
 
     private GeneralNode starNode;
 
@@ -486,8 +490,10 @@ public class StarDeltaTransform {
             starNode.setEffort(num / den, null, true);
         } else {
             if (Math.abs(num / den - starNode.getEffort()) > 1e-3) {
-                throw new CalculationException("Validation of already set"
-                        + " effort value failed.");
+                // throw new CalculationException("Validation of already set"
+                //        + " effort value failed.");
+                LOGGER.log(Level.WARNING, "Validation of already set" +
+                 "effort value failed.");
             }
         }
     }

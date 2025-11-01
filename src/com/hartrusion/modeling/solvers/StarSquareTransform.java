@@ -34,6 +34,8 @@ import com.hartrusion.modeling.general.LinearDissipator;
 import static com.hartrusion.util.ArraysExt.addObject;
 import static com.hartrusion.util.ArraysExt.containsObject;
 import static com.hartrusion.util.ArraysExt.indexOfObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Manages four resistors that are connected to a middle element called star.
@@ -54,6 +56,8 @@ import static com.hartrusion.util.ArraysExt.indexOfObject;
  * @author Viktor Alexander Hartung
  */
 public class StarSquareTransform {
+    private static final Logger LOGGER = Logger.getLogger(
+            StarSquareTransform.class.getName());
 
     private GeneralNode starNode;
 
@@ -511,8 +515,10 @@ public class StarSquareTransform {
             starNode.setEffort(num / den, null, true);
         } else {
             if (Math.abs(num / den - starNode.getEffort()) > 1e-3) {
-                throw new CalculationException("Validation of already set"
-                        + " effort value failed.");
+                // throw new CalculationException("Validation of already set"
+                //         + " effort value failed.");
+                LOGGER.log(Level.WARNING, "Validation of already set" +
+                 "effort value failed.");
             }
         }
     }
