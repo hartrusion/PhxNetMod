@@ -29,7 +29,12 @@ import com.hartrusion.mvc.ActionCommand;
  * Manages a setpoint value that can be changed with commands. Will provide the
  * setpoint to a parameter handler. It basically extends the SetpointIntegrator
  * as a single usable object that can be used to get and manage a value from
- * a gui controller.
+ * a GUI controller.
+ * <p>
+ * It listens to actions with the same name as the setpoint object.
+ * <p>
+ * It provides an output value to a parameter handler object that gets updated
+ * with the same name as this setpoint object.
  *
  * @author Viktor Alexander Hartung
  */
