@@ -30,6 +30,7 @@ import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.ClosedOrigin;
+import com.hartrusion.util.SimpleLogOut;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -58,11 +59,8 @@ public class SimplifiedResistorTest {
     
     @BeforeClass
     public static void setUpClass() throws Exception {
-        // Remove all loggers
-        java.util.logging.Logger root = java.util.logging.Logger.getLogger("");
-        for (java.util.logging.Handler h : root.getHandlers()) {
-            root.removeHandler(h);
-        }
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
     }
 
     public SimplifiedResistorTest() {
@@ -111,7 +109,6 @@ public class SimplifiedResistorTest {
      */
     @Test
     public void testBasicSeriesResistors() {
-        System.out.println("basicSeriesResistor");
         /*
          *          p1  
          *   --------o--------   
@@ -151,7 +148,6 @@ public class SimplifiedResistorTest {
      */
     @Test
     public void testFullReverseOrderSeriesResistors() {
-        System.out.println("fullReverseOrderSeriesResistor");
         /*
          *          p1  
          *   --------o--------  
@@ -191,7 +187,6 @@ public class SimplifiedResistorTest {
      */
     @Test
     public void testFlowFacesMiddleSeriesResistors() {
-        System.out.println("flowFacesMiddleSeriesResistors");
         /*
          *          p1  
          *   --------o--------  
@@ -233,7 +228,6 @@ public class SimplifiedResistorTest {
      */
     @Test
     public void testFlowFacesOuterSeriesResistors() {
-        System.out.println("flowFacesOuterSeriesResistors");
         /*
          *          p1  
          *   --------o--------         < ----   parentPorts[1]
@@ -275,7 +269,6 @@ public class SimplifiedResistorTest {
      */
     @Test
     public void testBasicParallelResistors() {
-        System.out.println("basicSeriesResistor");
         /*
          *                  p1  
          *   ----------------o---------------
@@ -310,7 +303,6 @@ public class SimplifiedResistorTest {
      */
     @Test
     public void testReverseParallelResistors() {
-        System.out.println("reverseSeriesResistor");
         /*
          *                  p1  
          *   ----------------o---------------
@@ -345,7 +337,6 @@ public class SimplifiedResistorTest {
      */
     @Test
     public void testMixedOrderParallelResistors() {
-        System.out.println("mixedOrderParallelResistors");
         /*
          *                  p1  
          *   ----------------o---------------
@@ -381,7 +372,6 @@ public class SimplifiedResistorTest {
      */
     @Test
     public void testMixedReverseOrderParallelResistors() {
-        System.out.println("mixedReversedOrderParallelResistors");
         /*
          *                  p1  
          *   ----------------o---------------

@@ -81,7 +81,6 @@ public class FlowSourceTest {
      */
     @Test
     public void testSourceAndResistor() {
-        System.out.println("sourceAndResistor");
         /*
          *          p2            
          *   --------o--------    The flow is expected to be a positive value
@@ -116,7 +115,6 @@ public class FlowSourceTest {
      */
     @Test
     public void testOpenSource() {
-        System.out.println("openSource");
         /*
          *          p2          
          *   --------o-------- 
@@ -156,7 +154,6 @@ public class FlowSourceTest {
      */
     @Test
     public void testBridgedSource() {
-        System.out.println("bridgedSource");
         /*
          *          p2            
          *   --------o--------    The flow is expected to be a positive value

@@ -141,7 +141,6 @@ public class PhasedExpandingThermalExchangerTest {
      */
     @Test
     public void testNoFlow() {
-        System.out.println("noFlow");
         origin.setOriginHeatEnergy(1252230); // default value
         flowSource.setFlow(0.0); // no fluid flow
         thForceFlow.setFlow(0.0); // no thermal flow
@@ -163,7 +162,6 @@ public class PhasedExpandingThermalExchangerTest {
      */
     @Test
     public void testFlushThrough() {
-        System.out.println("noFlow");
         origin.setOriginHeatEnergy(1252230); // default value
         flowSource.setFlow(10.0); // 10 kg/s in flow
         thForceFlow.setFlow(0.0); // no thermal flow
@@ -180,7 +178,6 @@ public class PhasedExpandingThermalExchangerTest {
     
     @Test
     public void testHeatUp() {
-        System.out.println("heatUp");
         origin.setOriginHeatEnergy(1252230); // default value
         flowSource.setFlow(10.0); // 10 kg/s in flow
         thForceFlow.setFlow(0.0); // no thermal flow
@@ -189,6 +186,7 @@ public class PhasedExpandingThermalExchangerTest {
 
         run();
 
+        fail("The test case is a prototype.");
     }
 
     private void run() {

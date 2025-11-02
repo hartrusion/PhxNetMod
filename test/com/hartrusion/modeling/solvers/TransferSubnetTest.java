@@ -33,6 +33,7 @@ import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.OpenOrigin;
 import com.hartrusion.modeling.general.SelfCapacitance;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 import org.testng.annotations.BeforeClass;
@@ -45,11 +46,8 @@ public class TransferSubnetTest {
     
     @BeforeClass
     public static void setUpClass() throws Exception {
-        // Remove all loggers
-        java.util.logging.Logger root = java.util.logging.Logger.getLogger("");
-        for (java.util.logging.Handler h : root.getHandlers()) {
-            root.removeHandler(h);
-        }
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
     }
 
     public TransferSubnetTest() {
@@ -62,7 +60,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testMinimumNetwork() {
-        System.out.println("minimumNetwork");
         TransferSubnet instance = new TransferSubnet();
 
         /*   n1        R         n2
@@ -123,7 +120,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testTwoOriginElements() {
-        System.out.println("twoOriginElements");
         TransferSubnet instance = new TransferSubnet();
 
         /*   n1       R0        n2      R1       n3
@@ -194,7 +190,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testTwoPumpsOneTankExample() {
-        System.out.println("twoPumpsOneTankExample");
         TransferSubnet instance = new TransferSubnet();
 
         /* This test will use a part (subnet) of the following network:
@@ -315,7 +310,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testNoOrigin() {
-        System.out.println("noOrigin");
         TransferSubnet instance = new TransferSubnet();
 
         /*   n0        R         n1
@@ -370,7 +364,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testTwoCapacitancePorts() {
-        System.out.println("twoCapacitancePorts");
         TransferSubnet instance = new TransferSubnet();
 
         /*    .-------XXXXX-------o  n2
@@ -432,7 +425,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testThreeCapacitancePorts() {
-        System.out.println("threeCapacitancePorts");
         TransferSubnet instance = new TransferSubnet();
 
         /*
@@ -509,7 +501,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testMainCirculationPumps() {
-        System.out.println("mainCirculationPumps");
         TransferSubnet instance = new TransferSubnet();
         /*
          *           c0                                           c1
@@ -695,7 +686,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testMainCirculationPumpsWithSteamOut() {
-        System.out.println("mainCirculationPumpsWithSteamOut");
         TransferSubnet instance = new TransferSubnet();
         /*
          *           c0       n23      r20  n24  r21        n25    c1
@@ -889,7 +879,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testThermalFlowSources() {
-        System.out.println("thermalFlowSources");
         TransferSubnet instance = new TransferSubnet();
         /*                         r2
          *    -------------------XXXXX-------------------
@@ -982,7 +971,6 @@ public class TransferSubnetTest {
      */
     @Test
     public void testThermalFlowSourcesSharedOrigin() {
-        System.out.println("thermalFlowSourcesSharedOrigin");
         TransferSubnet instance = new TransferSubnet();
         /*                         r2
          *    -------------------XXXXX-------------------

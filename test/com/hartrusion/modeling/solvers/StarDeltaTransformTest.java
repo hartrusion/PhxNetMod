@@ -28,7 +28,9 @@ import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.ClosedOrigin;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
+import org.testng.annotations.BeforeClass;
 
 import org.testng.annotations.Test;
 
@@ -37,6 +39,12 @@ import org.testng.annotations.Test;
  * @author Viktor Alexander Hartung
  */
 public class StarDeltaTransformTest {
+    
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
+    }
 
     public StarDeltaTransformTest() {
     }
@@ -54,7 +62,6 @@ public class StarDeltaTransformTest {
      */
     @Test
     public void testWheatstoneBridge() {
-        System.out.println("wheatstoneBridge");
         /*
          *               node 1
          *     -----------o-------------           Resistance between node 1
@@ -162,7 +169,6 @@ public class StarDeltaTransformTest {
      */
     @Test
     public void testBridgeWithRealSource() {
-        System.out.println("bridgeWithRealSource");
         /*
          *               node 1
          *       -----------o-------------           Resistance between node 1
@@ -273,7 +279,6 @@ public class StarDeltaTransformTest {
      */
     @Test
     public void testStarWithOneOpenConnection() {
-        System.out.println("starWithOneOpenConnection");
         /*                  o2
          *    ------------[   ]-------------
          *    |   8.83e8   n2      R       |

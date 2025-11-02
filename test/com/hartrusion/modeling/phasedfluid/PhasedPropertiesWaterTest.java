@@ -54,7 +54,6 @@ public class PhasedPropertiesWaterTest {
      */
     @Test
     public void testGetSaturationEffort() {
-        System.out.println("getSaturationEffort");
         // 0 degree Celsius = 0 Pa
         assertEquals(instance.getSaturationEffort(273.15), 0.0, 1.0);
         // 100 degree Celsius = 1e5 Pa with some error
@@ -68,7 +67,6 @@ public class PhasedPropertiesWaterTest {
      */
     @Test
     public void testGetSaturationTemperature() {
-        System.out.println("getSaturationTemperature");
         // 1 bar must be 100 Degree Celsius
         assertEquals(instance.getSaturationTemperature(1e5), 373.15, 5.0);
         // 60 bar must be around 275.5 degree Celsius
@@ -80,7 +78,6 @@ public class PhasedPropertiesWaterTest {
      */
     @Test
     public void testGetVapourFraction() {
-        System.out.println("getVapourFraction");
         // Heat energy for 95 Deg Celsius without evaporation
         double liquidHeatEnergy = (273.5 + 95)
                 * instance.getSpecificHeatCapacity();
@@ -110,7 +107,6 @@ public class PhasedPropertiesWaterTest {
      */
     @Test
     public void testGetDensity() {
-        System.out.println("getDensity");
         // Heat energy for 20 Deg Celsius without evaporation
         double liquidHeatEnergy = (273.5 + 20)
                 * instance.getSpecificHeatCapacity();
@@ -133,8 +129,6 @@ public class PhasedPropertiesWaterTest {
      */
     @Test
     public void testGetAvgDensity() {
-        System.out.println("getAvgDensity");
-
         // Room temperature
         double heatEnergyRoom = (273.5 + 20)
                 * instance.getSpecificHeatCapacity();

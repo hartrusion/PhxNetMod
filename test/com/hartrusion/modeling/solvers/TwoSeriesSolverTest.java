@@ -28,7 +28,9 @@ import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.ClosedOrigin;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
@@ -36,19 +38,24 @@ import org.testng.annotations.Test;
  * @author Viktor Alexander Hartung
  */
 public class TwoSeriesSolverTest {
+    
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
+    }
 
     public TwoSeriesSolverTest() {
     }
 
     /**
-     * Tests the behaviour of an open, not connected effort source. This is a
+     * Tests the behavior of an open, not connected effort source. This is a
      * case that can happen if for example in a hydraulic network when a pump is
      * connected between two closed valves. The corresponding electronics
      * circuit is represented by resistors with elementType OPEN.
      */
     @Test
     public void testStandardBehaviour() {
-        System.out.println("standardBehaviour");
         /*
          *  p1       U       p2     
          *   o------(-)------o    
@@ -120,7 +127,6 @@ public class TwoSeriesSolverTest {
 
     @Test
     public void testOneOpenConnection() {
-        System.out.println("oneOpenConnection");
         /*
          *  p1       U       p2     
          *   o------(-)------o    
@@ -228,7 +234,6 @@ public class TwoSeriesSolverTest {
      */
     @Test
     public void testIsolatedEffortSource() {
-        System.out.println("isolatedEffortSource");
         /*
          *  p1       U       p2     
          *   o------(-)------o    
@@ -320,7 +325,6 @@ public class TwoSeriesSolverTest {
      */
     @Test
     public void testBridgeAndShortcut() {
-        System.out.println("bridgeAndShortcut");
         /*
          *  p1       U       p2     
          *   o------(-)------o    

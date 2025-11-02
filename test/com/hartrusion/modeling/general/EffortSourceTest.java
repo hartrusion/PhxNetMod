@@ -82,7 +82,6 @@ public class EffortSourceTest {
      */
     @Test
     public void testSourceAndResistor() {
-        System.out.println("sourceAndResistor");
         /*
          *          p2            It is expected for the flow to be 0.02 Ampere.
          *   --------o--------    The flow is expecte to to be a positive value
@@ -116,7 +115,6 @@ public class EffortSourceTest {
      */
     @Test
     public void testOpenSource() {
-        System.out.println("openSource");
         /*
          *          p2          
          *   --------o-------- 
@@ -154,7 +152,6 @@ public class EffortSourceTest {
      */
     @Test
     public void testBridgedSource() {
-        System.out.println("bridgedSource");
         /*
          *          p2          
          *   --------o-------- 

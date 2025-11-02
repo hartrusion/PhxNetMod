@@ -32,6 +32,7 @@ import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.FlowSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
+import com.hartrusion.util.SimpleLogOut;
 
 /**
  * Integration test for class SuperPosition. This also serves as a documentation
@@ -47,11 +48,8 @@ public class SuperPositionTest {
     
     @BeforeClass
     public static void setUpClass() throws Exception {
-        // Remove all loggers
-        java.util.logging.Logger root = java.util.logging.Logger.getLogger("");
-        for (java.util.logging.Handler h : root.getHandlers()) {
-            root.removeHandler(h);
-        }
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
     }
 
     public SuperPositionTest() {
@@ -65,7 +63,6 @@ public class SuperPositionTest {
      */
     @Test
     public void testBasicNetwork() {
-        System.out.println("basicNetwork");
         SuperPosition instance = new SuperPosition();
 //        SuperPosition.setThreadPool(
 //                java.util.concurrent.Executors.newFixedThreadPool(
@@ -177,7 +174,6 @@ public class SuperPositionTest {
      */
     @Test
     public void testSummerTermExam() {
-        System.out.println("summerTermExam");
         SuperPosition instance = new SuperPosition();
 
         /* This test will create a network with two effort sources like
@@ -290,7 +286,6 @@ public class SuperPositionTest {
      */
     @Test
     public void testEffortSourcesWithOpenConnections() {
-        System.out.println("effortSourcesWithOpenConnections");
         SuperPosition instance = new SuperPosition();
         /*              n5      R4       n6
             ------------o-----XXXXXX-----o

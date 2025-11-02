@@ -29,6 +29,7 @@ import com.hartrusion.modeling.general.ClosedOrigin;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
 
 import org.testng.annotations.BeforeClass;
@@ -50,11 +51,8 @@ public class OverlayTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        // Remove all loggers
-        java.util.logging.Logger root = java.util.logging.Logger.getLogger("");
-        for (java.util.logging.Handler h : root.getHandlers()) {
-            root.removeHandler(h);
-        }
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
     }
 
     public OverlayTest() {
@@ -75,7 +73,6 @@ public class OverlayTest {
      */
     @Test
     public void testCheckForBridgedPaths() {
-        System.out.println("checkForBridgedPaths");
         Overlay instance = new Overlay();
 
         /*

@@ -117,7 +117,6 @@ public class MutualCapacitanceTest {
      */
     @Test(dataProvider = "stepTime")
     public void testChargeFunction(double stepTime) {
-        System.out.println("chargeFunction");
         instance.setStepTime(stepTime);
         int numberOfSteps = (int) (2.632 / stepTime);
         for (int step = 0; step < numberOfSteps; step++) {

@@ -438,7 +438,7 @@ public class StarSquareTransform {
                         parentStarElements[idx], true); // use as source
             }
         }
-        // how many elements are in "open" state?
+        // how many elements are in "open" or "bridged" state?
         openElements = 0;
         bridgedConnections = 0;
         for (idx = 0; idx < 4; idx++) {

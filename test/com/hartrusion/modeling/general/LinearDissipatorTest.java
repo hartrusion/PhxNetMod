@@ -42,7 +42,6 @@ public class LinearDissipatorTest {
      */
     @Test
     public void testBasicOhmsLaw() {
-        System.out.println("basicOhmsLaw");
         /*
          *          p1            It is expected for the flow to be 0.02 Ampere.
          *   --------o--------    The flow is expected to be a positive value
@@ -100,7 +99,6 @@ public class LinearDissipatorTest {
      */
     @Test
     public void testOpenConnectionWithVoltageSource() {
-        System.out.println("openConnectionWithVoltageSource");
         /*
          *          p1           
          *   --------o--------   
