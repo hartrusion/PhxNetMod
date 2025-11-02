@@ -42,7 +42,7 @@ import org.testng.annotations.Test;
  * @author viktor
  */
 public class StarSquareTransformTest {
-    
+
     public StarSquareTransformTest() {
     }
 
@@ -50,6 +50,141 @@ public class StarSquareTransformTest {
     public static void setUpClass() throws Exception {
         // Keep Log out clean during test run
         SimpleLogOut.configureLoggingWarningsOnly();
+    }
+
+    /**
+     * Tests the correct simplification for two bridged resistor elements if
+     * they are next to each other. This looks like a V, the opposite elements
+     * are not bridged. This test tests all possible combinations (four)
+     */
+    @Test
+    public void testTwoBridgesVShaped() {
+        // Commonly used for all subcases
+        GeneralNode[] node = new GeneralNode[5];
+        LinearDissipator[] r = new LinearDissipator[4];
+        StarSquareTransform instance;
+
+        // Setup a new star arragement with 4 resistors, set shortcuts and
+        // check if the generated square arrangement contains the correct
+        // values. Middle resistors will always be positive infintiy.
+        // The remaining non-shorted resitors have specified values, it is
+        // expected that they will be at the correct place.
+        
+        // V between 0 and 1 - idx 0
+        prepareStarSetup(node, r);
+        instance = new StarSquareTransform();
+        instance.setupStar(node[4]);
+        r[0].setBridgedConnection();
+        r[1].setBridgedConnection();
+        instance.calculateSquareResistorValues();
+        assertEquals(instance.getSquareElement(4).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(5).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(0).getResistance(),
+                0, 1e-12); // bridged
+        assertEquals(instance.getSquareElement(1).getResistance(),
+                120.0, 1e-12); // value from R2
+        assertEquals(instance.getSquareElement(2).getResistance(),
+                Double.POSITIVE_INFINITY); // open
+        assertEquals(instance.getSquareElement(3).getResistance(),
+                130.0, 1e-12); // value from r3
+        
+        // V between 1 and 2 - idx 1
+        prepareStarSetup(node, r);
+        instance = new StarSquareTransform();
+        instance.setupStar(node[4]);
+        r[1].setBridgedConnection();
+        r[2].setBridgedConnection();
+        instance.calculateSquareResistorValues();
+        assertEquals(instance.getSquareElement(4).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(5).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(0).getResistance(),
+                100, 1e-12); // value from R0
+        assertEquals(instance.getSquareElement(1).getResistance(),
+                0.0, 1e-12);
+        assertEquals(instance.getSquareElement(2).getResistance(),
+                130.0, 1e-12); // value from R3
+        assertEquals(instance.getSquareElement(3).getResistance(),
+                Double.POSITIVE_INFINITY);
+        
+        // V between 2 and 3 - idx 2
+        prepareStarSetup(node, r);
+        instance = new StarSquareTransform();
+        instance.setupStar(node[4]);
+        r[2].setBridgedConnection();
+        r[3].setBridgedConnection();
+        instance.calculateSquareResistorValues();
+        assertEquals(instance.getSquareElement(4).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(5).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(0).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(1).getResistance(),
+                110.0, 1e-12); // value from R1
+        assertEquals(instance.getSquareElement(2).getResistance(),
+                0, 1e-12);
+        assertEquals(instance.getSquareElement(3).getResistance(),
+                100, 1e-12); // value from R0 - fails
+        
+         // V between 3 and 0 - idx 3
+        prepareStarSetup(node, r);
+        instance = new StarSquareTransform();
+        instance.setupStar(node[4]);
+        r[3].setBridgedConnection();
+        r[0].setBridgedConnection();
+        instance.calculateSquareResistorValues();
+        assertEquals(instance.getSquareElement(4).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(5).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(0).getResistance(),
+                110.0, 1e-12); // value from R1
+        assertEquals(instance.getSquareElement(1).getResistance(),
+                Double.POSITIVE_INFINITY);
+        assertEquals(instance.getSquareElement(2).getResistance(),
+                120, 1e-12); // value from R2
+        assertEquals(instance.getSquareElement(3).getResistance(),
+                0, 1e-12);
+
+    }
+
+    /**
+     * Helper function that generates a star setup template and writes it into
+     * existing arrays.
+     *
+     * @param nodeArray
+     * @param resistorArray
+     */
+    private void prepareStarSetup(GeneralNode[] nodeArray,
+            LinearDissipator[] resistorArray) {
+        for (int idx = 0; idx < nodeArray.length; idx++) { // init
+            nodeArray[idx] = new GeneralNode(PhysicalDomain.ELECTRICAL);
+            if (idx == 4) {
+                nodeArray[idx].setName("StarNode");
+            } else {
+                nodeArray[idx].setName("node" + idx);
+            }
+        }
+
+        for (int idx = 0; idx < resistorArray.length; idx++) { // init
+            resistorArray[idx] = new LinearDissipator(
+                    PhysicalDomain.ELECTRICAL);
+            resistorArray[idx].setName("R" + idx);
+            // r[0] will have 100 ohms, r[1] has 110 and so on per default
+            resistorArray[idx].setResistanceParameter(
+                    100.0 + 10.0 * (double) (idx));
+        }
+
+        resistorArray[0].connectBetween(nodeArray[0], nodeArray[4]);
+        resistorArray[1].connectBetween(nodeArray[1], nodeArray[4]);
+        resistorArray[2].connectBetween(nodeArray[2], nodeArray[4]);
+        resistorArray[3].connectBetween(nodeArray[3], nodeArray[4]);
+
+        assertEquals(StarSquareTransform.checkForStarNode(nodeArray[4]), true);
     }
 
     /**
@@ -229,7 +364,7 @@ public class StarSquareTransformTest {
         for (GeneralNode n : node) {
             solver.registerNode(n);
         }
-        
+
         // It is vital that the elements are getting connected in the exact
         // same order as here, otherwise the error will not be triggered!
         solver.registerElement(zero);
@@ -239,7 +374,7 @@ public class StarSquareTransformTest {
         for (int idx = 2; idx <= 11; idx++) {
             solver.registerElement(r[idx]);
         }
-         
+
         // set up the solver, creating the layers
         int numberOfLayers;
         numberOfLayers = solver.recursiveSimplificationSetup(0);
@@ -257,9 +392,8 @@ public class StarSquareTransformTest {
         assertEquals(node[1].getEffort(), 0.0, 1e-12);
 
         assertEquals(node[4].getEffort(), 1600000.0, 1e-12);
-        
+
         // Node 3 is free-fluating
-        
         for (int idx = 0; idx < r.length; idx++) { // init
             assertEquals(r[idx].getFlow(), 0.0, 1e-12);
         }

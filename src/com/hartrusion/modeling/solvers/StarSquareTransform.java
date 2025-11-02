@@ -106,9 +106,11 @@ public class StarSquareTransform {
             } catch (NoFlowThroughException ex) {
                 return false; // and by the way, all R need to be flowthrough.
             }
-            if (otherNode.getNumberOfElements() <= 1) {
-                return false; // detected a dead end.
-            }
+            // if (otherNode.getNumberOfElements() <= 1) {
+            //     return false; // detected a dead end.
+            // }
+            // - removed as it's not a restriction here and allows more
+            // precise testing. model will crash at different place then.
         }
         return true;
     }
@@ -295,17 +297,19 @@ public class StarSquareTransform {
                 // There is also a pattern that rotates on the square, this
                 // will be used here. I can't draw it, unfortunately.
                 if (jdx == 3) {
-                    transferToChild(jdx, 0);
+                    transferToChild(0, jdx);
                 } else {
                     transferToChild(jdx + 1, jdx);
                 }
-                childSquareElements[jdx].setBridgedConnection();
                 if (idx == 0) {
                     transferToChild(3, 3);
                 } else {
                     transferToChild(idx - 1, idx - 1);
                 }
-                // Opposite side is open:
+                // Shortcut is always the element with idx, pretty easy. If you
+                // dont swap jdx and idx...
+                childSquareElements[idx].setBridgedConnection();
+                // Determine which side is open and shorted
                 switch (idx) {
                     case 0:
                         childSquareElements[2].setOpenConnection();
@@ -577,7 +581,7 @@ public class StarSquareTransform {
         return childSquareNodes[idx];
     }
 
-    public AbstractElement getSquareElement(int idx) {
+    public LinearDissipator getSquareElement(int idx) {
         return childSquareElements[idx];
     }
 
