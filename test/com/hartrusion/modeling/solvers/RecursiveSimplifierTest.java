@@ -960,9 +960,6 @@ public class RecursiveSimplifierTest {
         // After method call, whole network must be in fully calculated state.
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished());
-        
-        instance.prepareRecursiveCalculation();
-        instance.doRecursiveCalculation();
 
         // Those are all connected to zero
         assertEquals(node[6].getEffort(), 0.0, 1e-12);
