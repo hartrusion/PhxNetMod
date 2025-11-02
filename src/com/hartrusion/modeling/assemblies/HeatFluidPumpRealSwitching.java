@@ -27,7 +27,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Extends the heated fluid pump to a more realistic behaviour with some extras
+ * Extends the heated fluid pump to a more realistic behavior with some extras
  * for usage by an operator.
  *
  * @author Viktor Alexander Hartung
@@ -35,11 +35,12 @@ import java.time.Instant;
 public class HeatFluidPumpRealSwitching extends HeatFluidPump {
 
     private boolean ready;
-    private Instant switchTime;
-    
+    private Instant stateTime; // for state machine control
+    private Instant switchOnTime;
+
     /**
      * Describes the state of the startup (and shutdown) procedure.
-     * 
+     *
      */
     private int state;
 
@@ -50,49 +51,68 @@ public class HeatFluidPumpRealSwitching extends HeatFluidPump {
         // get current time
         Instant now = Instant.now();
 
-        ready = suctionControl.getOutput() >= 95
-                && dischargeControl.getOutput() <= 1.0
-                && !pumpState;
+        if (switchOnTime == null) {
+            ready = suctionControl.getOutput() >= 95
+                    && dischargeControl.getOutput() <= 1.0;
+        } else {
+            // if there is a switch-on-time recorded, some time must pass as 
+            // its not allowed to turn on the pump immediately.
+            ready = suctionControl.getOutput() >= 95
+                    && dischargeControl.getOutput() <= 1.0
+                    && Duration.between(switchOnTime, now).toMillis() >= 30000;
+        }
 
         switch (state) {
-            case 0:
+            case 0: // inactive
                 if (ready) {
                     state = 1;
+                    stateTime = Instant.now();
                 }
                 break;
-            case 2: // pump on switching requested
-                if (Duration.between(switchTime, now).toMillis() >= 200) {
-                    pcs.firePropertyChange(pump.toString() + "_StartupState",
-                            state, 3); // make pump ready
-                    switchTime = Instant.now();
-                    state = 3;
+            case 1: // ready time delay
+                if (Duration.between(stateTime, now).toMillis() >= 1500) {
+                    pumpState = PumpState.READY;
+                    state = 2;
+                }
+            case 2: // Pump ready to be switched on
+                if (!ready) { // no more ready state 
+                    state = 0;
+                    pumpState = PumpState.OFFLINE;
                 }
                 break;
-            case 3: // 
-                if (Duration.between(switchTime, now).toMillis() >= 1200) {
-                    pcs.firePropertyChange(pump.toString() + "_StartupState",
-                            state, 4); // begin startup
-                    switchTime = Instant.now(); 
+            case 3: // Start the startup phase after short delay
+                if (Duration.between(stateTime, now).toMillis() >= 800) {
+                    stateTime = Instant.now();
+                    pumpState = PumpState.STARTUP;
                     state = 4;
+                } else if (!ready) { // abort
+                    state = 0;
+                    pumpState = PumpState.OFFLINE;
                 }
                 break;
-            case 4:
-                if (Duration.between(switchTime, now).toMillis() >= 700) {
-                    pcs.firePropertyChange(pump.toString() + "_StartupState",
-                            state, 5); // pump running
-                    switchTime = Instant.now(); 
+            case 4: // Startup phase
+                if (Duration.between(stateTime, now).toMillis() >= 3000) {
+                    stateTime = Instant.now();
                     state = 5;
-                    super.operateStartPump();
+                    // Remember this time for restart lock time
+                    switchOnTime = Instant.now();
+                    super.operateStartPump(); // this will set pumpState
+                } else if (!ready) { // abort
+                    state = 0;
+                    pumpState = PumpState.OFFLINE;
                 }
+                break;
+            case 5: // Pump is running
+                // nothing to automate so far
                 break;
         }
     }
 
     @Override
     public void operateStartPump() {
-        if (state == 1) {
-            state = 2; // switch state machine
-            switchTime = Instant.now();
+        if (state == 2) {
+            state = 3; // switch state machine
+            stateTime = Instant.now();
         }
     }
 

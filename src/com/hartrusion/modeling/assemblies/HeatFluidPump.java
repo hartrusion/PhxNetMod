@@ -61,8 +61,8 @@ public class HeatFluidPump implements Runnable {
 
     protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-    protected boolean pumpState = false;
-    protected boolean oldPumpState = false;
+    protected PumpState pumpState;
+    protected PumpState oldPumpState = null;
 
     private double totalHead;
 
@@ -130,7 +130,11 @@ public class HeatFluidPump implements Runnable {
         if (suctionOpen) {
             suctionControl.forceOutputValue(105);
         }
-        pumpState = pumpActive;
+        if (pumpActive) {
+            pumpState = PumpState.RUNNING;
+        } else {
+            pumpState = PumpState.OFFLINE;
+        }
         if (pumpActive) {
             pump.setEffort(totalHead);
         } else {
@@ -156,7 +160,7 @@ public class HeatFluidPump implements Runnable {
 
         suctionValve.setOpening(suctionControl.getOutput());
 
-        if (pumpState) {
+        if (pumpState == PumpState.RUNNING) {
             dischargeValve.setOpening(dischargeControl.getOutput());
         } else {
             // Such pumps always have a check valve. As we can not simulate or
@@ -171,6 +175,7 @@ public class HeatFluidPump implements Runnable {
         suctionMonitor.run();
         dischargeMonitor.run();
 
+        // Fire changes in pump state
         if (pumpState != oldPumpState) {
             pcs.firePropertyChange(pump.toString() + "_State",
                     oldPumpState, pumpState);
@@ -179,8 +184,8 @@ public class HeatFluidPump implements Runnable {
     }
 
     /**
-     * Allows proessing received events by the class itself. The Property name
-     * must beginn with the same name as this classes elements, which was 
+     * Allows processing received events by the class itself. The Property name
+     * must begin with the same name as this classes elements, which was 
      * initialized with the initName function call.
      *
      * @param ac
@@ -234,12 +239,12 @@ public class HeatFluidPump implements Runnable {
         if (dischargeControl.getOutput() > 1.0) {
             return; // Protection: not start if discharge is not closed.
         }
-        pumpState = true;
+        pumpState = PumpState.RUNNING;
         pump.setEffort(totalHead);
     }
 
     public void operateStopPump() {
-        pumpState = false;
+        pumpState = PumpState.OFFLINE;
         pump.setEffort(0.0);
     }
 
