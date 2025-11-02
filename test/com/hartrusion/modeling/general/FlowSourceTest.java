@@ -25,8 +25,10 @@ package com.hartrusion.modeling.general;
 
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -40,6 +42,12 @@ public class FlowSourceTest {
     LinearDissipator r;
     ClosedOrigin z;
     GeneralNode p1, p2;
+    
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
+    }
 
     public FlowSourceTest() {
     }

@@ -25,8 +25,10 @@ package com.hartrusion.modeling.general;
 
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.solvers.SimpleIterator;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -54,6 +56,12 @@ public class MutualCapacitanceTest {
     ClosedOrigin gnd;
     GeneralNode[] n = new GeneralNode[3];
     SimpleIterator solver;
+    
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
+    }
 
     public MutualCapacitanceTest() {
     }

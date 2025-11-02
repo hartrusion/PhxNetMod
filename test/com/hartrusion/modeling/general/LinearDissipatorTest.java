@@ -24,7 +24,9 @@
 package com.hartrusion.modeling.general;
 
 import com.hartrusion.modeling.PhysicalDomain;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
@@ -32,6 +34,12 @@ import org.testng.annotations.Test;
  * @author Viktor Alexander Hartung
  */
 public class LinearDissipatorTest {
+    
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
+    }
 
     public LinearDissipatorTest() {
     }

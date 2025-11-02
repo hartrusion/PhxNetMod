@@ -26,8 +26,10 @@ package com.hartrusion.modeling.general;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -41,6 +43,12 @@ public class EffortSourceTest {
     LinearDissipator r;
     ClosedOrigin z;
     GeneralNode p1, p2;
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
+    }
 
     public EffortSourceTest() {
     }
@@ -121,7 +129,7 @@ public class EffortSourceTest {
          * 1 |            0  |   
          *   |                   
          *  (|) U              R  
-         *   |  12 V            inf Ohms
+         *   |  16 V            inf Ohms
          * 0 |            1  |
          *   o---------------- 
          *   |  p1
@@ -148,7 +156,8 @@ public class EffortSourceTest {
     }
 
     /**
-     * An open effort source does nothing but it is allowed and valid.
+     * This test is supposed to fail. We will catch the exception and expect the
+     * calculation run not to be finished.
      */
     @Test
     public void testBridgedSource() {
@@ -158,7 +167,7 @@ public class EffortSourceTest {
          * 1 |            0  |   
          *   |              |||  
          *  (|) U           ||| R  
-         *   |  12 V        ||| inf Ohms
+         *   |  16 V        ||| inf Ohms
          * 0 |            1  |
          *   o---------------- 
          *   |  p1
@@ -166,11 +175,11 @@ public class EffortSourceTest {
          *
          */
 
+        System.out.println("Expected Warning: Diff. effort of 16.0");
         r.setBridgedConnection();
 
         r.prepareCalculation();
         instance.prepareCalculation();
-
         try {
             z.doCalculation();
             instance.doCalculation();
