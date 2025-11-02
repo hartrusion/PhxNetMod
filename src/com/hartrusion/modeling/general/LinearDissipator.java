@@ -25,7 +25,6 @@ package com.hartrusion.modeling.general;
 
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
-import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -151,17 +150,18 @@ public class LinearDissipator extends FlowThrough {
     @Override
     public boolean doCalculation() {
         boolean retVal = calculateOhmsLaw();
+        double diff;
         // Perfom some additional checks to validate results
         if (elementType == ElementType.OPEN) {
             if (nodes.get(0).flowUpdated(this)
                     && nodes.get(1).flowUpdated(this)) {
-                if (nodes.get(0).getFlow(this) > 1e-10
+                if (nodes.get(0).getFlow(this) > 1e-6
                         || nodes.get(0).getFlow(this) < -1e-6 // was 1e-10
                         || nodes.get(1).getFlow(this) > 1e-6
                         || nodes.get(1).getFlow(this) < -1e-6) {
                     //throw new CalculationException(
                     //         "A node contains flow to an open Element.");
-                    LOGGER.log(Level.WARNING, "A node contains flow to an "
+                    LOGGER.log(Level.WARNING, "A node contains flow to this "
                             + "open Element. Forcing 0.0");
                     nodes.get(0).setFlow(0.0, this, false);
                     nodes.get(1).setFlow(0.0, this, false);
@@ -170,14 +170,15 @@ public class LinearDissipator extends FlowThrough {
         } else if (elementType == ElementType.BRIDGED) {
             if (nodes.get(0).effortUpdated()
                     && nodes.get(1).effortUpdated()) {
-                if (Math.abs(nodes.get(0).getEffort()
-                        - nodes.get(1).getEffort()) > 1e-2) { // previous:  1e-8
+                diff = Math.abs(nodes.get(0).getEffort()
+                        - nodes.get(1).getEffort());
+                if (diff > 1e-2) { // previous:  1e-8
                     // reducig from 1e-3 to 1e-2 now, seems to be a real issue
                     // during valve opening and closing O.o
                     // throw new CalculationException(
                     //        "Different effort on nodes of bridged element.");
                     LOGGER.log(Level.WARNING, "Different effort on nodes of "
-                            + "bridged element.");
+                            + "bridged element: " + diff);
                 }
             }
         }

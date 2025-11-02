@@ -38,14 +38,14 @@ import org.testng.annotations.BeforeClass;
  * @author Viktor Alexander Hartung
  */
 public class RecursiveSimplifierTest {
-    
+
     @BeforeClass
     public static void setUpClass() throws Exception {
         // Remove all loggers
         java.util.logging.Logger root = java.util.logging.Logger.getLogger("");
-        for (java.util.logging.Handler h : root.getHandlers()) {
-            root.removeHandler(h);
-        }
+        //for (java.util.logging.Handler h : root.getHandlers()) {
+        //    root.removeHandler(h);
+        //}
     }
 
     public RecursiveSimplifierTest() {
@@ -687,9 +687,9 @@ public class RecursiveSimplifierTest {
 
     /**
      * This situation has three parallel resistors connected to one node and if
-     * you would merge them, a dead end resistor will be the result. But
-     * somehow it ended up triggering the star delta solver which is some not
-     * intended behaviour and an internal check will be triggered.
+     * you would merge them, a dead end resistor will be the result. But somehow
+     * it ended up triggering the star delta solver which is some not intended
+     * behaviour and an internal check will be triggered.
      */
     @Test
     public void testDeadEndStar() {
@@ -793,62 +793,6 @@ public class RecursiveSimplifierTest {
         // Connect as listed in debugger with the exact same connections, 
         // the register method is therefore used instead of the connect.
         // But it turned out this does not matter.
-        /* node[0].registerElement(zero);
-        node[0].registerElement(u);
-        node[0].registerElement(r[8]);
-        node[0].registerElement(r[9]);
-        node[0].registerElement(r[11]);
-        node[1].registerElement(r[2]);
-        node[1].registerElement(r[3]);
-        node[1].registerElement(r[9]);
-        node[1].registerElement(r[10]);
-        node[2].registerElement(r[0]);
-        node[2].registerElement(r[7]);
-        node[2].registerElement(r[10]);
-        node[2].registerElement(r[11]);
-        node[3].registerElement(r[4]);
-        node[3].registerElement(r[5]);
-        node[3].registerElement(r[7]);
-        node[3].registerElement(r[8]);
-        node[4].registerElement(r[0]);
-        node[4].registerElement(r[3]);
-        node[4].registerElement(r[4]);
-        node[4].registerElement(r[6]);
-        node[5].registerElement(r[1]);
-        node[5].registerElement(r[2]);
-        node[5].registerElement(r[5]);
-        node[5].registerElement(r[6]);
-        node[6].registerElement(r[1]);
-        node[6].registerElement(u);
-        
-        zero.registerNode(node[0]);
-        r[0].registerNode(node[2]);
-        r[0].registerNode(node[4]);
-        r[1].registerNode(node[6]);
-        r[1].registerNode(node[5]);
-        r[2].registerNode(node[5]);
-        r[2].registerNode(node[1]);
-        u.registerNode(node[0]);
-        u.registerNode(node[6]);
-        r[3].registerNode(node[1]);
-        r[3].registerNode(node[4]);
-        r[4].registerNode(node[4]);
-        r[4].registerNode(node[3]);
-        r[5].registerNode(node[3]);
-        r[5].registerNode(node[5]);
-        r[6].registerNode(node[5]);
-        r[6].registerNode(node[4]);
-        r[7].registerNode(node[2]);
-        r[7].registerNode(node[3]);
-        r[8].registerNode(node[0]);
-        r[8].registerNode(node[3]);
-        r[9].registerNode(node[0]);
-        r[9].registerNode(node[1]);
-        r[10].registerNode(node[1]);
-        r[10].registerNode(node[2]);
-        r[11].registerNode(node[0]);
-        r[11].registerNode(node[2]); */
-        
         // Using connect methods instead of register gives same failure:
         zero.connectTo(node[0]);
         r[0].connectBetween(node[2], node[4]);
@@ -883,5 +827,155 @@ public class RecursiveSimplifierTest {
         // After method call, whole network must be in fully calculated state.
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished());
+    }
+
+    /**
+     * Another issue in the chernobyl simulation. Two of the feed pumps do crash
+     * the simulation with almost infinity flow rate, they also trigger one
+     * warning of the LinearDissipator class that there would be different
+     * effort values on a bridged element. This value is very high (in the
+     * number of thousands) and this test case investigates the network which
+     * provoked this error.
+     * <p>
+     * r[8] to r[11] are SimplifiedResistor classes that are represented as
+     * resistors in this network layer.
+     * <p>
+     * The network is basically a total mess of open connections and there must
+     * be no flow.
+     */
+    @Test
+    public void testComplexFeedwaterDetail() {
+        System.out.println("complexFeedwaterDetail");
+        RecursiveSimplifier instance = new RecursiveSimplifier();
+
+        // Prepare network elements
+        GeneralNode[] node = new GeneralNode[7];
+        LinearDissipator[] r = new LinearDissipator[12];
+        EffortSource u = new EffortSource(PhysicalDomain.ELECTRICAL);
+        ClosedOrigin zero = new ClosedOrigin(PhysicalDomain.ELECTRICAL);
+
+        for (int idx = 0; idx < node.length; idx++) { // init
+            node[idx] = new GeneralNode(PhysicalDomain.ELECTRICAL);
+            node[idx].setName("node" + idx);
+        }
+
+        for (int idx = 0; idx < r.length; idx++) { // init
+            r[idx] = new LinearDissipator(PhysicalDomain.ELECTRICAL);
+            r[idx].setName("R" + idx);
+        }
+
+        // Connect as listed in debugger with the exact same connections, 
+        // the register method is therefore used instead of the connect.
+        node[0].registerElement(r[5]);
+        node[0].registerElement(r[7]);
+        node[0].registerElement(r[8]);
+        node[0].registerElement(r[10]);
+        node[1].registerElement(r[4]);
+        node[1].registerElement(r[6]);
+        node[1].registerElement(r[9]);
+        node[1].registerElement(r[10]);
+        node[2].registerElement(r[2]);
+        node[2].registerElement(r[3]);
+        node[2].registerElement(r[6]);
+        node[2].registerElement(r[8]);
+        node[2].registerElement(r[11]);
+        node[3].registerElement(r[1]);
+        node[3].registerElement(r[7]);
+        node[3].registerElement(r[9]);
+        node[3].registerElement(r[11]);
+        node[4].registerElement(r[0]);
+        node[4].registerElement(r[1]);
+        node[4].registerElement(r[3]);
+        node[4].registerElement(r[4]);
+        node[4].registerElement(r[5]);
+        node[5].registerElement(r[0]);
+        node[5].registerElement(u);
+        node[6].registerElement(zero);
+        node[6].registerElement(u);
+        node[6].registerElement(r[2]);
+
+        zero.registerNode(node[6]);
+        r[0].registerNode(node[5]);
+        r[0].registerNode(node[4]);
+        r[1].registerNode(node[4]);
+        r[1].registerNode(node[3]);
+        u.registerNode(node[6]);
+        u.registerNode(node[5]);
+        r[2].registerNode(node[6]);
+        r[2].registerNode(node[2]);
+        r[3].registerNode(node[2]);
+        r[3].registerNode(node[4]);
+        r[4].registerNode(node[4]);
+        r[4].registerNode(node[1]);
+        r[5].registerNode(node[0]);
+        r[5].registerNode(node[4]);
+        r[6].registerNode(node[1]);
+        r[6].registerNode(node[2]);
+        r[7].registerNode(node[3]);
+        r[7].registerNode(node[0]);
+        r[8].registerNode(node[0]);
+        r[8].registerNode(node[2]);
+        r[9].registerNode(node[3]);
+        r[9].registerNode(node[1]);
+        r[10].registerNode(node[0]);
+        r[10].registerNode(node[1]);
+        r[11].registerNode(node[2]);
+        r[11].registerNode(node[3]);
+
+        // Set Values from breakpoint
+        r[0].setResistanceParameter(14814.814814814816);
+        r[1].setOpenConnection();
+        u.setEffort(1600000.0);
+        r[2].setResistanceParameter(222.22222222222223);
+        r[3].setOpenConnection();
+        r[4].setOpenConnection();
+        r[5].setOpenConnection();
+        r[6].setOpenConnection();
+        r[7].setOpenConnection();
+        r[8].setBridgedConnection();
+        r[9].setOpenConnection();
+        r[10].setBridgedConnection();
+        r[11].setOpenConnection();
+
+        for (GeneralNode n : node) {
+            instance.registerNode(n);
+        }
+        
+        // It is vital that the elements are getting connected in the exact
+        // same order as here, otherwise the error will not be triggered!
+        instance.registerElement(zero);
+        instance.registerElement(r[0]);
+        instance.registerElement(r[1]);
+        instance.registerElement(u);
+        for (int idx = 2; idx <= 11; idx++) {
+            instance.registerElement(r[idx]);
+        }
+         
+        // set up the solver, creating the layers
+        int numberOfLayers;
+        numberOfLayers = instance.recursiveSimplificationSetup(0);
+
+        instance.prepareRecursiveCalculation();
+
+        // After method call, whole network must be in fully calculated state.
+        instance.doRecursiveCalculation();
+        assertTrue(instance.isCalculationFinished());
+        
+        instance.prepareRecursiveCalculation();
+        instance.doRecursiveCalculation();
+
+        // Those are all connected to zero
+        assertEquals(node[6].getEffort(), 0.0, 1e-12);
+        assertEquals(node[2].getEffort(), 0.0, 1e-12);
+        assertEquals(node[0].getEffort(), 0.0, 1e-12);
+        assertEquals(node[1].getEffort(), 0.0, 1e-12);
+
+        assertEquals(node[4].getEffort(), 1600000.0, 1e-12);
+        
+        // Node 3 is free-fluating
+        
+        for (int idx = 0; idx < r.length; idx++) { // init
+            assertEquals(r[idx].getFlow(), 0.0, 1e-12);
+        }
     }
 }
