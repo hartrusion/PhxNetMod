@@ -32,7 +32,6 @@ import com.hartrusion.modeling.exceptions.NoFlowThroughException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.PhysicalDomain;
-import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.general.FlowSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
@@ -815,6 +814,8 @@ public class RecursiveSimplifier extends ChildNetwork {
      * @return Created number of child layers
      */
     public int recursiveSimplificationSetup(int parentLayers) {
+        int numberOfElements;
+        
         if (checkDeadEnds()) {
             createChildElements();
             registerChildElements();
@@ -846,17 +847,28 @@ public class RecursiveSimplifier extends ChildNetwork {
 
             return generateChild(parentLayers);
         }
+        
+        // We might end with a floating loop in the last recursion. In this 
+        // case, elements which are part of the loop are isSubstituted[idx] =
+        // true but no substitutuion was performed (otherwise we would not get
+        // here because of the return statements above).
+        numberOfElements = elements.size();
+        if (containsFloatingLoop) { // subtract those.
+            for (int idx = 0; idx < isSubstituted.length; idx++) {
+                numberOfElements -= 1;
+            }
+        }
 
-        if (elements.size() <= 5) {
+        if (numberOfElements <= 4) {
             LOGGER.log(
                     Level.INFO, (parentLayers + 1)
                     + " layers created, last layer containing "
-                    + elements.size() + " elements.");
+                    + numberOfElements + " elements.");
         } else {
             LOGGER.log(
                     Level.WARNING, (parentLayers + 1)
                     + " layers created, last layer still containing "
-                    + elements.size() + " elements. No solution guaranteed.");
+                    + numberOfElements + " elements. No solution guaranteed.");
         }
         return parentLayers;
     }
