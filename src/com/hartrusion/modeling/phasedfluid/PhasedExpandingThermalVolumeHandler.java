@@ -488,4 +488,15 @@ public class PhasedExpandingThermalVolumeHandler
         // steam or liquid output.
         throw new ModelErrorException("Not supported.");
     }
+
+    /**
+     * Calculates and returns the current temperature inside the volume by
+     * using the pressure (its isobaric) and heat energy.
+     * 
+     * @return Temperature in Kelvin
+     */
+    public double getTemperature() {
+        return fluidProperties.getTemperature(heatEnergy, 
+                phasedNodes.get(0).getEffort());
+    }
 }

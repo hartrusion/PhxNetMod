@@ -267,8 +267,28 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     public PhasedFluidProperties getPhasedFluidProperties() {
         return phasedHandler.getPhasedFluidProperties();
     }
-    
-    public double getVoiding() {
-        return phasedHandler.getVoiding(1e5);
+
+    /**
+     * Calculates a voiding based on a reference effort value, the voiding will
+     * be the volume in percent that is present compared with the volume that
+     * would be there on the referenceEffort at boiling temperature.
+     *
+     * @param referenceEffort Pressure in Pa defining the saturation point. This
+     * can be 1e5 for ambient pressure.
+     *
+     * @return Value between 0 and 100 % with 0 % being solid filled, 100 %
+     * being completely empty.
+     */
+    public double getVoiding(double referenceEffort) {
+        return phasedHandler.getVoiding(referenceEffort);
+    }
+
+    /**
+     * Returns the temperature inside the element.
+     *
+     * @return Temperature in Kelvin
+     */
+    public double getTemperature() {
+        return phasedHandler.getTemperature();
     }
 }
