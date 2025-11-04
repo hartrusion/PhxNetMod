@@ -6,7 +6,7 @@ behaviour of dynamic systems in electronics, mechanics, hydraulics and
 thermal systems can be described with very similar linear ordinary 
 differential equations, the circuit analysis can be used on networks of 
 hydraulic systems as it would be used in electronic circuits calculation. This 
-is also addressed by a theory called bond graphs.
+is also addressed by a theory called **bond graphs**.
 
 **Please note: This is work in progess. It's propably not good code and only
 published to have easy access to it and disclose source code of my projects
@@ -23,11 +23,25 @@ describing the network has to have certain properties which do not allow
 unlimited or absolutely zero flow rates like you would have them if you 
 shortcut or cut a wire in a circuit.
 
+The focus on this project is to provide stable solutions outside of operating 
+range and lineraization. For example, the heat exchanger classes are very 
+inaccurate in terms of thermal thransfer but they provide solutions for 
+all possible cases, even when the flow on one side is zero or even reversed.
+
 ## Model description
 The model is set up by connecting elements to common nodes. The nodes 
 actually hold most of the information. There are some basic, general domains 
 available (like thermal, electric, hydraulic). Those can be extended to heat,
 steam or two phased fluids.
+
+Each node has a so called effort variable which can be, depending on the 
+physical domain, voltage or pressure for example. It also holds flow values 
+with flows to each elements which can be amperage or mass flow. Check the
+package-info files for more information.
+
+Heat fluid, phased fluid and steam are some extensions that use the network 
+to calculate flow directions first and provide scalar values on top of 
+those basic elements.
 
 ## Solver
 Contrary to popular solutions the solvers supplied here translate the 
@@ -41,3 +55,20 @@ method for the next time step after the network solution is obtained.
 
 This does not give accurate solutions but allows to simulate complex 
 networks like they are used in thermal power plants in real time.
+
+## Usage
+To set up your physical model, create nodes and elements which describe it 
+using the elements provided in the packages. There are some converters 
+available, for example from heat fluid to phased fluid.
+
+Some examples on how to build (not how to solve!) a model can be seen in 
+the test packages, the ones in **com.hartrusion.modeling.solvers** are more
+complex, like in the **TransferSubnetTest.java**.
+
+After configuring the model, you can use **DomainAnalogySolver** class to 
+compile the network by just calling **addNetwork** with any node. 
+Calling **prepareCalculation** will reset the network to a non-calculated 
+state for the next time step and **doCalculation** will update the network.
+
+Values must be obtained from elements and nodes, keep in mind that most 
+values are actually hold by the nodes itself.
