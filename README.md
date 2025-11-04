@@ -8,10 +8,10 @@ differential equations, the circuit analysis can be used on networks of
 hydraulic systems as it would be used in electronic circuits calculation. This 
 is also addressed by a theory called **bond graphs**.
 
-**Please note: This is work in progess. It's propably not good code and only
+**Please note: This is work in process. It's probably not good code and only
 published to have easy access to it and disclose source code of my projects
-for security reasons.** I strongly believe that beeing able to disclose the 
-full source and allow people to complile and build projects themselves is
+for security reasons.** I strongly believe that being able to disclose the 
+full source and allow people to compile and build projects themselves is
 a proper way to prove that an application does not pose any risks.
 
 It was designed as the core of the chornobyl RBMK simulator project.
@@ -23,9 +23,9 @@ describing the network has to have certain properties which do not allow
 unlimited or absolutely zero flow rates like you would have them if you 
 shortcut or cut a wire in a circuit.
 
-The focus on this project is to provide stable solutions outside of operating 
-range and lineraization. For example, the heat exchanger classes are very 
-inaccurate in terms of thermal thransfer but they provide solutions for 
+The focus on this project is to provide stable solutions outside operating 
+range and liberalization. For example, the heat exchanger classes are very 
+inaccurate in terms of thermal transfer, but they provide solutions for 
 all possible cases, even when the flow on one side is zero or even reversed.
 
 ## Model description
@@ -34,9 +34,9 @@ actually hold most of the information. There are some basic, general domains
 available (like thermal, electric, hydraulic). Those can be extended to heat,
 steam or two phased fluids.
 
-Each node has a so called effort variable which can be, depending on the 
+Each node has a so-called effort variable which can be, depending on the 
 physical domain, voltage or pressure for example. It also holds flow values 
-with flows to each elements which can be amperage or mass flow. Check the
+with flows to each element which can be amperage or mass flow. Check the
 package-info files for more information.
 
 Heat fluid, phased fluid and steam are some extensions that use the network 
