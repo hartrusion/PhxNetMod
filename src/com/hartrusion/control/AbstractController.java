@@ -25,6 +25,7 @@ package com.hartrusion.control;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.function.DoubleSupplier;
 
 /**
  * Common functionality of control systems controller classes, can be further
@@ -43,7 +44,7 @@ public abstract class AbstractController implements Runnable {
     protected boolean manualMode = true;
     protected double stepTime = 0.1;
 
-    protected DataProvider inputProvider;
+    protected DoubleSupplier inputProvider;
 
     private String controllerName;
 
@@ -62,7 +63,7 @@ public abstract class AbstractController implements Runnable {
         // If there is an input provider set, use it to set the controller
         // difference input by the class itself.
         if (inputProvider != null) {
-            setInput(inputProvider.retrieveValue());
+            setInput(inputProvider.getAsDouble());
         }
     }
 
@@ -74,7 +75,7 @@ public abstract class AbstractController implements Runnable {
         this.eInput = eInput;
     }
 
-    public void addInputProvider(DataProvider inputProvider) {
+    public void addInputProvider(DoubleSupplier inputProvider) {
         this.inputProvider = inputProvider;
     }
 
@@ -110,7 +111,7 @@ public abstract class AbstractController implements Runnable {
     /**
      * Set the minimum value limitation for the output value. Default: 0
      *
-     * @param uMax
+     * @param uMin
      */
     public void setMinOutput(double uMin) {
         this.uMin = uMin;
