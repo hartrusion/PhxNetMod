@@ -190,6 +190,10 @@ public class DomainAnalogySolver {
             }
         }
 
+        LOGGER.log(Level.INFO, "Found " + modelElements.size() + " Elements "
+                + "connected to " + modelNodes.size() + " Nodes. Setting up "
+                + "solvers...");
+
         // Now, as all nodes and elements are known, mark all nodes that have
         // a connection to an effort enforcing element. We do this to determine
         // how to solve the network. This will mark boundaries for possible 
@@ -252,6 +256,9 @@ public class DomainAnalogySolver {
             lastIterator.addElement(e);
         }
 
+        LOGGER.log(Level.INFO, "...setup of " + subnets.size() + " linear "
+                + "Transfersubnets and " + nonLinearNets.size() + " non-linear "
+                + "networks finished.");
     }
 
     private boolean allElementsInSolvers() {
