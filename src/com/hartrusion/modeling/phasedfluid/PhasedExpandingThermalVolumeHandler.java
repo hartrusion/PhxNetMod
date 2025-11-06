@@ -100,6 +100,8 @@ public class PhasedExpandingThermalVolumeHandler
     private boolean waitForReverseOutProperties;
 
     private double reverseOutMassCorretion;
+    
+    private boolean previousReversOutActive = false;
 
     private double nextDelayedInHeatEnergy;
     private double delayedInHeatEnergy;
@@ -395,6 +397,8 @@ public class PhasedExpandingThermalVolumeHandler
 
             // reset this here in case the flow direction changes back and again
             reverseOutMassCorretion = 0.0;
+            
+            previousReversOutActive = false;
 
             didSomething = true;
         } else if (!heatEnergyPrepared
@@ -444,9 +448,13 @@ public class PhasedExpandingThermalVolumeHandler
 //                    aElement, true);
 //            
 //            waitForReverseOutProperties = true;
-            LOGGER.log(Level.WARNING,
-                    "Reverse Flow on Thermal Expanding Handler occured, "
-                    + "this is not yet implemented properly.");
+
+            if (!previousReversOutActive) {
+                LOGGER.log(Level.WARNING,
+                        "Reverse Flow on Thermal Expanding Handler occured, "
+                        + "this is not yet implemented properly.");
+                previousReversOutActive = true;
+            }
 
             didSomething = true;
 
