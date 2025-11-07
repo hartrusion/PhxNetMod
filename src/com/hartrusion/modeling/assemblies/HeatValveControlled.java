@@ -25,10 +25,7 @@ package com.hartrusion.modeling.assemblies;
 
 import com.hartrusion.control.AbstractController;
 import com.hartrusion.control.ControlCommand;
-import com.hartrusion.control.PControl;
-import com.hartrusion.control.PIControl;
 import com.hartrusion.control.ParameterHandler;
-import com.hartrusion.control.Setpoint;
 import com.hartrusion.mvc.ActionCommand;
 import java.beans.PropertyChangeListener;
 
@@ -45,6 +42,7 @@ public class HeatValveControlled extends HeatValve {
 
     private AbstractController controller;
 
+    private String name = "unnamed";
     private String actionCommand;
     private String componentControlState;
 
@@ -62,9 +60,12 @@ public class HeatValveControlled extends HeatValve {
     @Override
     public void initName(String name) {
         super.initName(name);
-        controller.setName(name);
+        this.name = name;
+        if (controller != null) {
+            controller.setName(name);
+        }
 
-        // Strings that will be sent or 
+        // Strings that will be sent or received
         actionCommand = name + "ControlCommand";
         componentControlState = name + "ControlState";
     }
@@ -92,6 +93,7 @@ public class HeatValveControlled extends HeatValve {
      * @param controller
      */
     public void initController(AbstractController controller) {
+        controller.setName(name);
         this.controller = controller;
     }
 
@@ -99,12 +101,15 @@ public class HeatValveControlled extends HeatValve {
     public void run() {
         controller.run(); // updates controller output
 
+        // Write the output of the controller to the Valve SWI if the
+        // controller is in auto mode
         if (!controller.isManualMode()) {
             swControl.setInput(controller.getOutput());
         }
 
         super.run(); // sets value to SWI, update SWI, set valve value.
 
+        // Follow-Up value is the valves position
         if (controller.isManualMode()) {
             controlState = ControlCommand.MANUAL_OPERATION;
             // For non-jump behaviour of output
