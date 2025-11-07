@@ -32,8 +32,8 @@ import com.hartrusion.mvc.ActionCommand;
  */
 public class PhasedValve implements Runnable {
 
-    private final PhasedLinearValve valve = new PhasedLinearValve();
-    private final SetpointIntegrator swControl
+    protected final PhasedLinearValve valve = new PhasedLinearValve();
+    protected final SetpointIntegrator swControl
             = new SetpointIntegrator();
     private final ValveActuatorMonitor monitor
             = new ValveActuatorMonitor();
