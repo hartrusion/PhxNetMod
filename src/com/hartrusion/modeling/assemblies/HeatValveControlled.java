@@ -85,12 +85,14 @@ public class HeatValveControlled extends HeatValve {
         controller.addPropertyChangeListener(signalListener);
     }
 
-    public void initPControl() {
-        controller = new PControl();
-    }
-    
-    public void initPIControl() {
-        controller = new PIControl();
+    /**
+     * Initializes a controller instance for this class. Either a already
+     * existing or a new instance of a PI or P control element can be given.
+     *
+     * @param controller
+     */
+    public void initController(AbstractController controller) {
+        this.controller = controller;
     }
 
     @Override
@@ -168,10 +170,10 @@ public class HeatValveControlled extends HeatValve {
     public void setInput(double input) {
         controller.setInput(input);
     }
-    
+
     /**
      * Returns the instance of the used controller.
-     * 
+     *
      * @return AbstractController
      */
     public AbstractController getController() {
