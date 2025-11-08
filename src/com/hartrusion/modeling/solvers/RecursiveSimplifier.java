@@ -23,6 +23,7 @@
  */
 package com.hartrusion.modeling.solvers;
 
+import com.hartrusion.modeling.ElementType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -945,6 +946,18 @@ public class RecursiveSimplifier extends ChildNetwork {
         // resulting an exception. The attached iterative solver has its own
         // methods to handle this.
         iterativeSolver.doCalculationOnEnforcerElements();
+        
+        // Next we will call doCalculation on all open connections which will
+        // have exactly zero flow. This will reduce numeric issues as we do not
+        // need to calculate this like 5.23 - 1.23 - 4.0 = 0.0 what might not
+        // be 0.0 bitwise, we just set it to the excatly double 0.0 value.
+        // This little line dramatically helps to improve accuracy of the 
+        // whole solver.
+        for (AbstractElement e : elements) {
+            if (e.getElementType() == ElementType.OPEN) {
+                e.doCalculation();
+            }
+        }
 
         if (child != null) {
             child.doRecursiveCalculation();
