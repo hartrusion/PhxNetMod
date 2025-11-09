@@ -37,7 +37,7 @@ import com.hartrusion.modeling.initial.HeatedEnerergyStorageInitialCondition;
  * boils, go for the HeatClosedSteamedReservoir to consider boiling pressure.
  *
  * <p>
- * Configuration: Set time constant with T = A / rho * g.
+ * Configuration: Set time constant with T = A / g.
  *
  * <pre>
  * Some notes on where those equations came from:
@@ -58,7 +58,7 @@ import com.hartrusion.modeling.initial.HeatedEnerergyStorageInitialCondition;
  *
  * effort = tau * int(flow)
  *
- * Therefore it is tau = g / A With tau = t/T, time constant can be
+ * Therefore it is tau = g / A With tau = 1/T, time constant can be
  * described as T = A / g and there is a method in the parent class
  * EnergyStorage to set this value.
  *
