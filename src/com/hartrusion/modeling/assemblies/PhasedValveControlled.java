@@ -30,7 +30,6 @@ import static com.hartrusion.control.ControlCommand.MANUAL_OPERATION;
 import static com.hartrusion.control.ControlCommand.OUTPUT_CONTINUE;
 import static com.hartrusion.control.ControlCommand.OUTPUT_DECREASE;
 import static com.hartrusion.control.ControlCommand.OUTPUT_INCREASE;
-import com.hartrusion.control.ParameterHandler;
 import com.hartrusion.mvc.ActionCommand;
 import java.beans.PropertyChangeListener;
 
@@ -47,12 +46,6 @@ public class PhasedValveControlled extends PhasedValve {
 
     private boolean outputOverride;
 
-    /**
-     * Updated output values (valve position) will be set to this parameter
-     * handler.
-     */
-    private ParameterHandler outputValues;
-
     @Override
     public void initName(String name) {
         super.initName(name);
@@ -63,16 +56,6 @@ public class PhasedValveControlled extends PhasedValve {
 
         // Strings that will be sent or received
         actionCommand = name + "ControlCommand";
-    }
-
-    /**
-     * Sets a ParameterHandler that will get the valve position on each run
-     * call.
-     *
-     * @param h reference to ParameterHandler
-     */
-    public void initParameterHandler(ParameterHandler h) {
-        outputValues = h;
     }
 
     @Override
@@ -108,12 +91,6 @@ public class PhasedValveControlled extends PhasedValve {
         if (controller.isManualMode()) {
             // For non-jump behaviour of output
             controller.setFollowUp(swControl.getOutput());
-        }
-
-        // Send valve position as parameter value for monitoring
-        if (outputValues != null) {
-            outputValues.setParameterValue(valve.toString(),
-                    valve.getOpening());
         }
     }
 

@@ -16,6 +16,7 @@
  */
 package com.hartrusion.modeling.assemblies;
 
+import com.hartrusion.control.ParameterHandler;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -38,6 +39,12 @@ public class PhasedValve implements Runnable {
     private final ValveActuatorMonitor monitor
             = new ValveActuatorMonitor();
     protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+    
+    /**
+     * Updated output values (valve position) will be set to this parameter
+     * handler.
+     */
+    private ParameterHandler outputValues;
 
     public PhasedValve() {
         swControl.setMaxRate(25);
@@ -48,6 +55,16 @@ public class PhasedValve implements Runnable {
     public void initName(String name) {
         valve.setName(name);
         monitor.setName(name);
+    }
+    
+    /**
+     * Sets a ParameterHandler that will get the valve position on each run
+     * call.
+     *
+     * @param h reference to ParameterHandler
+     */
+    public void initParameterHandler(ParameterHandler h) {
+        outputValues = h;
     }
 
     /**
@@ -99,6 +116,12 @@ public class PhasedValve implements Runnable {
         valve.setOpening(swControl.getOutput());
         monitor.setInput(swControl.getOutput());
         monitor.run();
+        
+        // Send valve position as parameter value for monitoring
+        if (outputValues != null) {
+            outputValues.setParameterValue(valve.toString(),
+                    valve.getOpening());
+        }
     }
 
     public void operateOpenValve() {
