@@ -234,7 +234,8 @@ public class HeatNode extends GeneralNode {
             allFlowsZero = true; // init
             for (int idx = 0; idx < connectedElements.size(); idx++) {
                 // allFlowsZero = allFlowsZero && (getFlow(idx) == 0.0);
-                allFlowsZero = allFlowsZero && Math.abs(getFlow(idx)) < 1e-10;
+                allFlowsZero = allFlowsZero && Math.abs(getFlow(idx)) < 1e-8;
+                // changed from 1e-10 to 1e-8 due to some numeric errors.
             }
             // Now, get total incoming thermal energy and check if those
             // temperatures are updated.
