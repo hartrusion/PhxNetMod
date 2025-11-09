@@ -47,12 +47,6 @@ public class HeatValveControlled extends HeatValve {
 
     private boolean outputOverride;
 
-    /**
-     * Updated output values (valve position) will be set to this parameter
-     * handler.
-     */
-    private ParameterHandler outputValues;
-
     @Override
     public void initName(String name) {
         super.initName(name);
@@ -63,16 +57,6 @@ public class HeatValveControlled extends HeatValve {
 
         // Strings that will be sent or received
         actionCommand = name + "ControlCommand";
-    }
-
-    /**
-     * Sets a ParameterHandler that will get the valve position on each run
-     * call.
-     *
-     * @param h reference to ParameterHandler
-     */
-    public void initParameterHandler(ParameterHandler h) {
-        outputValues = h;
     }
 
     @Override
@@ -107,12 +91,6 @@ public class HeatValveControlled extends HeatValve {
         // Follow-Up value is the valves position
         if (controller.isManualMode()) {
             controller.setFollowUp(swControl.getOutput());
-        }
-
-        // Send valve position as parameter value for monitoring
-        if (outputValues != null) {
-            outputValues.setParameterValue(valve.toString(),
-                    valve.getOpening());
         }
     }
 

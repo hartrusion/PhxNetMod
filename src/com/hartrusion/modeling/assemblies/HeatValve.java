@@ -16,6 +16,7 @@
  */
 package com.hartrusion.modeling.assemblies;
 
+import com.hartrusion.control.ParameterHandler;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import com.hartrusion.control.SetpointIntegrator;
@@ -55,6 +56,12 @@ public class HeatValve implements Runnable {
             = new ValveActuatorMonitor();
 
     protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+    
+    /**
+     * Updated output values (valve position) will be set to this parameter
+     * handler.
+     */
+    private ParameterHandler outputValues;
 
     public HeatValve() {
         swControl.setMaxRate(25);
@@ -100,7 +107,16 @@ public class HeatValve implements Runnable {
     public void initOpening(double opening) {
         valve.setOpening(opening);
         swControl.forceOutputValue(opening);
-
+    }
+    
+    /**
+     * Sets a ParameterHandler that will get the valve position on each run
+     * call.
+     *
+     * @param h reference to ParameterHandler
+     */
+    public void initParameterHandler(ParameterHandler h) {
+        outputValues = h;
     }
 
     @Override
@@ -109,6 +125,12 @@ public class HeatValve implements Runnable {
         valve.setOpening(swControl.getOutput());
         monitor.setInput(swControl.getOutput());
         monitor.run();
+        
+         // Send valve position as parameter value for monitoring
+        if (outputValues != null) {
+            outputValues.setParameterValue(valve.toString(),
+                    valve.getOpening());
+        }
     }
 
     /**
