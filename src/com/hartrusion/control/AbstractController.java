@@ -41,12 +41,15 @@ public abstract class AbstractController implements Runnable {
     protected double uOutput;
     protected double uMax = 100;
     protected double uMin = 0;
-    protected boolean manualMode = true;
     protected double stepTime = 0.1;
+
+    protected ControlCommand controlState = ControlCommand.MANUAL_OPERATION;
+    private ControlCommand oldControlState;
 
     protected DoubleSupplier inputProvider;
 
     private String controllerName;
+    private String componentControlState;
 
     /**
      * Events from controller, namely switching from manual to auto, will be
@@ -65,6 +68,16 @@ public abstract class AbstractController implements Runnable {
         if (inputProvider != null) {
             setInput(inputProvider.getAsDouble());
         }
+        
+        if ((controlState != oldControlState)) {
+            // Send Manual/Auto state on change
+            pcs.firePropertyChange(componentControlState,
+                    oldControlState, controlState);
+            oldControlState = controlState;
+        }
+        
+        // More specified controllers like PI or P will override this method
+        // and call calulations of output etc here.
     }
 
     public double getInput() {
@@ -118,11 +131,19 @@ public abstract class AbstractController implements Runnable {
     }
 
     public boolean isManualMode() {
-        return manualMode;
+        return controlState != ControlCommand.AUTOMATIC;
     }
 
     public void setManualMode(boolean hnd) {
-        this.manualMode = hnd;
+        if (hnd) {
+            controlState = ControlCommand.MANUAL_OPERATION;
+        } else {
+            controlState = ControlCommand.AUTOMATIC;
+        }
+    }
+    
+    public ControlCommand getControlState() {
+        return controlState;
     }
 
     public void gatherInput() {
@@ -141,6 +162,7 @@ public abstract class AbstractController implements Runnable {
 
     public void setName(String name) {
         controllerName = name;
+        componentControlState = name + "ControlState";
     }
 
     @Override

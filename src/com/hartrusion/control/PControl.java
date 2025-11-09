@@ -37,7 +37,7 @@ public class PControl extends AbstractController {
         
         double uControl = eInput * kR;
 
-        if (manualMode) { // overwrite output value
+        if (controlState != ControlCommand.AUTOMATIC) { // overwrite output value
             uControl = uFollowUp;
         }
 

@@ -44,10 +44,6 @@ public class HeatValveControlled extends HeatValve {
 
     private String name = "unnamed";
     private String actionCommand;
-    private String componentControlState;
-
-    private ControlCommand controlState;
-    private ControlCommand oldControlState;
 
     private boolean outputOverride;
 
@@ -67,7 +63,6 @@ public class HeatValveControlled extends HeatValve {
 
         // Strings that will be sent or received
         actionCommand = name + "ControlCommand";
-        componentControlState = name + "ControlState";
     }
 
     /**
@@ -111,18 +106,7 @@ public class HeatValveControlled extends HeatValve {
 
         // Follow-Up value is the valves position
         if (controller.isManualMode()) {
-            controlState = ControlCommand.MANUAL_OPERATION;
-            // For non-jump behaviour of output
             controller.setFollowUp(swControl.getOutput());
-        } else {
-            controlState = ControlCommand.AUTOMATIC;
-        }
-
-        if ((controlState != oldControlState) && !outputOverride) {
-            // Send Manual/Auto state on change, but not during temporary overr
-            pcs.firePropertyChange(componentControlState,
-                    oldControlState, controlState);
-            oldControlState = controlState;
         }
 
         // Send valve position as parameter value for monitoring

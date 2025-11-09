@@ -51,7 +51,7 @@ public class PIControl extends AbstractController {
 
         // Manual mode sets the integrator properly so the output matches the
         // followUp input value.
-        if (manualMode) {
+        if (controlState != ControlCommand.AUTOMATIC) {
             xIntegral = uFollowUp - dIntegral - proportionalPart;
         }
 
@@ -72,7 +72,7 @@ public class PIControl extends AbstractController {
             xIntegral = integralPart; // assign what was summed up previously
         }
 
-        if (manualMode) { // overwrite output value
+        if (controlState != ControlCommand.AUTOMATIC) { // overwrite output value
             uOutput = uFollowUp;
         }
     }
