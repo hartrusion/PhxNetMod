@@ -29,16 +29,14 @@ import com.hartrusion.modeling.exceptions.NonexistingStateVariableException;
 import com.hartrusion.modeling.general.AbstractElement;
 
 /**
- * Handles heat energy managment as an object assigned to a phased element. An
- * instance of this object is definded in each phased element. This phased
+ * Handles heat energy management as an object assigned to a phased element. An
+ * instance of this object is defined in each phased element. This phased
  * handler does not support heat energy capacity for the element that is using
  * it, therefore it will just calculate heat energy distribution and pass
  * everything through as soon as it is possible - and if it is possible at all.
- *
  * <p>
  * Heat energy values of an element using this node will be strictly only be
  * saved in phased nodes connected to the element.
- *
  * <p>
  * This phased handler does simply mix all incoming heat flows towards the
  * element using this and sets a mixing heat energy toward nodes which have
@@ -128,7 +126,7 @@ public class PhasedSimpleHandler implements PhasedHandler {
             }
             // calculate specific mixture heat energy
             mixedInHeat = phasedVolumeFlowIn / flowIn;
-            for (PhasedNode pn : phasedNodes) { // all nodes connected to element
+            for (PhasedNode pn : phasedNodes) { // all nodes connected
                 flow = pn.getFlow((AbstractElement) element);
                 if (flow > 0.0) {
                     continue; // this flow goes in

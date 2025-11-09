@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2025 Viktor Alexander Hartung.
+ * Copyright 2025 Viktor Alexander Hartung
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,15 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.hartrusion.modeling.heatfluid;
+package com.hartrusion.modeling.phasedfluid;
 
 /**
  *
- * @author Viktor Alexander Hartung
+ * @author viktor
  */
-public class HeatSimpleFlowResistance extends HeatAbstractFlowResistance {
-
-    public HeatSimpleFlowResistance() {
-        heatHandler = new HeatSimpleHandler(this);
+public class PhasedSimpleFlowResistance extends PhasedAbstractFlowResistance {
+    
+    public PhasedSimpleFlowResistance() {
+        phasedHandler = new PhasedSimpleHandler(this);
     }
+
+    @Override
+    public PhasedFluidProperties getPhasedFluidProperties() {
+        // This kidn of element does not use FluidProperties.
+        return null;
+    }
+    
 }
