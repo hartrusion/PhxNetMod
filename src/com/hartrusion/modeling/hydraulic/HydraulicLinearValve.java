@@ -32,7 +32,7 @@ import com.hartrusion.modeling.general.LinearDissipator;
  * Represents a valve which can be set between 0 and 100 % opening. This extends
  * the linear resistor for use as a hydraulic valve. It could also be an
  * electrical potentiometer. The flow resistance at 100 % opening will be set
- * with setValveOperatingPoint. The valve will behave linear. Nonliner
+ * with setValveOperatingPoint. The valve will behave linear. Nonlinear
  * resistances would require solver which are able to solve nonlinear problems,
  * this is not available here.
  *
@@ -55,7 +55,7 @@ public class HydraulicLinearValve extends LinearDissipator {
         super(PhysicalDomain.HYDRAULIC);
         opening = 0.0; // init as closed valve
         elementType = ElementType.OPEN; // means closed (open connection!)
-        resistanceFullOpen = 1e6;
+        resistanceFullOpen = 500; // was 1e6
     }
 
     /**
@@ -72,7 +72,7 @@ public class HydraulicLinearValve extends LinearDissipator {
      * Sets the resistance parameter for the valve when it is on 100 % opening
      * state.
      *
-     * @param r Resistence as Effort/Flow
+     * @param r Resistance as Effort/Flow
      */
     public void setResistanceFullOpen(double r) {
         resistanceFullOpen = r;
@@ -81,7 +81,7 @@ public class HydraulicLinearValve extends LinearDissipator {
 
     /**
      * Set the valve opening as percentage. To have a more realistic valve
-     * behaviour, use a setpoint integrator to call this.
+     * behavior, use a setpoint integrator to call this.
      *
      * @param o valve opening 0..100
      */
@@ -106,7 +106,7 @@ public class HydraulicLinearValve extends LinearDissipator {
     }
 
     /**
-     * Retuns the current set opening of the valve that is active. Note that
+     * Returns the current set opening of the valve that is active. Note that
      * this value might be different from the value that was set with setOpening
      * as the set method has some filtering of the input value.
      *
@@ -155,22 +155,17 @@ public class HydraulicLinearValve extends LinearDissipator {
     /**
      * Sets the characteristic between opening and the actual flow resistance.
      * The default value is linear and the calculation will be
-     *
      * <pre>
      * R = R_max * 100 / opening
      * </pre>
-     *
      * <p>
-     * This is basically a a linear behaviour of the conductance (1/R) value. It
+     * This is basically a a linear behavior of the conductance (1/R) value. It
      * will result in a high resistance only in values close to 0.
-     *
      * <p>
      * Alternatively a factor and linear=false can be specified. It will then be
-     *
      * <pre>
      * R = closedFactor * R_max + opening * (1 - closedFactor) / 100
      * </pre>
-     *
      * @param linear: Default, uses the 100/opening formula when true.
      * @param closedFactor:
      */
