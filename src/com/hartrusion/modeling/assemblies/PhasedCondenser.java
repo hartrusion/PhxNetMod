@@ -40,12 +40,12 @@ import com.hartrusion.modeling.phasedfluid.PhasedThermalVolumeHandler;
 /**
  * Represents a condenser unit for phased fluid while the secondary loop is
  * implemented by using the heat fluid. A condenser is a combined thermal
- * exchanger and reservoir on the primaray phased side.
- *
+ * exchanger and reservoir on the primary phased side.
  * <p>
  * It consists of three main elements: A primary heat exchanger for the phased
- * fluid, a reservoir of the phased fluid and a secondary heat exchanger.
- *
+ * fluid, a reservoir of the phased fluid and a secondary heat exchanger. It 
+ * also contains a full thermal network between those which has to be detected
+ * automatically when using the solving algorithm. 
  * <p>
  * The heat transfer is depending on the fill level of the phased fluid
  * reservoir. This has to be parametrized with the initCharacteristic method,
@@ -55,34 +55,35 @@ import com.hartrusion.modeling.phasedfluid.PhasedThermalVolumeHandler;
  */
 public class PhasedCondenser {
 
-    HeatThermalExchanger secondarySide = new HeatThermalExchanger();
-    PhasedThermalExchanger primarySideCondenser;
-    PhasedClosedSteamedReservoir primarySideReservoir;
+    private final HeatThermalExchanger secondarySide 
+            = new HeatThermalExchanger();
+    private final PhasedThermalExchanger primarySideCondenser;
+    private final PhasedClosedSteamedReservoir primarySideReservoir;
 
-    PhasedNode primaryInnerNode = new PhasedNode();
+    private final PhasedNode primaryInnerNode = new PhasedNode();
 
-    GeneralNode primaryCondenserThermalNode
+    private final GeneralNode primaryCondenserThermalNode
             = new GeneralNode(PhysicalDomain.THERMAL);
-    GeneralNode primaryReservoirThermalNode
+    private final GeneralNode primaryReservoirThermalNode
             = new GeneralNode(PhysicalDomain.THERMAL);
-    GeneralNode secondaryThermalNode
+    private final GeneralNode secondaryThermalNode
             = new GeneralNode(PhysicalDomain.THERMAL);
-    EffortSource primaryCondenserTemperature
+    private final EffortSource primaryCondenserTemperature
             = new EffortSource(PhysicalDomain.THERMAL);
-    EffortSource primaryReservoirTemperature
+    private final EffortSource primaryReservoirTemperature
             = new EffortSource(PhysicalDomain.THERMAL);
-    EffortSource secondaryTemperature
+    private final EffortSource secondaryTemperature
             = new EffortSource(PhysicalDomain.THERMAL);
-    GeneralNode thermalOriginNode
+    private final GeneralNode thermalOriginNode
             = new GeneralNode(PhysicalDomain.THERMAL);
-    ClosedOrigin thermalOrigin
+    private final ClosedOrigin thermalOrigin
             = new ClosedOrigin(PhysicalDomain.THERMAL);
-    LinearDissipator thermalFlowCondenserResistance
+    private final LinearDissipator thermalFlowCondenserResistance
             = new LinearDissipator(PhysicalDomain.THERMAL);
-    LinearDissipator thermalFlowReservoirResistance
+    private final LinearDissipator thermalFlowReservoirResistance
             = new LinearDissipator(PhysicalDomain.THERMAL);
 
-    PhasedThermalVolumeHandler primaryReservoirHandler;
+    private final PhasedThermalVolumeHandler primaryReservoirHandler;
 
     private boolean nodesGenerated = false;
 
@@ -106,7 +107,7 @@ public class PhasedCondenser {
         primarySideReservoir.setPhasedHandler(primaryReservoirHandler);
 
         // Build the thermal network - this will be done manually here as it 
-        // has to be modified during calculation and we need some access here.
+        // has to be modified during calculation, and we need some access here.
         thermalOrigin.connectTo(thermalOriginNode);
         primaryCondenserTemperature.connectBetween(
                 thermalOriginNode, primaryCondenserThermalNode);
@@ -143,15 +144,15 @@ public class PhasedCondenser {
 
     /**
      *
-     * @param primaryBaseArea Base area of the phased side.
+     * @param primaryBaseArea Base area of the phased side (m²)
      * @param primaryCondensingMass Constant heated mass inside the primary
-     * phased side
-     * @param secondaryMass Constant heated mass inside the secondary side
-     * @param kTimesA Thermal conductance k * A
+     * phased side (kg)
+     * @param secondaryMass Constant heated mass inside the secondary side (kg)
+     * @param kTimesA Thermal conductance k * A in W/K
      * @param fillLevelLow Fill level of the reservoir with thermal exchanger
-     * fully exposed
+     * fully exposed (meters)
      * @param fillLevelHigh Fill level of the reservoir with thermal exchanger
-     * completely covered.
+     * completely covered (meters)
      */
     public void initCharacteristic(double primaryBaseArea,
             double primaryCondensingMass,
@@ -167,11 +168,22 @@ public class PhasedCondenser {
     }
 
     /**
-     * Generates a set ofof nodes that are connected to the heat exchangers
+     * Generates a set of nodes that are connected to the heat exchangers
      * primary and secondary side. Those nodes can then be named with initName
      * and be accessed with getHeatNode or getPhasedNode.
+     * <p>
+     * This is not required for the assembly to work, it's just a convenient
+     * method that allows generating the required nodes instead of generating
+     * them outside and connect them.
+     * <p>
+     * Nodes can be accessed by using getHeatNode or getPhasedNode, no matter 
+     * if they were created using this method or outside this assembly.
      */
     public void initGenerateNodes() {
+        if (nodesGenerated) {
+            throw new IllegalStateException("Nodes were already generated, " +
+                    "this must only be called once.");
+        }
         nodesGenerated = true;
         GeneralNode node;
         node = new PhasedNode();
@@ -243,7 +255,7 @@ public class PhasedCondenser {
     }
 
     /**
-     * Acess the heat nodes which are connected with this phased condenser.
+     * Access the heat nodes which are connected with this phased condenser.
      *
      * @param identifier can be SECONDARY_IN (3), SECONDARY_OUT (4)
      * @return
@@ -259,10 +271,10 @@ public class PhasedCondenser {
     }
     
     /**
-     * Acess the phased nodes which are connected with this phased condenser.
+     * Access the phased nodes which are connected with this phased condenser.
      *
      * @param identifier can be PRIMARY_IN (1), PRIMARY_OUT (2)
-     * @return
+     * @return PhasedNode
      */
     public PhasedNode getPhasedNode(int identifier) {
         switch (identifier) {

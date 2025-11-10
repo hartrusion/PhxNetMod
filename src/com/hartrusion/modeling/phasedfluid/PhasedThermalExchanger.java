@@ -91,10 +91,10 @@ public class PhasedThermalExchanger extends FlowThrough
 
         didSomething = thermalEffortSource.doCalculation() || didSomething;
 
-        // Call heathandler calculation
+        // Call Phased Handler calculation
         didSomething = phasedHandler.doPhasedCalculation() || didSomething;
 
-        // call calulation on heat nodes - contrary to flow, it is not
+        // call calculation on phased nodes - contrary to flow, it is not
         // possible to do this with the set-operation as it is unknown when 
         // that calculation will be possible.
         for (GeneralNode p : nodes) {
@@ -107,7 +107,7 @@ public class PhasedThermalExchanger extends FlowThrough
 
     @Override
     public boolean isCalculationFinished() {
-        // Add call for phasedHandler calculationfinished
+        // Add call for phasedHandler calculationFinished
         return super.isCalculationFinished()
                 && phasedHandler.isPhasedCalulationFinished();
     }
@@ -115,17 +115,14 @@ public class PhasedThermalExchanger extends FlowThrough
     /**
      * Creates a minimum set of elements with a thermal effort source. It will
      * create and connect:
-     *
      * <ul>
      * <li>Thermal open Origin</li>
      * <li>General Port</li>
      * <li>Thermal Effort Source</li>
      * </ul>
-     *
      * <p>
      * The thermal effort source will be used as a connection to a thermal
      * network from the heat domain.
-     *
      * <p>
      * Use of this method is optional, it just makes network setup easier as
      * thermal networks usually are super small. You can also do a full network
