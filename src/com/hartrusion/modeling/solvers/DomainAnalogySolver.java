@@ -34,6 +34,7 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.GeneralNode;
+import com.hartrusion.modeling.general.OpenOrigin;
 import com.hartrusion.modeling.general.SelfCapacitance;
 import com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchanger;
 import com.hartrusion.modeling.steam.SteamIsobaricIsochoricEvaporator;
@@ -103,6 +104,12 @@ public class DomainAnalogySolver {
     private final List<SimpleIterator> nonLinearNets = new ArrayList<>();
 
     /**
+     * Holds references to all created SuperPosition instances which can solve a
+     * network on their own.
+     */
+    private final List<SuperPosition> superPosNets = new ArrayList<>();
+
+    /**
      * An iterative solver that will be called at the end of the calculation
      * run, it contains all elements and will ensure that the temperature and
      * properties distribution along the calculated flow is calculated.
@@ -117,7 +124,7 @@ public class DomainAnalogySolver {
     private ExecutorService threadPool;
 
     /**
-     * Traveses through a network, needs one node as a starting point. Calling
+     * Traverses through a network, needs one node as a starting point. Calling
      * This will add the whole network to this Instance.
      *
      * @param randomNode Any node of the network to start from
@@ -256,9 +263,10 @@ public class DomainAnalogySolver {
             lastIterator.addElement(e);
         }
 
-        LOGGER.log(Level.INFO, "...setup of " + subnets.size() + " linear "
-                + "Transfersubnets and " + nonLinearNets.size() + " non-linear "
-                + "networks finished.");
+        LOGGER.log(Level.INFO, "...setup finished. "
+                + "TransferSubnets: " + subnets.size()
+                + ", NonLinearNets: " + nonLinearNets.size()
+                + ", SuperPositions: " + superPosNets.size());
     }
 
     private boolean allElementsInSolvers() {
@@ -270,6 +278,9 @@ public class DomainAnalogySolver {
             }
             for (SimpleIterator si : nonLinearNets) {
                 found |= si.containsElement(e);
+            }
+            for (SuperPosition sp : superPosNets) {
+                found |= sp.containsElement(e);
             }
             if (!found) {
                 return false;
@@ -292,14 +303,19 @@ public class DomainAnalogySolver {
                 return true;
             }
         }
+        for (SuperPosition sp : superPosNets) {
+            if (sp.containsElement(e)) {
+                return true;
+            }
+        }
         return false;
     }
 
     /**
-     * Uses one element which is inside of a network that shall be set up as a
-     * transfer subnet. Will add everything to a SimpleIterator if nonlinear
-     * elements are contained. It basically runs a search again but this time
-     * stays inside the boundaries of forced effort nodes.
+     * Adds a subnet of the model to a solver. This will examine the network
+     * beginning with one element until it hits a boundary that forces an effort
+     * to the network. After the subnet is determined, it will be added to a
+     * more specific solver.
      *
      * @param startElement a random element from INSIDE the subnet.
      */
@@ -309,10 +325,13 @@ public class DomainAnalogySolver {
         List<AbstractElement> foundElements = new ArrayList<>();
         List<GeneralNode> foundNodes = new ArrayList<>();
         boolean allElementsLinear = true;
+        boolean closedCircuit = true;
+        int numberOfSources = 0;
         // boolean containsExpansionElement;
         boolean expansionPathFound;
         TransferSubnet ts;
         SimpleIterator si;
+        SuperPosition sp;
         int nr, idx, jdx;
         int iterations = 1000;
         AbstractElement element, f, g;
@@ -396,12 +415,29 @@ public class DomainAnalogySolver {
                 }
             }
         } // end of outer while
+        // Examine all elements which were identified as this one subnet.
         for (AbstractElement e : foundElements) {
             if (!e.isLinear()) {
                 allElementsLinear = false;
             }
+            // Determine if this is a closed circuit without energy saving
+            // elements. Such can be solved directly with a SuperPosition 
+            // solver without the need of the TransferSubnet solver.
+            if (e.getElementType() == ElementType.CAPACTIANCE
+                    || e.getElementType() == ElementType.ENFORCER
+                    || e.getElementType() == ElementType.INDUCTANCE
+                    || e instanceof OpenOrigin
+                    || e instanceof SteamIsobaricIsochoricEvaporator
+                    || e instanceof PhasedExpandingThermalExchanger) {
+                closedCircuit = false;
+            }
+            if (e.getElementType() == ElementType.FLOWSOURCE
+                    || e.getElementType() == ElementType.EFFORTSOURCE) {
+                numberOfSources++;
+                // Todo: If there's only one source, use RecursiveSimplifier.
+            }
         }
-        if (allElementsLinear) {
+        if (allElementsLinear && !closedCircuit) {
             // add all to the subnet solver
             ts = new TransferSubnet();
             for (GeneralNode fn : foundNodes) {
@@ -517,6 +553,16 @@ public class DomainAnalogySolver {
             }
             // </editor-fold>
 
+        } else if (allElementsLinear && closedCircuit) {
+            sp = new SuperPosition();
+            for (GeneralNode fn : foundNodes) {
+                sp.registerNode(fn);
+            }
+            for (AbstractElement e : foundElements) {
+                sp.registerElement(e);
+            }
+            sp.superPositionSetup();
+            superPosNets.add(sp);
         } else {
             // add all to the subnet solver
             si = new SimpleIterator();
@@ -535,6 +581,9 @@ public class DomainAnalogySolver {
         for (TransferSubnet ts : subnets) {
             ts.prepareCalculation();
         }
+        for (SuperPosition sp : superPosNets) {
+            sp.prepareCalculation();
+        }
         for (SimpleIterator si : nonLinearNets) {
             si.prepareCalculation();
         }
@@ -550,6 +599,9 @@ public class DomainAnalogySolver {
         }
         for (AbstractElement e : selfSolvingElements) {
             e.doCalculation();
+        }
+        for (SuperPosition sp : superPosNets) {
+            sp.doCalculation();
         }
         for (SimpleIterator si : nonLinearNets) {
             si.doCalculation();

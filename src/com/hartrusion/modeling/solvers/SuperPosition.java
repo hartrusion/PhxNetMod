@@ -520,6 +520,10 @@ public class SuperPosition extends LinearNetwork {
 
         return numberOfSources;
     }
+    
+    public boolean containsElement(AbstractElement element) {
+        return elements.contains(element);
+    }
 
     /**
      * All layers can be calculated parallel in multiple threads if a thread
