@@ -43,9 +43,30 @@ import com.hartrusion.modeling.phasedfluid.PhasedThermalVolumeHandler;
  * exchanger and reservoir on the primary phased side.
  * <p>
  * It consists of three main elements: A primary heat exchanger for the phased
- * fluid, a reservoir of the phased fluid and a secondary heat exchanger. It 
+ * fluid, a reservoir of the phased fluid and a secondary heat exchanger. It
  * also contains a full thermal network between those which has to be detected
- * automatically when using the solving algorithm. 
+ * automatically when using the solving algorithm.
+ * <pre>
+ *          primary_in
+ *               o
+ *               |
+ *   primary   -----    o---------XXXXX----
+ *   condenser |   |    |                 |        secondary_out
+ *             |   | = (|)                |            o
+ *             |   |    |                 |            |
+ *             -----    |                 o-----       |
+ *         prim. |      ----              |    |     -----
+ *         inner o          |             |    |     |   |  secondary
+ *         node  |          |             |   (|) =  |   |  side
+ *             -----    o---------XXXXX----    |     |   |  heatFluid
+ *             |   |    |   |                  |     -----  exchanger
+ *     primary |   | = (|)  |    ---------------       |
+ *   reservoir |   |    |   |    |                     |
+ *             -----    |   |    |                     o secondary_in
+ *               |      ----o----
+ *  primary_Out  o          |
+ *                         _|_ thermalOrigin
+ * </pre>
  * <p>
  * The heat transfer is depending on the fill level of the phased fluid
  * reservoir. This has to be parametrized with the initCharacteristic method,
@@ -55,7 +76,7 @@ import com.hartrusion.modeling.phasedfluid.PhasedThermalVolumeHandler;
  */
 public class PhasedCondenser {
 
-    private final HeatThermalExchanger secondarySide 
+    private final HeatThermalExchanger secondarySide
             = new HeatThermalExchanger();
     private final PhasedThermalExchanger primarySideCondenser;
     private final PhasedClosedSteamedReservoir primarySideReservoir;
@@ -132,14 +153,14 @@ public class PhasedCondenser {
         // Connect condenser and reservoir on primary side.
         primarySideCondenser.connectToVia(
                 primarySideReservoir, primaryInnerNode);
-        
+
         // Make the assembly known to get the prepareCalculation call here.
         primarySideCondenser.setExternalPhasedCondenserAssembly(this);
     }
-    
+
     // gets called by the PhasedThermalExchanger
     public void prepareCalculation() {
-        
+
     }
 
     /**
@@ -176,13 +197,13 @@ public class PhasedCondenser {
      * method that allows generating the required nodes instead of generating
      * them outside and connect them.
      * <p>
-     * Nodes can be accessed by using getHeatNode or getPhasedNode, no matter 
-     * if they were created using this method or outside this assembly.
+     * Nodes can be accessed by using getHeatNode or getPhasedNode, no matter if
+     * they were created using this method or outside this assembly.
      */
     public void initGenerateNodes() {
         if (nodesGenerated) {
-            throw new IllegalStateException("Nodes were already generated, " +
-                    "this must only be called once.");
+            throw new IllegalStateException("Nodes were already generated, "
+                    + "this must only be called once.");
         }
         nodesGenerated = true;
         GeneralNode node;
@@ -220,7 +241,7 @@ public class PhasedCondenser {
                     name + "PhasedCondenserSecondaryOut");
         }
         primaryInnerNode.setName(
-            name + "PhasedCondenserMiddleNode");
+                name + "PhasedCondenserMiddleNode");
         // Thermal network
         thermalOrigin.setName(name + "PhasedCondenserThermalOrigin");
         thermalOriginNode.setName(name + "PhasedCondenserThermalOrigin");
@@ -269,7 +290,7 @@ public class PhasedCondenser {
         }
         return null;
     }
-    
+
     /**
      * Access the phased nodes which are connected with this phased condenser.
      *
