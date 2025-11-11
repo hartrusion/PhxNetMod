@@ -166,6 +166,7 @@ public class HeatThermalExchanger extends HeatPassive
 
     public void setInnerThermalEffortSource(EffortSource s) {
         thermalEffortSource = s;
+        heatHandler.setThermalEffortSource(thermalEffortSource);
         setCoupledElement(s);
     }
 

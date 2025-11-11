@@ -34,6 +34,7 @@ import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
 import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
 import com.hartrusion.modeling.phasedfluid.PhasedThermalExchanger;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
+import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -88,6 +89,12 @@ public class PhasedCondenserTest {
     private HeatOrigin hz1, hz2;
 
     private DomainAnalogySolver solver;
+    
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        // Keep Log out clean during test run
+        SimpleLogOut.configureLoggingWarningsOnly();
+    }
 
     public PhasedCondenserTest() {
     }
