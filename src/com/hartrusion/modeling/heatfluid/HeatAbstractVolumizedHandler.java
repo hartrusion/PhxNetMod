@@ -196,6 +196,7 @@ public abstract class HeatAbstractVolumizedHandler implements HeatHandler {
     @Override
     public void setInitialTemperature(double t) {
         temperature = t;
+        nextTemperature = t; // this gets written to thermal sources
     }
 
     @Override

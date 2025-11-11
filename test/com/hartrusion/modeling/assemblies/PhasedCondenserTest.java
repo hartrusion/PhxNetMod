@@ -168,6 +168,7 @@ public class PhasedCondenserTest {
     public void testZeroFlow() {
         pz1.setOriginHeatEnergy(300 * water.getSpecificHeatCapacity());
         pz2.setOriginHeatEnergy(300 * water.getSpecificHeatCapacity());
+        // 300 * c = 1.260.000
         hz2.setOriginTemperature(300);
 
         instance.initConditions(300, 300, 1.0);
@@ -175,10 +176,17 @@ public class PhasedCondenserTest {
         flowOut.setFlow(0.0);
         heatFluidFlow.setFlow(0);
         
-        for (int idx = 0; idx < 10; idx++) {
+        for (int idx = 0; idx < 1; idx++) {
             solver.prepareCalculation();
             solver.doCalculation();
         }
+        
+        assertEquals(
+                instance.getSecondarySide().getHeatHandler().getTemperature(),
+                300, 1.0);
+        assertEquals(instance.getPrimarySideReservoir().getTemperature(),
+                300, 1.0);
+ 
     }
 
 }

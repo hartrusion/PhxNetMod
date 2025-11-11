@@ -178,6 +178,7 @@ public class PhasedThermalExchanger extends FlowThrough
     public void setInnerThermalEffortSource(EffortSource s) {
         thermalEffortSource = s;
         setCoupledElement(s);
+        phasedHandler.setThermalEffortSource(thermalEffortSource);
     }
 
     @Override
