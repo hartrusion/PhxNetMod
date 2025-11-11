@@ -178,7 +178,7 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
 
     /**
      * Allows replacing the attached phased handler with an other handler class.
-     * Intended ussage is to be able to attach the PhasedThermalVolume handler
+     * Intended usage is to be able to attach the PhasedThermalVolume handler
      * to be able to simulate thermal/temperature exchange with the reservoir.
      * For this case, the handler has to be replaced.
      *
@@ -253,15 +253,30 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         phasedHandler.setInitialHeatEnergy(
                 fluidProperties.getSpecificHeatCapacity() * temperature);
     }
+    
+    /**
+     * Helper function to calculate any mass for a given fill height. This does
+     * not change any of the elements state variables, it can be used to set 
+     * the initial state with a fill height value instead of a stored mass.
+     * The base area must be set.
+     * @param fillHeight in Meters
+     * @param temperature in Kelvin
+     * @return mass in kg
+     */
+    public double getMassForHeight(double fillHeight, double temperature) {
+        double pressure = fluidProperties.getSaturationEffort(temperature);
+        double rho = fluidProperties.getDensityLiquid(pressure);
+        return fillHeight * baseArea * rho;
+    }
 
     /**
      * Defines the given connected node to be a steam output node. Flow out of
      * this element towards this node will always be in gas phase, requiring the
-     * element to be in a near evaporatin state. If the contained fluid is far
+     * element to be in a near evaporation state. If the contained fluid is far
      * from evaporation, a warning will be sent to the log. If you use this the
      * model has to be made in a way that ensures no flow is going out below the
      * evaporation. This can be achieve with automatic valves which open only if
-     * a certain pressure is reaced.
+     * a certain pressure is reached.
      *
      * @param pn
      */

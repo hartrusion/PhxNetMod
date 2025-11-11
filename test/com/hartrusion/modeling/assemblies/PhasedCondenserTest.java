@@ -76,17 +76,17 @@ public class PhasedCondenserTest {
     *              pz2
      */
     private PhasedCondenser instance;
-    
+
     private PhasedPropertiesWater water = new PhasedPropertiesWater();
-    
+
     private PhasedFlowSource flowIn, flowOut;
     private PhasedNode pn1, pn2;
     private PhasedOrigin pz1, pz2;
-    
+
     private HeatFlowSource heatFluidFlow;
     private HeatNode hn;
     private HeatOrigin hz1, hz2;
-    
+
     private DomainAnalogySolver solver;
 
     public PhasedCondenserTest() {
@@ -103,7 +103,7 @@ public class PhasedCondenserTest {
         // kTimesA is 425 k = 85 W/m^2/K, A = 5 m²
         // 0.5 m level for low, 1.5 m level for high.
         instance.initCharacteristic(1.0, 20, 200, 420, 0.5, 1.5);
-        
+
         // Generate additonal model elements
         flowIn = new PhasedFlowSource();
         flowOut = new PhasedFlowSource();
@@ -115,7 +115,7 @@ public class PhasedCondenserTest {
         hn = new HeatNode();
         hz1 = new HeatOrigin();
         hz2 = new HeatOrigin();
-        
+
         // connect elements like in schematic
         pz2.connectToVia(flowOut, pn2);
         flowOut.connectTo(
@@ -128,7 +128,7 @@ public class PhasedCondenserTest {
                 instance.getHeatNode(PhasedCondenser.SECONDARY_IN));
         hz1.connectTo(
                 instance.getHeatNode(PhasedCondenser.SECONDARY_OUT));
-        
+
         // Setup solver
         solver = new DomainAnalogySolver();
         solver.addNetwork(hn);
@@ -151,12 +151,27 @@ public class PhasedCondenserTest {
     }
 
     /**
-     * Test of nothing. If all initial conditions are correct, no flow 
-     * should be anywhere.
+     * Test of nothing. If all initial conditions are correct, no flow should be
+     * anywhere. Sets all temperatures to 300 Kelvin and runs the calculations a
+     * few times, after that, temperatures must still be 300. Of course it is 
+     * also expected for the calculation fo be in fully completed state each
+     * time.
      */
     @Test
     public void testZeroFlow() {
-        // todo, does fail due to solver not able to handle thermal network
+        pz1.setOriginHeatEnergy(300 * water.getSpecificHeatCapacity());
+        pz2.setOriginHeatEnergy(300 * water.getSpecificHeatCapacity());
+        hz2.setOriginTemperature(300);
+
+        instance.initConditions(300, 300, 1.0);
+        flowIn.setFlow(0.0);
+        flowOut.setFlow(0.0);
+        heatFluidFlow.setFlow(0);
+        
+        for (int idx = 0; idx < 10; idx++) {
+            solver.prepareCalculation();
+            solver.doCalculation();
+        }
     }
 
 }
