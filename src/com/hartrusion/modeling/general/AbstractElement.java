@@ -79,11 +79,7 @@ public abstract class AbstractElement implements CalculationStep,
     /**
      * Sets a unique name for this element. The name can be returned by using
      * the toString function of java.lang.object.
-     *
-     * <p>
-     * Note that a @-sign is not allowed as the hashCode will be appended to the
-     * set name with the @-sign afterward.
-     *
+     * 
      * @param name Unique name of the element.
      */
     public void setName(String name) {
@@ -314,5 +310,10 @@ public abstract class AbstractElement implements CalculationStep,
      */
     public void setCoupledElement(AbstractElement coupledElement) {
         this.coupledElement = coupledElement;
+        // Also make the connection the other way so both elements know
+        // each other
+        if (coupledElement.getCoupledElement() == null) {
+            coupledElement.setCoupledElement(this);
+        }
     }
 }
