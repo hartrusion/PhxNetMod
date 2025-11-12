@@ -190,7 +190,7 @@ public class PhasedCondenserTest {
         flowOut.setFlow(0.0);
         heatFluidFlow.setFlow(0);
 
-        for (int idx = 0; idx < 2; idx++) {
+        for (int idx = 0; idx < 10; idx++) {
             solver.prepareCalculation();
             solver.doCalculation();
             
