@@ -89,7 +89,7 @@ public class PhasedCondenserTest {
     private HeatOrigin hz1, hz2;
 
     private DomainAnalogySolver solver;
-    
+
     @BeforeClass
     public static void setUpClass() throws Exception {
         // Keep Log out clean during test run
@@ -122,6 +122,17 @@ public class PhasedCondenserTest {
         hn = new HeatNode();
         hz1 = new HeatOrigin();
         hz2 = new HeatOrigin();
+        
+        flowIn.setName("FlowIn");
+        flowOut.setName("FlowOut");
+        pn1.setName("pn1");
+        pn2.setName("pn2");
+        pz1.setName("pz1");
+        pz2.setName("pz2");
+        heatFluidFlow.setName("HeatFluidFlow");
+        hn.setName("hn");
+        hz1.setName("hz1");
+        hz2.setName("hz2");
 
         // connect elements like in schematic
         pz2.connectToVia(flowOut, pn2);
@@ -160,33 +171,44 @@ public class PhasedCondenserTest {
     /**
      * Test of nothing. If all initial conditions are correct, no flow should be
      * anywhere. Sets all temperatures to 300 Kelvin and runs the calculations a
-     * few times, after that, temperatures must still be 300. Of course it is 
+     * few times, after that, temperatures must still be 300. Of course it is
      * also expected for the calculation fo be in fully completed state each
      * time.
      */
     @Test
     public void testZeroFlow() {
-        pz1.setOriginHeatEnergy(300 * water.getSpecificHeatCapacity());
-        pz2.setOriginHeatEnergy(300 * water.getSpecificHeatCapacity());
+        double temperature = 300;
         // 300 * c = 1.260.000
-        hz2.setOriginTemperature(300);
+        double heatEnergy = temperature * water.getSpecificHeatCapacity();
+        
+        pz1.setOriginHeatEnergy(heatEnergy);
+        pz2.setOriginHeatEnergy(heatEnergy);
+        hz2.setOriginTemperature(temperature);
 
-        instance.initConditions(300, 300, 1.0);
+        instance.initConditions(temperature, temperature, 1.0);
         flowIn.setFlow(0.0);
         flowOut.setFlow(0.0);
         heatFluidFlow.setFlow(0);
-        
-        for (int idx = 0; idx < 1; idx++) {
+
+        for (int idx = 0; idx < 2; idx++) {
             solver.prepareCalculation();
             solver.doCalculation();
+            
+            // There must be no flow in primary side
+            assertEquals(instance.getPhasedNode(PhasedCondenser.PRIMARY_INNER)
+                    .getFlow(0), 0.0, 1e-8);
         }
+
+        // There must be no changes to the inner temperature and energy.
+        assertEquals( instance.getSecondarySide().getHeatHandler()
+                .getTemperature(), temperature, 1e-8);
+
+        assertEquals(instance.getPrimarySideCondenser().getPhasedHandler()
+                .getHeatEnergy(), heatEnergy, 1e-8);
         
-        assertEquals(
-                instance.getSecondarySide().getHeatHandler().getTemperature(),
-                300, 1.0);
         assertEquals(instance.getPrimarySideReservoir().getTemperature(),
-                300, 1.0);
- 
+                temperature, 1e-8);
+
     }
 
 }

@@ -127,6 +127,7 @@ public class PhasedCondenser {
     public static final int PRIMARY_OUT = 2;
     public static final int SECONDARY_IN = 3;
     public static final int SECONDARY_OUT = 4;
+    public static final int PRIMARY_INNER = 5;
 
     private double fillLevelLow, fillLevelHigh, kTimesA;
 
@@ -286,41 +287,41 @@ public class PhasedCondenser {
      */
     public void initName(String name) {
         primarySideCondenser.setName(
-                name + "PhasedCondenserPrimarySideCondenser");
+                name + "PrimarySideCondenser");
         primarySideReservoir.setName(
-                name + "PhasedCondenserPrimarySideReservoir");
-        secondarySide.setName(name + "PhasedCondenserSecondarySide");
+                name + "PrimarySideReservoir");
+        secondarySide.setName(name + "SecondarySide");
         if (nodesGenerated) {
             getPhasedNode(PRIMARY_IN).setName(
-                    name + "PhasedCondenserPrimaryIn");
+                    name + "PrimaryIn");
             getPhasedNode(PRIMARY_OUT).setName(
-                    name + "PhasedCondenserPrimaryOut");
+                    name + "PrimaryOut");
             getHeatNode(SECONDARY_IN).setName(
-                    name + "PhasedCondenserSecondaryIn");
+                    name + "SecondaryIn");
             getHeatNode(SECONDARY_OUT).setName(
-                    name + "PhasedCondenserSecondaryOut");
+                    name + "SecondaryOut");
         }
         primaryInnerNode.setName(
-                name + "PhasedCondenserMiddleNode");
+                name + "MiddleNode");
         // Thermal network
-        thermalOrigin.setName(name + "PhasedCondenserThermalOrigin");
-        thermalOriginNode.setName(name + "PhasedCondenserThermalOrigin");
+        thermalOrigin.setName(name + "ThermalOrigin");
+        thermalOriginNode.setName(name + "ThermalOrigin");
         primaryCondenserThermalNode.setName(
-                name + "PhasedCondenserPrimaryCondenserThermalNode");
+                name + "PrimaryCondenserThermalNode");
         primaryReservoirThermalNode.setName(
-                name + "PhasedCondenserPrimaryReservoirThermalNode");
+                name + "PrimaryReservoirThermalNode");
         secondaryThermalNode.setName(
-                name + "PhasedCondenserSecondaryThermalNode");
+                name + "SecondaryThermalNode");
         primaryCondenserTemperature.setName(
-                name + "PhasedCondenserPrimaryCondenserTemperature");
+                name + "PrimaryCondenserTemperature");
         primaryReservoirTemperature.setName(
-                name + "PhasedCondenserPrimaryReservoirTemperature");
+                name + "PrimaryReservoirTemperature");
         secondaryTemperature.setName(
-                name + "PhasedCondenserSecondaryTemperature");
+                name + "SecondaryTemperature");
         thermalFlowCondenserResistance.setName(
-                name + "PhasedCondenserThermalFlowCondenserResistance");
+                name + "ThermalFlowCondenserResistance");
         thermalFlowReservoirResistance.setName(
-                name + "PhasedCondenserThermalFlowReservoirResistance");
+                name + "ThermalFlowReservoirResistance");
     }
 
     /**
@@ -378,6 +379,8 @@ public class PhasedCondenser {
                 return (PhasedNode) primarySideCondenser.getNode(1);
             case PRIMARY_OUT:
                 return (PhasedNode) primarySideReservoir.getNode(1);
+            case PRIMARY_INNER:
+                return primaryInnerNode;
         }
         return null;
     }
