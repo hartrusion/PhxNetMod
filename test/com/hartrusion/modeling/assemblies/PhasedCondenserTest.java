@@ -109,7 +109,7 @@ public class PhasedCondenserTest {
         // 200 kg water in heat exchanger side, 
         // kTimesA is 425 k = 85 W/m^2/K, A = 5 m²
         // 0.5 m level for low, 1.5 m level for high.
-        instance.initCharacteristic(1.0, 20, 200, 420, 0.5, 1.5);
+        instance.initCharacteristic(1.0, 20, 200, 420, 0.5, 1.5, 1e5);
 
         // Generate additonal model elements
         flowIn = new PhasedFlowSource();
