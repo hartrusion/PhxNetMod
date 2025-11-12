@@ -336,7 +336,7 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
 
     /**
      * Returns the current set ambient pressure in Pa. As the element is an
-     * effort forcing capacitace, it will always enforce pressure or effort on
+     * effort forcing capacitance, it will always enforce pressure or effort on
      * all connected nodes. The effort will be limited to be at least as high as
      * the ambient pressure, this allows to have a state of pressurized fluid
      * that is not vaporizing.
@@ -349,7 +349,7 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
 
     /**
      * Sets the current set ambient pressure in Pa. As the element is an effort
-     * forcing capacitace, it will always enforce pressure or effort on all
+     * forcing capacitance, it will always enforce pressure or effort on all
      * connected nodes. The effort will be limited to be at least as high as the
      * ambient pressure, this allows to have a state of pressurized fluid that
      * is not vaporizing.
