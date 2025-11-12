@@ -34,16 +34,13 @@ import com.hartrusion.modeling.general.SelfCapacitance;
  * the saturation pressure. It is possible to set an ambient pressure which will
  * always be present (for example 1 bar or 1e5 Pa) and the fluid will be stored
  * as cold, non saturated fluid with lower temperature.
- *
  * <p>
  * Nodes can be configured to be either liquid or steam state to define where on
  * this element they are connected.
- *
  * <p>
  * The stateValue of this element is defined to be the absolute mass in kg
  * inside this element. As we strictly use kg/s for mass flow, time constant tau
  * will be 1.0.
- *
  * <p>
  * The element will not apply hydrostatic pressure on the nodes as this would
  * require the steam nodes to not have this pressure and this would be contrary
@@ -64,7 +61,7 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
      * 1 bar ambient pressure for 100 deg C boiling temperature. The pressure or
      * effort value will never be lower than this value.
      */
-    private final double ambientPressure = 1e5;
+    private double ambientPressure = 1e5;
 
     /**
      * Absolute pressure of the fluid. Will not drop below ambient pressure.
@@ -82,6 +79,8 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
      * Area in m^2, allows calculation of fill height.
      */
     private double baseArea = 1.0;
+
+    private boolean previousPressureSet;
 
     /**
      * Sets the base area in m^2 of the reservoir. This value is used to
@@ -137,12 +136,38 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         boolean didSomething = false;
         PhasedNode pn;
 
-        didSomething = setEffortValueOnNodes(absoluteFluidPressure) 
+        didSomething = setEffortValueOnNodes(absoluteFluidPressure)
                 || didSomething;
 
         // Sum up all incoming flows like its done in SelfCapacitance class.
         // This will call the .integrate() method from EnergyStorage.
         didSomething = calculateNewDeltaValue() || didSomething;
+
+        // This part is only needed if the handler is actually replaced with
+        // a thermal part for heat exchange, this needs the current pressure
+        // for the next calculation cycle beforehand.
+        if (!previousPressureSet) {
+            if (phasedHandler instanceof PhasedThermalVolumeHandler) {
+                if (getNode(0).effortUpdated()) {
+                    PhasedThermalVolumeHandler handler
+                            = (PhasedThermalVolumeHandler) phasedHandler;
+                    handler.setPreviousPressure(getNode(0).getEffort());
+                    didSomething = true;
+                    previousPressureSet = true;
+                } else if (getNode(1).effortUpdated()) {
+                    // as this is a flowthrough type element, we should never
+                    // need this and node 0 is sufficient.
+                    PhasedThermalVolumeHandler handler
+                            = (PhasedThermalVolumeHandler) phasedHandler;
+                    handler.setPreviousPressure(getNode(1).getEffort());
+                    didSomething = true;
+                    previousPressureSet = true;
+                }
+            } else {
+                previousPressureSet = true;
+                // no didsomething here as this is not relevant.
+            }
+        }
 
         // Add call for thermalhandler calculation
         didSomething = phasedHandler.doPhasedCalculation() || didSomething;
@@ -178,9 +203,9 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
 
     /**
      * Allows replacing the attached phased handler with an other handler class.
-     * Intended usage is to be able to attach the PhasedThermalVolume handler
-     * to be able to simulate thermal/temperature exchange with the reservoir.
-     * For this case, the handler has to be replaced.
+     * Intended usage is to be able to attach the PhasedThermalVolume handler to
+     * be able to simulate thermal/temperature exchange with the reservoir. For
+     * this case, the handler has to be replaced.
      *
      * @param phasedHandler
      */
@@ -252,13 +277,27 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         stateValue = storedMass;
         phasedHandler.setInitialHeatEnergy(
                 fluidProperties.getSpecificHeatCapacity() * temperature);
+        // in case of the handler beeing a thermal exchanger (this is possible
+        // and used in the PhasedCondenser assembly there has to be an initial
+        // pressure known to set the thermal network accordingly.
+        if (phasedHandler instanceof PhasedThermalVolumeHandler) {
+            double pressure = fluidProperties.getSaturationEffort(temperature);
+            PhasedThermalVolumeHandler handler
+                    = (PhasedThermalVolumeHandler) phasedHandler;
+            if (pressure > ambientPressure) {
+                handler.setPreviousPressure(pressure);
+            } else {
+                handler.setPreviousPressure(ambientPressure);
+            }
+        }
     }
-    
+
     /**
      * Helper function to calculate any mass for a given fill height. This does
-     * not change any of the elements state variables, it can be used to set 
-     * the initial state with a fill height value instead of a stored mass.
-     * The base area must be set.
+     * not change any of the elements state variables, it can be used to set the
+     * initial state with a fill height value instead of a stored mass. The base
+     * area must be set.
+     *
      * @param fillHeight in Meters
      * @param temperature in Kelvin
      * @return mass in kg
@@ -293,6 +332,32 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
                     + "to this element.");
         }
         return false; // todo
+    }
+
+    /**
+     * Returns the current set ambient pressure in Pa. As the element is an
+     * effort forcing capacitace, it will always enforce pressure or effort on
+     * all connected nodes. The effort will be limited to be at least as high as
+     * the ambient pressure, this allows to have a state of pressurized fluid
+     * that is not vaporizing.
+     *
+     * @return ambient pressure in Pa
+     */
+    public double getAmbientPressure() {
+        return ambientPressure;
+    }
+
+    /**
+     * Sets the current set ambient pressure in Pa. As the element is an effort
+     * forcing capacitace, it will always enforce pressure or effort on all
+     * connected nodes. The effort will be limited to be at least as high as the
+     * ambient pressure, this allows to have a state of pressurized fluid that
+     * is not vaporizing.
+     *
+     * @param ambientPressure Ambient pressure in Pa, typically 1e5 for 1 bar.
+     */
+    public void setAmbientPressure(double ambientPressure) {
+        this.ambientPressure = ambientPressure;
     }
 
 }

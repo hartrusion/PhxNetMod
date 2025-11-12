@@ -33,7 +33,6 @@ import com.hartrusion.util.ArraysExt;
  * Abstract handler class that does basics of assigning a mass with heat energy
  * and providing some common methods. Will be extended to more specialized
  * handler classes.
- *
  * <p>
  * Handles volumized heat energy.
  *
@@ -48,7 +47,7 @@ public abstract class PhasedAbstractVolumizedHandler implements PhasedHandler {
 
     /**
      * Nodes that are placed on the upper side of a vessel will always output
-     * the steam phase of the phased fuid while the lower nodes will always
+     * the steam phase of the phased fluid while the lower nodes will always
      * output liquid. This array is to identify what kind of output there is.
      */
     protected boolean[] isSteamOutput = new boolean[1];

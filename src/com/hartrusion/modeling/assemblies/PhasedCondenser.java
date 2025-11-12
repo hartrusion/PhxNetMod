@@ -225,17 +225,22 @@ public class PhasedCondenser {
      * @param primaryCondensingMass Constant heated mass inside the primary
      * phased side (kg)
      * @param secondaryMass Constant heated mass inside the secondary side (kg)
-     * @param kTimesA Thermal conductance k * A in W/K
+     * @param kTimesA Thermal conductance k * A in W/K, k is around 80 and A
+     * is the area in m².
      * @param fillLevelLow Fill level of the reservoir with thermal exchanger
      * fully exposed (meters)
      * @param fillLevelHigh Fill level of the reservoir with thermal exchanger
      * completely covered (meters)
+     * @param ambientPressure Minimum pressure, there will be no pressure 
+     * below this value on the reservoir. Default: 1e5 Pa
      */
     public void initCharacteristic(double primaryBaseArea,
             double primaryCondensingMass,
             double secondaryMass, double kTimesA,
-            double fillLevelLow, double fillLevelHigh) {
+            double fillLevelLow, double fillLevelHigh,
+            double ambientPressure) {
         primarySideReservoir.setBaseArea(primaryBaseArea);
+        primarySideReservoir.setAmbientPressure(ambientPressure);
         primarySideCondenser.getPhasedHandler().setInnerHeatedMass(
                 primaryCondensingMass);
         this.fillLevelLow = fillLevelLow;
@@ -326,7 +331,12 @@ public class PhasedCondenser {
 
     /**
      * Sets the fluid temperature on both sides (initial condition). This also
-     * sets the pressure on the primary side
+     * sets the pressure on the primary side.
+     * <p>
+     * The initial condition with this method is restricted to fluid phase only,
+     * meaning there is X=0 in the mass inside the primary side condenser.
+     * <p>
+     * The pressure will be set to saturation pressure of the given temperature.
      *
      * @param primaryTemp in Kelvin
      * @param secondaryTemp in Kelvin
@@ -337,18 +347,29 @@ public class PhasedCondenser {
         // get properties from the element that knows it.
         PhasedFluidProperties fp
                 = primarySideReservoir.getPhasedFluidProperties();
-        // Primary condenser:
-        primaryCondenserHandler.setInitialHeatEnergy(
-                primaryTemp * fp.getSpecificHeatCapacity());
+        double pressure = fp.getSaturationEffort(primaryTemp);
+        // Limit the pressure to be at least the ambient pressure, this is 
+        // important fo setting the correct previousPressure before anythign
+        // can be calculated automatically. The reservoir will later force the 
+        // effort and pressure but this is not known during the call of this
+        // method.
+        if (pressure < primarySideReservoir.getAmbientPressure()) {
+            pressure = primarySideReservoir.getAmbientPressure();
+        }
         // Primary reservoir:
         primaryReservoirHandler.setInitialHeatEnergy(
                 primaryTemp * fp.getSpecificHeatCapacity());
-        primarySideReservoir.setInitialEffort(
-                fp.getSaturationEffort(primaryTemp));
+        primarySideReservoir.setInitialEffort(pressure);
+        // Primary condenser:
+        primaryCondenserHandler.setInitialHeatEnergy(
+                primaryTemp * fp.getSpecificHeatCapacity());
+        // The condenser does not have a state value for pressure but the
+        // phased handler needs to know it.
+        primaryCondenserHandler.setPreviousPressure(pressure);
         secondarySide.getHeatHandler().setInitialTemperature(secondaryTemp);
         primarySideReservoir.setInitialState(
-                primarySideReservoir.getMassForHeight(fillHeight, primaryTemp)
-                , primaryTemp);
+                primarySideReservoir.getMassForHeight(fillHeight, primaryTemp),
+                 primaryTemp);
     }
 
     /**

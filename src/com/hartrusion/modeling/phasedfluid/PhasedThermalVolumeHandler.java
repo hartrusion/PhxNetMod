@@ -50,9 +50,13 @@ public class PhasedThermalVolumeHandler extends PhasedAbstractVolumizedHandler {
     /**
      * Effort value from the previous cycle. To be able to provide a full
      * solution we need to set a temperature which we only can set using this
-     * previous value. The fluidProperties are pressure dependend.
+     * previous value. The fluidProperties are depending on pressure.
      */
     private double previousPressure;
+
+    public void setPreviousPressure(double previousPressure) {
+        this.previousPressure = previousPressure;
+    }
 
     public PhasedThermalVolumeHandler(PhasedFluidProperties fluidProperties,
             PhasedElement parent) {

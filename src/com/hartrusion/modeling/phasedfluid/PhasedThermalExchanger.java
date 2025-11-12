@@ -35,6 +35,11 @@ import com.hartrusion.modeling.general.OpenOrigin;
  * Represents a fixed mass that can store heat energy and transfer this heat
  * energy to a thermal system. Commonly used as one side of a heat exchanger
  * system.
+ * <p>
+ * As the thermal network that is connected to this element is transferring 
+ * temperature, not heat energy, a pressure value has to be managed and passed 
+ * to the handler so the temperature without the evaporation energy part can 
+ * be calculated and used.
  *
  * @author Viktor Alexander Hartung
  */
@@ -46,6 +51,8 @@ public class PhasedThermalExchanger extends FlowThrough
     private OpenOrigin thermalOrigin;
     private EffortSource thermalEffortSource;
     private GeneralNode thermalNode;
+    
+    private boolean previousPressureSet;
     
     /**
      * A reference to a condenser assembly that uses this element. This is used
@@ -67,6 +74,7 @@ public class PhasedThermalExchanger extends FlowThrough
 
     @Override
     public void prepareCalculation() {
+        previousPressureSet = false;
         if (externalPhasedCondenserAssembly != null) {
             // Call assembly prepare
             externalPhasedCondenserAssembly.prepareCalculation();
@@ -87,6 +95,20 @@ public class PhasedThermalExchanger extends FlowThrough
 
         if (thermalOrigin != null) {
             didSomething = thermalOrigin.doCalculation();
+        }
+        
+        if (!previousPressureSet) {
+            if (getNode(0).effortUpdated()) {
+                phasedHandler.setPreviousPressure(getNode(0).getEffort());
+                didSomething = true;
+                previousPressureSet = true;
+            } else if (getNode(1).effortUpdated()) {
+                // as this is a flowthrough type element, we should never
+                // need this and node 0 is sufficient.
+                phasedHandler.setPreviousPressure(getNode(1).getEffort());
+                didSomething = true;
+                previousPressureSet = true;
+            }
         }
 
         didSomething = thermalEffortSource.doCalculation() || didSomething;
