@@ -16,17 +16,17 @@ a proper way to prove that an application does not pose any risks.
 
 It was designed as the core of the chornobyl RBMK simulator project.
 
-The usual academic  approach is to generate a state space representation of 
+The usual academic approach is to generate a state space representation of 
 a network model or use nodal analysis to calculate the state of a physical 
-network for each step.  However, this has the downside that the matrix 
+network for each step. However, this has the downside that the matrix 
 describing the network has to have certain properties which do not allow 
 unlimited or absolutely zero flow rates like you would have them if you 
 shortcut or cut a wire in a circuit.
 
 The focus on this project is to provide stable solutions outside operating 
-range and liberalization. For example, the heat exchanger classes are very 
-inaccurate in terms of thermal transfer, but they provide solutions for 
-all possible cases, even when the flow on one side is zero or even reversed.
+range. For example, the heat exchanger classes are very inaccurate in terms of 
+thermal transfer, but they provide solutions for all possible cases, even when 
+the flow on one side is zero or even reversed.
 
 ## Model description
 The model is set up by connecting elements to common nodes. The nodes 
@@ -44,12 +44,15 @@ to calculate flow directions first and provide scalar values on top of
 those basic elements.
 
 ## Solver
-Contrary to popular solutions the solvers supplied here translate the 
-network into multiple electronic circuits and apply simplifications 
+Contrary to popular solutions the solvers supplied here compile the 
+network as multiple electronic circuits and apply simplifications 
 recursively, making a calculation from top to bottom and back to make a full 
 calculation of all flows and efforts in the network. This allows shortcuts and
 open connections as it is clear what happens if you put a shortcut parallel 
-or an open connection in series.
+or an open connection in series. Having bridged connections which force equal  
+effort values or open connections which force a flow of zero are explicit 
+features of this modeling approach and the solving algorithm takes care of that.
+
 The library provies a low accuracy solution using the most simple euler 
 method for the next time step after the network solution is obtained.
 
