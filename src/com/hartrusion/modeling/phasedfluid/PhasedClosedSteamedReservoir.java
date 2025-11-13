@@ -24,7 +24,6 @@
 package com.hartrusion.modeling.phasedfluid;
 
 import com.hartrusion.modeling.PhysicalDomain;
-import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.SelfCapacitance;
 
@@ -320,18 +319,7 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
      * @param pn
      */
     public void setSteamOut(PhasedNode pn) {
-        if (!nodes.contains(pn)) {
-            throw new ModelErrorException("Provided node is not connected"
-                    + "to this element.");
-        }
-    }
-
-    public boolean isSteamOut(PhasedNode pn) {
-        if (!nodes.contains(pn)) {
-            throw new ModelErrorException("Provided node is not connected"
-                    + "to this element.");
-        }
-        return false; // todo
+        phasedHandler.setSteamOutput(pn, true);
     }
 
     /**

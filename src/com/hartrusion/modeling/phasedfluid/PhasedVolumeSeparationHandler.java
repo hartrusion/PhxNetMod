@@ -26,8 +26,8 @@ package com.hartrusion.modeling.phasedfluid;
 import com.hartrusion.modeling.general.AbstractElement;
 
 /**
- * Splits the pased fluid according to the set kind of node, either steam or
- * liquid. The assumtion is that the stored fluid has no energy stored in
+ * Splits the phased fluid according to the set kind of node, either steam or
+ * liquid. The assumption is that the stored fluid has no energy stored in
  * steam phase.
  *
  * @author Viktor Alexander Hartung
