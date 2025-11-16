@@ -302,6 +302,10 @@ public class GeneralNode {
      * @return flow
      */
     public double getFlow(AbstractElement e) {
+        if (!connectedElements.contains(e)) {
+            throw new IllegalArgumentException("Given element is not known "
+                    + "to this node.");
+        }
         if (!flowToElements.get(connectedElements.indexOf(e))
                 .isFlowUpdated()) {
             throw new ModelErrorException("Tried to get "
