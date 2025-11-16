@@ -285,6 +285,10 @@ public class HeatFluidPumpSimple implements Runnable {
         pumpState = PumpState.OFFLINE;
         pump.setEffort(0.0);
     }
+    
+    public HeatEffortSource getPumpEffortSource() {
+        return pump;
+    }
 
     public HeatLinearValve getDischargeValve() {
         return dischargeValve;
