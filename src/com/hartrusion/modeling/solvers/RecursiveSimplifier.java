@@ -97,7 +97,8 @@ public class RecursiveSimplifier extends ChildNetwork {
     private int childLayer;
 
     private boolean substitutesFound, obsoleteNodesListUpdated,
-            childElementsCreated, newElementsConnected, containsFloatingLoop;
+            childElementsCreated, newElementsConnected, containsFloatingLoop,
+            hasDeadEnds;
 
     /**
      * If star delta transform is done on this recursion, this will hold a
@@ -373,7 +374,7 @@ public class RecursiveSimplifier extends ChildNetwork {
 
     /**
      * Updates array nodeObsolete.After the substitutions are created, this will
-     * ûpdate the array nodeObsolete to allow quick access to the information
+     * update the array nodeObsolete to allow quick access to the information
      * weather a node is still in use in the derived child network or not.
      * <p>
      * Called after searchSubstitutes(). Will set nodeObsolete[idx] to true for
@@ -718,7 +719,7 @@ public class RecursiveSimplifier extends ChildNetwork {
      * @return true, if at least one dead end element was found.
      */
     private boolean checkDeadEnds() {
-        boolean deadEndFound = false;
+        hasDeadEnds = false;
         checkArraySizes();
         for (GeneralNode n : nodes) {
             if (n.getNumberOfElements() == 1) {
@@ -728,11 +729,11 @@ public class RecursiveSimplifier extends ChildNetwork {
                 }
                 deadEnd[elements.indexOf(n.getElement(0))] = true;
                 nodeObsolete[nodes.indexOf(n)] = true;
-                deadEndFound = true;
+                hasDeadEnds = true;
                 obsoleteNodesListUpdated = true;
             }
         }
-        return deadEndFound;
+        return hasDeadEnds;
     }
 
     /**
@@ -816,7 +817,7 @@ public class RecursiveSimplifier extends ChildNetwork {
      */
     public int recursiveSimplificationSetup(int parentLayers) {
         int numberOfElements;
-        
+
         if (checkDeadEnds()) {
             createChildElements();
             registerChildElements();
@@ -848,7 +849,7 @@ public class RecursiveSimplifier extends ChildNetwork {
 
             return generateChild(parentLayers);
         }
-        
+
         // We might end with a floating loop in the last recursion. In this 
         // case, elements which are part of the loop are isSubstituted[idx] =
         // true but no substitutuion was performed (otherwise we would not get
@@ -946,7 +947,7 @@ public class RecursiveSimplifier extends ChildNetwork {
         // resulting an exception. The attached iterative solver has its own
         // methods to handle this.
         iterativeSolver.doCalculationOnEnforcerElements();
-        
+
         // Next we will call doCalculation on all open connections which will
         // have exactly zero flow. This will reduce numeric issues as we do not
         // need to calculate this like 5.23 - 1.23 - 4.0 = 0.0 what might not
@@ -1031,6 +1032,31 @@ public class RecursiveSimplifier extends ChildNetwork {
                 e.doCalculation();
             }
         }
+
+        // Dead-End elements have a node with only 1 element connected. There
+        // is no solution for such a node if the element is of type OPEN.
+        // For such cases, copy the effort value from the other node to have
+        // a solution.
+        if (hasDeadEnds) {
+            for (int idx = 0; idx < elements.size(); idx++) {
+                if (!deadEnd[idx]) {
+                    continue;
+                }
+                AbstractElement e = elements.get(idx);
+                if (e.getElementType() == ElementType.OPEN) {
+                    if (e.getNode(0).getNumberOfElements() == 1
+                            && !e.getNode(0).effortUpdated()
+                            && e.getNode(1).effortUpdated()) {
+                        e.getNode(0).setEffort(e.getNode(1).getEffort());
+                    } else if (e.getNode(1).getNumberOfElements() == 1
+                            && !e.getNode(1).effortUpdated()
+                            && e.getNode(0).effortUpdated()) {
+                        e.getNode(1).setEffort(e.getNode(0).getEffort());
+                    }
+                }
+            }
+        }
+
         // At this point, the network must be in a full calculated state, it is
         // made in a way that even open connections do produce values so we
         // throw a warning here in case that did not happen. This warning most
