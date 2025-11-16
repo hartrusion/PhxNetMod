@@ -31,6 +31,8 @@ import com.hartrusion.modeling.heatfluid.HeatEffortSource;
 import com.hartrusion.modeling.heatfluid.HeatLinearValve;
 import com.hartrusion.modeling.heatfluid.HeatNode;
 import com.hartrusion.mvc.ActionCommand;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Represents an assembly of a pump with suction and discharge valves. A working
@@ -38,6 +40,9 @@ import com.hartrusion.mvc.ActionCommand;
  * assembly will generate a linear characteristic by those values.
  * <p>
  * It has some methods to allow controlling it and can process events itself.
+ * <p>
+ * The assembly also features a state machine that controls basic pump controls,
+ * it is not allowed to do things that you must not do with such pumps.
  *
  * @author Viktor Alexander Hartung
  */
@@ -65,6 +70,16 @@ public class HeatFluidPump implements Runnable {
     protected PumpState oldPumpState = null;
 
     private double totalHead;
+    
+    private boolean ready;
+    private Instant stateTime; // for state machine control
+    private Instant switchOnTime;
+
+    /**
+     * Describes the state of the startup (and shutdown) procedure.
+     *
+     */
+    private int state;
 
     String name;
 
@@ -140,6 +155,9 @@ public class HeatFluidPump implements Runnable {
         } else {
             pump.setEffort(0);
         }
+        if (pumpActive && suctionOpen && dischargeOpen) {
+            state = 5;
+        }
     }
 
     /**
@@ -181,6 +199,67 @@ public class HeatFluidPump implements Runnable {
                     oldPumpState, pumpState);
         }
         oldPumpState = pumpState;
+        
+       // get current time
+        Instant now = Instant.now();
+
+        if (switchOnTime == null) {
+            ready = suctionControl.getOutput() >= 95
+                    && dischargeControl.getOutput() <= 1.0;
+        } else {
+            // if there is a switch-on-time recorded, some time must pass as 
+            // its not allowed to turn on the pump immediately.
+            ready = suctionControl.getOutput() >= 95
+                    && dischargeControl.getOutput() <= 1.0
+                    && Duration.between(switchOnTime, now).toMillis() >= 30000;
+        }
+
+        switch (state) {
+            case 0: // inactive
+                if (ready) {
+                    state = 1;
+                    stateTime = Instant.now();
+                }
+                break;
+            case 1: // ready time delay
+                if (Duration.between(stateTime, now).toMillis() >= 1500) {
+                    pumpState = PumpState.READY;
+                    state = 2;
+                }
+            case 2: // Pump ready to be switched on
+                if (!ready) { // no more ready state 
+                    state = 0;
+                    pumpState = PumpState.OFFLINE;
+                }
+                break;
+            case 3: // Start the startup phase after short delay
+                if (Duration.between(stateTime, now).toMillis() >= 800) {
+                    stateTime = Instant.now();
+                    pumpState = PumpState.STARTUP;
+                    state = 4;
+                } else if (!ready) { // abort
+                    state = 0;
+                    pumpState = PumpState.OFFLINE;
+                }
+                break;
+            case 4: // Startup phase
+                if (Duration.between(stateTime, now).toMillis() >= 3000) {
+                    stateTime = Instant.now();
+                    state = 5;
+                    // Remember this time for restart lock time
+                    switchOnTime = Instant.now();
+                    // Switch on:
+                    pumpState = PumpState.RUNNING;
+                    pump.setEffort(totalHead);
+                } else if (!ready) { // abort
+                    state = 0;
+                    pumpState = PumpState.OFFLINE;
+                }
+                break;
+            case 5: // Pump is running
+                // nothing to automate so far
+                break;
+        }
     }
 
     /**
@@ -236,14 +315,14 @@ public class HeatFluidPump implements Runnable {
     }
 
     public void operateStartPump() {
-        if (dischargeControl.getOutput() > 1.0) {
-            return; // Protection: not start if discharge is not closed.
+        if (state == 2 && dischargeControl.getOutput() <= 1.0) {
+            state = 3; // switch state machine
+            stateTime = Instant.now();
         }
-        pumpState = PumpState.RUNNING;
-        pump.setEffort(totalHead);
     }
 
     public void operateStopPump() {
+        state = 0;
         pumpState = PumpState.OFFLINE;
         pump.setEffort(0.0);
     }
