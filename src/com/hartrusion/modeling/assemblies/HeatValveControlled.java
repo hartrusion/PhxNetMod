@@ -25,7 +25,6 @@ package com.hartrusion.modeling.assemblies;
 
 import com.hartrusion.control.AbstractController;
 import com.hartrusion.control.ControlCommand;
-import com.hartrusion.control.ParameterHandler;
 import com.hartrusion.mvc.ActionCommand;
 import java.beans.PropertyChangeListener;
 
@@ -62,7 +61,9 @@ public class HeatValveControlled extends HeatValve {
     @Override
     public void initSignalListener(PropertyChangeListener signalListener) {
         super.initSignalListener(signalListener);
-        controller.addPropertyChangeListener(signalListener);
+        if (controller != null) {
+            controller.addPropertyChangeListener(signalListener);
+        }
     }
 
     /**
@@ -73,6 +74,11 @@ public class HeatValveControlled extends HeatValve {
      */
     public void initController(AbstractController controller) {
         controller.setName(name);
+        // Add all listeners which are known to this class already
+        PropertyChangeListener[] listeners = pcs.getPropertyChangeListeners();
+        for (PropertyChangeListener l : listeners) {
+            controller.addPropertyChangeListener(l);
+        }
         this.controller = controller;
     }
 
