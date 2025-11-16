@@ -129,7 +129,7 @@ public class PhasedCondenser {
     public static final int SECONDARY_OUT = 4;
     public static final int PRIMARY_INNER = 5;
 
-    private double fillLevelLow, fillLevelHigh, kTimesA;
+    private double fillLevelLow = 1.0, fillLevelHigh = 4.0, kTimesA = 400;
 
     /**
      * Factor of how much kTimesA value is still used in total on both primary
