@@ -80,11 +80,34 @@ import com.hartrusion.modeling.phasedfluid.PhasedThermalVolumeHandler;
  * on flow direction. This also allows easier solving.
  * <p>
  * The fill level will change the kTimesA distribution between the condenser and
- * the reservoir. The total kTimesA will be reduced down to 20 % if the heat
- * exchanger is filled completely. This leads to more heat going into the
- * reservoir, increasing the pressure and therefore acting as a self-regulation
- * mechanism if the condenser fills up too much. The behavior can be disabled by
- * setting a high level value on the low level property.
+ * the reservoir. The total kTimesA will be reduced if the heat exchanger is
+ * filled completely. This leads to more heat going into the reservoir,
+ * increasing the pressure and therefore acting as a self-regulation mechanism
+ * if the condenser fills up too much.
+ * <p>
+ * <ul>
+ * <li>
+ * When the reservoir is filled below minimum fill level, fReservoir is used to
+ * define the distribution of the heat conductance. fReservoir is 0.05 by
+ * default, meaning 0.05 parts of the thermal conductance will be applied to the
+ * fluid inside the reservoir and 0.95 parts are applied to the condenser heat 
+ * exchange elements.
+ * </li>
+ * <li>
+ * When the reservoir is filled above flooded level, there will be no thermal
+ * conductance by the condenser elements. A fraction, defined with fFilled, of
+ * the thermal conductance will be applied to the reservoir part. This models 
+ * the missing condensation (or evaporation!) on the surface of the piping.
+ * </li>
+ * <li>
+ * Between those two fill levels, thermal conductance gets interpolated.
+ * </li>
+ * </ul>
+ * This is a very rough estimation of something that is otherwise hard to 
+ * calculate at all and allows traversing between those operating points.
+ * <p>
+ * Even if this class is called Condenser, it is actually possible to use it as
+ * an evaporation module.
  *
  * @author Viktor Alexander Hartung
  */
@@ -132,12 +155,18 @@ public class PhasedCondenser {
     private double fillLevelLow = 1.0, fillLevelHigh = 4.0, kTimesA = 400;
 
     /**
-     * Factor of how much kTimesA value is still used in total on both primary
-     * elements if the condenser is flooded (level > fillLevelHigh)
+     * Factor of how much kTimesA is used by the reservoir if the condenser has
+     * its fill level below min level
      */
-    private double floodedKTimesATotal = 0.3;
+    private double fReservoir = 0.05;
 
-    private double km, kb, dm, db;
+    /**
+     * Factor of how much ktimesA is used by the reservoir itself if the
+     * condenser is flooded (fill level above max)
+     */
+    private double fFilled = 0.4;
+
+    private double cm, cb, rm, rb;
 
     public PhasedCondenser(PhasedFluidProperties fluidProperties) {
         // Generate elements that require the PhasedFluidProperties
@@ -196,26 +225,26 @@ public class PhasedCondenser {
     public void prepareCalculation() {
         double kA, kDist, level;
         level = primarySideReservoir.getFillHeight();
-        // kTimesA effective on both elements
+        // kTimesA effective on both elements is kA
         // kDist from 0 to 1 is the part that is applied to the reservoir
         if (level <= fillLevelLow) {
-            kA = kTimesA;
-            kDist = 0.0;
-            thermalFlowCondenserResistance.setResistanceParameter(kA);
-            thermalFlowReservoirResistance.setOpenConnection();
+            thermalFlowCondenserResistance.setConductanceParameter(
+                    (1.0 - fReservoir) * kTimesA);
+            thermalFlowReservoirResistance.setConductanceParameter(
+                    fReservoir * kTimesA);
         } else if (level >= fillLevelHigh) {
-            kA = kTimesA * floodedKTimesATotal;
-            kDist = 1.0;
+            // Heat transfer only by the fluid of the reservoir with reduced
+            // heat conducance by definded factor.
             thermalFlowCondenserResistance.setOpenConnection();
-            thermalFlowReservoirResistance.setResistanceParameter(kA);
+            thermalFlowReservoirResistance.setConductanceParameter(
+                    fFilled * kTimesA);
         } else { // interpolate
-            kA = km * level + kb;
-            kDist = dm * level + db;
-            // Apply kA total and distribution value:
+            double kTimesACondenser = cm * level + cb;
+            double kTimesAReservoir = rm * level + rb;
             thermalFlowCondenserResistance
-                    .setResistanceParameter(kA * (1.0 - kDist));
+                    .setConductanceParameter(cm * level + cb);
             thermalFlowReservoirResistance
-                    .setResistanceParameter(kA * kDist);
+                    .setConductanceParameter(rm * level + rb);
         }
     }
 
@@ -225,14 +254,14 @@ public class PhasedCondenser {
      * @param primaryCondensingMass Constant heated mass inside the primary
      * phased side (kg)
      * @param secondaryMass Constant heated mass inside the secondary side (kg)
-     * @param kTimesA Thermal conductance k * A in W/K, k is around 80 and A
-     * is the area in m².
+     * @param kTimesA Thermal conductance k * A in W/K, k is around 80 and A is
+     * the area in m².
      * @param fillLevelLow Fill level of the reservoir with thermal exchanger
      * fully exposed (meters)
      * @param fillLevelHigh Fill level of the reservoir with thermal exchanger
      * completely covered (meters)
-     * @param ambientPressure Minimum pressure, there will be no pressure 
-     * below this value on the reservoir. Default: 1e5 Pa
+     * @param ambientPressure Minimum pressure, there will be no pressure below
+     * this value on the reservoir. Default: 1e5 Pa
      */
     public void initCharacteristic(double primaryBaseArea,
             double primaryCondensingMass,
@@ -247,11 +276,15 @@ public class PhasedCondenser {
         this.fillLevelHigh = fillLevelHigh;
         this.kTimesA = kTimesA;
         secondarySide.getHeatHandler().setInnerThermalMass(secondaryMass);
-        // Calculate some factors once for kTimesA calculation:
-        km = (floodedKTimesATotal - 1.0) / (fillLevelHigh - fillLevelLow);
-        kb = 1.0 - km * fillLevelLow;
-        dm = (1.0) / (fillLevelHigh - fillLevelLow);
-        db = -dm * fillLevelLow;
+        // Calculate some factors once for kTimesA calculation.
+        // Condensation piping part: fFilled 0.4, fReservoir 0.1
+        cm = -((1.0 - fReservoir) * kTimesA)
+                / (fillLevelHigh - fillLevelLow);
+        cb = -cm * fillLevelHigh;
+        // Reservoir:
+        rm = (fFilled * kTimesA - fReservoir * kTimesA)
+                / (fillLevelHigh - fillLevelLow);
+        rb = fReservoir * kTimesA -rm * fillLevelLow;
     }
 
     /**
@@ -369,7 +402,7 @@ public class PhasedCondenser {
         secondarySide.getHeatHandler().setInitialTemperature(secondaryTemp);
         primarySideReservoir.setInitialState(
                 primarySideReservoir.getMassForHeight(fillHeight, primaryTemp),
-                 primaryTemp);
+                primaryTemp);
     }
 
     /**

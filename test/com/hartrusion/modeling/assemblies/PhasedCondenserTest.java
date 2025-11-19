@@ -26,17 +26,13 @@ package com.hartrusion.modeling.assemblies;
 import com.hartrusion.modeling.heatfluid.HeatFlowSource;
 import com.hartrusion.modeling.heatfluid.HeatNode;
 import com.hartrusion.modeling.heatfluid.HeatOrigin;
-import com.hartrusion.modeling.heatfluid.HeatThermalExchanger;
-import com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoir;
 import com.hartrusion.modeling.phasedfluid.PhasedFlowSource;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
 import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
-import com.hartrusion.modeling.phasedfluid.PhasedThermalExchanger;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -107,9 +103,9 @@ public class PhasedCondenserTest {
         instance.initName("TestCondenserInstance");
         // 1 m² base area, 20 kg steam in condensing area,
         // 200 kg water in heat exchanger side, 
-        // kTimesA is 425 k = 85 W/m^2/K, A = 5 m²
+        // kTimesA is k: 4000 W/m^2/K, A: 5 m² == 2e4 W/K
         // 0.5 m level for low, 1.5 m level for high.
-        instance.initCharacteristic(1.0, 20, 200, 420, 0.5, 1.5, 1e5);
+        instance.initCharacteristic(1.0, 20, 200, 2e4, 0.5, 1.5, 1e5);
 
         // Generate additonal model elements
         flowIn = new PhasedFlowSource();
@@ -211,4 +207,31 @@ public class PhasedCondenserTest {
 
     }
 
+    /**
+     * Filled to Mid-Level (same as zeroFlow test) with 350 Kelvin temperature,
+     * which is about 75 °C, secondary side is at 20 °C. It is expected for
+     * the temperatures to equalize after some time.
+     */
+    @Test
+    public void testNoFlowTemperatureEqualizing() {
+        double temperaturePrimary = 350; // 75 °C
+        double temperatureSecondary = 293.15; // 20 °C
+        double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity();
+        
+        pz1.setOriginHeatEnergy(heatEnergy);
+        pz2.setOriginHeatEnergy(heatEnergy);
+        hz2.setOriginTemperature(temperatureSecondary);
+
+        instance.initConditions(temperaturePrimary, temperatureSecondary, 1.0);
+        flowIn.setFlow(0.0);
+        flowOut.setFlow(0.0);
+        heatFluidFlow.setFlow(0);
+
+        for (int idx = 0; idx < 10; idx++) {
+            solver.prepareCalculation();
+            solver.doCalculation();
+            System.out.println(instance.getPrimarySideReservoir().getTemperature());
+        }
+        System.out.println(instance.getPrimarySideReservoir().getTemperature());
+    }
 }
