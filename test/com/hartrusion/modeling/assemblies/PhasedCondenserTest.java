@@ -118,7 +118,7 @@ public class PhasedCondenserTest {
         hn = new HeatNode();
         hz1 = new HeatOrigin();
         hz2 = new HeatOrigin();
-        
+
         flowIn.setName("FlowIn");
         flowOut.setName("FlowOut");
         pn1.setName("pn1");
@@ -176,7 +176,7 @@ public class PhasedCondenserTest {
         double temperature = 300;
         // 300 * c = 1.260.000
         double heatEnergy = temperature * water.getSpecificHeatCapacity();
-        
+
         pz1.setOriginHeatEnergy(heatEnergy);
         pz2.setOriginHeatEnergy(heatEnergy);
         hz2.setOriginTemperature(temperature);
@@ -189,19 +189,19 @@ public class PhasedCondenserTest {
         for (int idx = 0; idx < 10; idx++) {
             solver.prepareCalculation();
             solver.doCalculation();
-            
+
             // There must be no flow in primary side
             assertEquals(instance.getPhasedNode(PhasedCondenser.PRIMARY_INNER)
                     .getFlow(0), 0.0, 1e-8);
         }
 
         // There must be no changes to the inner temperature and energy.
-        assertEquals( instance.getSecondarySide().getHeatHandler()
+        assertEquals(instance.getSecondarySide().getHeatHandler()
                 .getTemperature(), temperature, 1e-8);
 
         assertEquals(instance.getPrimarySideCondenser().getPhasedHandler()
                 .getHeatEnergy(), heatEnergy, 1e-8);
-        
+
         assertEquals(instance.getPrimarySideReservoir().getTemperature(),
                 temperature, 1e-8);
 
@@ -209,29 +209,36 @@ public class PhasedCondenserTest {
 
     /**
      * Filled to Mid-Level (same as zeroFlow test) with 350 Kelvin temperature,
-     * which is about 75 °C, secondary side is at 20 °C. It is expected for
-     * the temperatures to equalize after some time.
+     * which is about 75 °C, secondary side is at 20 °C. It is expected for the
+     * temperatures to equalize after some time.
      */
     @Test
     public void testNoFlowTemperatureEqualizing() {
         double temperaturePrimary = 350; // 75 °C
         double temperatureSecondary = 293.15; // 20 °C
         double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity();
-        
+
         pz1.setOriginHeatEnergy(heatEnergy);
         pz2.setOriginHeatEnergy(heatEnergy);
         hz2.setOriginTemperature(temperatureSecondary);
 
-        instance.initConditions(temperaturePrimary, temperatureSecondary, 1.0);
+        // With a height of 0.2 m, there should be about same mass as
+        // in reservor and no heat transfer happens in the condenser. The
+        // temperature should equalizze evenly.
+        instance.initConditions(temperaturePrimary, temperatureSecondary, 0.2);
         flowIn.setFlow(0.0);
         flowOut.setFlow(0.0);
         heatFluidFlow.setFlow(0);
 
-        for (int idx = 0; idx < 10; idx++) {
+        for (int idx = 0; idx < 100; idx++) {
             solver.prepareCalculation();
             solver.doCalculation();
-            System.out.println(instance.getPrimarySideReservoir().getTemperature());
+//            System.out.println("Primary Res Temp: "
+//                    + instance.getPrimarySideReservoir().getTemperature()
+//                    + "Primary Hex Temp: "
+//                    + instance.getPrimarySideCondenser().getPhasedHandler().getHeatEnergy() / water.getSpecificHeatCapacity()
+//                    + ", Scondary Temp: "
+//                    + instance.getSecondarySide().getHeatHandler().getTemperature());
         }
-        System.out.println(instance.getPrimarySideReservoir().getTemperature());
     }
 }
