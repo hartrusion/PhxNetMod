@@ -33,6 +33,7 @@ import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
 import com.hartrusion.modeling.general.AbstractElement;
+import com.hartrusion.modeling.general.FlowThrough;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.OpenOrigin;
 import com.hartrusion.modeling.general.SelfCapacitance;
@@ -238,6 +239,28 @@ public class DomainAnalogySolver {
                 if (hasForcedEffort[idx] && hasForcedEffort[jdx]) {
                     selfSolvingElements.add(e);
                 }
+            }
+        }
+
+        // Perform a rudimentary check: No element that is of type flowthrough
+        // must have less than two nodes (it must be exactly 2), otherwise 
+        // there will be some weird error later.
+        for (AbstractElement e : modelElements) {
+            if (e instanceof FlowThrough) {
+                if (e.getNumberOfNodes() != 2) {
+                    throw new ModelErrorException("A flow-through element "
+                        + "with not exactly two nodes is illegal.");
+                }
+            }
+        }
+
+        // Check that all nodes have at least 2 connections. It is not illegal
+        // to have a node that is floating around but probably this is not
+        // wanted.
+        for (GeneralNode n : modelNodes) {
+            if (n.getNumberOfElements() <= 1) {
+                LOGGER.log(Level.WARNING, "Floating node found, check "
+                        + "provided network for errors.");
             }
         }
 

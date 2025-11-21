@@ -212,8 +212,8 @@ public abstract class PhasedAbstractVolumizedHandler implements PhasedHandler {
 
     @Override
     public void setInnerHeatedMass(double heatedMass) {
-        if (heatedMass < 0) {
-            throw new ModelErrorException("Thermal mass must never be a "
+        if (heatedMass <= 0.0) {
+            throw new ModelErrorException("Heated mass must never be a "
                     + "negative value, this is physically impossible.");
         }
         this.innerHeatMass = heatedMass;

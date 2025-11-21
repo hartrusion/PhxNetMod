@@ -32,14 +32,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
-import com.hartrusion.modeling.general.AbstractElement;
-import com.hartrusion.modeling.general.EffortSource;
+import com.hartrusion.modeling.general.*;
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
-import com.hartrusion.modeling.general.ClosedOrigin;
-import com.hartrusion.modeling.general.FlowSource;
-import com.hartrusion.modeling.general.GeneralNode;
-import com.hartrusion.modeling.general.LinearDissipator;
 
 /**
  * Solves a network using superposition method. This is used for networks
@@ -207,7 +202,8 @@ public class SuperPosition extends LinearNetwork {
         int idx, jdx;
         double flow, effort, value;
         LinearDissipator r;
-        // Call calculation for each child network. This needs to be sucessfull
+        FlowThrough target;
+        // Call calculation for each child network. This needs to be successful
         // to be able to use those results for superposition. But: Networks that
         // have either a flow or an effort value of exactly 0.0 do not need any
         // calculation, so check the value before fully firing the calculation. 
@@ -281,8 +277,11 @@ public class SuperPosition extends LinearNetwork {
                     flow = flow + r.getFlow();
                 }
             }
-            r = (LinearDissipator) elements.get(idx); // get the target resist
-            r.setFlow(flow, true); // assign superpositioned value
+            // Assign the flow to the elment of the superposition network.
+            // It may not be a resistor as the network provided may use
+            // different elements.
+            target = (FlowThrough) elements.get(idx); // get the target resist
+            target.setFlow(flow, true); // assign superpositioned value
         }
 
         // this should be enough to solve the whole network

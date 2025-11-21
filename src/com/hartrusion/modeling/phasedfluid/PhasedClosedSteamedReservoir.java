@@ -97,6 +97,12 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
 
     public PhasedClosedSteamedReservoir(PhasedFluidProperties fluidProperties) {
         super(PhysicalDomain.PHASEDFLUID);
+        // if everything is implemented proper, the stateValue will be written
+        // when setting initial conditions. However, if not, to have at least
+        // something that does allow to have a solution instead of crashing 
+        // right away, we will set the stateValue to a positive value. 0 is
+        // not allowed as the handler will not accept it.
+        stateValue = 1.0;
         setTimeConstant(1.0); // see doc header
         this.fluidProperties = fluidProperties;
         // attach the default volumized handler

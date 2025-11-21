@@ -61,6 +61,10 @@ public class EffortSource extends FlowThrough {
      * @param e value to set
      */
     public void setEffort(double e) {
+        if (!Double.isFinite(effort)) {
+            throw new IllegalArgumentException(
+                    "Non-finite effort value (NaN or inf) provided.");
+        }
         effort = e;
         effortUpdated = true;
     }
