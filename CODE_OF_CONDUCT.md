@@ -28,6 +28,4 @@ present alternative ways and solutions. It is likely to happen that technical
 details will be discussed with emotions and disagreements. 
 
 I have chosen to put this up as a code of conduct because I strongly believe 
-that this declaration is fundamental for a peaceful coexistence. As the 
-maintainer and author I strongly believe in the importance as human rights and
-I do expect the same from everybody who wants to work with me.
+that this declaration is fundamental for a peaceful coexistence.
