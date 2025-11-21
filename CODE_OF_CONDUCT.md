@@ -1,11 +1,16 @@
 # Code of Conduct
 
-Every person who participates in this project (issues, pull requests, 
-discussions and so on) must acknowledge, respect and support the **Universal 
-Declaration of Human Rights** which was declared on 10 December 1948.
+**tl;dr**: Respect human rights. Don't do actions which undermine them. This 
+is a more abstract way to describe CoCs that you will find on many Open Source 
+projects.
 
-If you're not familiar with this declaration, please take some time and read 
-it, it only takes a few minutes.
+Every person who participates in this project (issues, pull requests, 
+discussions and so on) must acknowledge, respect and support human rights as 
+declared in the **Universal Declaration of Human Rights** from 10 December 1948.
+
+If you're not familiar with this declaration, you might want to read it as 
+it marks an important part in development of mankind towards a peaceful 
+civilization.
 
 Contributions of any form which directly or indirectly try to undermine human 
 rights will not be tolerated and removed. This includes:
@@ -23,4 +28,6 @@ present alternative ways and solutions. It is likely to happen that technical
 details will be discussed with emotions and disagreements. 
 
 I have chosen to put this up as a code of conduct because I strongly believe 
-that this declaration is fundamental for a peaceful coexistence.
+that this declaration is fundamental for a peaceful coexistence. As the 
+maintainer and author I strongly believe in the importance as human rights and
+I do expect the same from everybody who wants to work with me.
