@@ -290,10 +290,10 @@ public class PhasedExpandingThermalVolumeHandler
             // depending on the flow rate to mass ratio. Fast flow rates will
             // result in fast input energy adaption, low flow rates will 
             // result in a way slower response in terms of mass ejection.
-            // This is completely made up but it behaves at least a bit as I 
+            // This is completely made up, but it behaves at least a bit as I
             // expect it and the best thing is: It can be calculated and is 
             // a stable solution for most cases we will encounter in our rbmk
-            // evaporatior. This delayed input temperature will be used for the
+            // evaporator. This delayed input temperature will be used for the
             // 
             // Some T1-behaviour with massflow/mass as time constant
             if (firstUpdatedNode.noHeatEnergy(aElement)
@@ -368,7 +368,7 @@ public class PhasedExpandingThermalVolumeHandler
                             + "towards a port.");
                 }
             } else if (massOut <= negativeMass) {
-                // There is theroretically something going out but it is fully
+                // There is theoretically something going out, but it is fully
                 // consumed by the negative mass
                 outMassQuantity = 0.0;
                 negativeMass -= massOut; // remove from the accumulation
@@ -408,11 +408,11 @@ public class PhasedExpandingThermalVolumeHandler
                 && thermalFlowUpdated
                 && !waitForReverseOutProperties) {
             // Reverse flow, meaning a flow out is set on one port. Not the 
-            // desired behaviour and very inacurate but at least some solution.
+            // desired behaviour and very inaccurate but at least some solution.
             // The port that has the requested flow out is set as
             // firstUpdatedNode.
-            // The flow in has to be set first so the model can then self-
-            // assign the heat properties to the nodes.
+            // The flow in has to be set first so the model can then self-assign
+            // the heat properties to the nodes.
             if (!firstUpdatedNode.heatEnergyUpdated(aElement)) {
                 firstUpdatedNode.setHeatEnergy(heatEnergy, aElement);
             }
