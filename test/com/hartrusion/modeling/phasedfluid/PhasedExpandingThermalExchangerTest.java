@@ -142,16 +142,23 @@ public class PhasedExpandingThermalExchangerTest {
      */
     @Test
     public void testNoFlow() {
-        origin.setOriginHeatEnergy(1252230); // default value
+        double temperature = 298.15;
+        double specHeatEnergy =
+                fluidProperties.getSpecificHeatCapacity() * temperature;
+        origin.setOriginHeatEnergy(specHeatEnergy); // default value
         flowSource.setFlow(0.0); // no fluid flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setInitialState(1.0, 1e5, 298.15, 298.15);
+        instance.setInitialState(1.0, 1e5, temperature, temperature);
 
-        run();
+        for (int steps = 0; steps <= 10; steps++) {
+            run();
 
-        // Expect nothing to happen:
-        assertEquals(nodeOut.getFlow(instance), 0.0, 1e-5);
+            // Expect nothing to happen
+            assertEquals(nodeOut.getFlow(instance), 0.0, 1e-5);
+            // Internal specific heat energy must stay at its value.
+            assertEquals(nodeOut.getHeatEnergy(), specHeatEnergy, 1e-2);
+        }
     }
 
     /**
@@ -163,18 +170,23 @@ public class PhasedExpandingThermalExchangerTest {
      */
     @Test
     public void testFlushThrough() {
-        origin.setOriginHeatEnergy(1252230); // default value
+        double temperature = 298.15;
+        double specHeatEnergy =
+                fluidProperties.getSpecificHeatCapacity() * temperature;
+        origin.setOriginHeatEnergy(specHeatEnergy); // default value
         flowSource.setFlow(10.0); // 10 kg/s in flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
         instance.setInitialState(1.0, 1e5, 298.15, 298.15);
 
-        run();
+        for (int steps = 0; steps <= 10; steps++) {
+            run();
 
-        // Expect exactly 10 kg/s going out of the element
-        assertEquals(nodeOut.getFlow(instance), -10.0, 1e-5);
-        // Heat energy must be the same as from initial conditions
-        assertEquals(nodeOut.getHeatEnergy(), 1252230, 1e-2);
+            // Expect exactly 10 kg/s going out of the element
+            assertEquals(nodeOut.getFlow(instance), -10.0, 1e-5);
+            // Heat energy must not change
+            assertEquals(nodeOut.getHeatEnergy(), specHeatEnergy, 1e-2);
+        }
     }
 
     /**
