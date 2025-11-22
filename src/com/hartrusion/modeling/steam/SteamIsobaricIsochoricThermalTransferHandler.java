@@ -31,20 +31,18 @@ import com.hartrusion.modeling.general.EffortSource;
 
 /**
  * Handler for the steam evaporator.
- *
  * <p>
  * The expected behaviour is that the model sets a flow value into the assigned
  * steam element with set steam properties. This handler will then calculate the
- * steam or water output out of this element and consideres a thermal capacity
+ * steam or water output out of this element and considers a thermal capacity
  * itself which is to be heated up. As the saturated mixture expands when
  * heating up, the mass will be less if the heating increases and the mass
- * difference will be applied to the out node as an additional flow. Therefore
+ * difference will be applied to the out node as an additional flow. Therefore,
  * only one flow value must be set towards this element so the handler here can
  * calculate the corresponding out flow.
- *
  * <p>
  * The element does however not support any kind of suction by contraction. To
- * model it anyways, it has a so called negative mass that will be accumulated.
+ * model it anyway, it has a so called negative mass that will be accumulated.
  * The negative mass represents the amount of water that needs to be put into
  * the element to fill it up until more steam will leave the element. So, if,
  * anyhow, cold water suddenly flows into the element and this would cool down
@@ -53,11 +51,9 @@ import com.hartrusion.modeling.general.EffortSource;
  * much of a problem, as usually we have recirculation that is higher than this
  * effect but the implementation of this behaviour is there to have at least
  * something to handle the situation if it ever occurs.
- *
  * <p>
  * Designed calculation run (thermal flow heats up the evaporator, one updated
  * water/steam mixture is flowing into the element is as follows:
- *
  * <ul>
  * <li>Total Mass is known from previous state, as well as local steam
  * property.</li>
@@ -68,10 +64,10 @@ import com.hartrusion.modeling.general.EffortSource;
  * <li>Calculate nextSteamProperties by using the new specific enthalpy from
  * that absolute enthalpy and the new updated mass.</li>
  * <li>Use the specific volume from steam table to calculate how much volume the
- * now calculated mass in its now calulated next state would need.</li>
+ * now calculated mass in its now calculated next state would need.</li>
  * <li>As the volume of this element is fixed, we know how much additional
  * volume we will have. This is usually a positive value, a negative value will
- * be considered also but thats a special case already.</li>
+ * be considered also but that's a special case already.</li>
  * <li>The volume that is additional is the mass out, that mass can be
  * calculated by using the specific volume value again.</li>
  * <li>The out flow mass gets the current steam parameters assigned, not the
@@ -81,9 +77,8 @@ import com.hartrusion.modeling.general.EffortSource;
  * to compensate for that shrinkage, the element will accumulate that missing
  * mass as a so called negativeMass and set the flow out to zero. If any mass
  * would go out of the element again later, it will first fill up that negative
- * mass value before somethign goes out of the element.</li>
+ * mass value before something goes out of the element.</li>
  * </ul>
- *
  *
  * @author Viktor Alexander Hartung
  */
@@ -108,9 +103,9 @@ public class SteamIsobaricIsochoricThermalTransferHandler
 
     /**
      * A reference to a steam element which has this handler assigned as a
-     * reference to the abstract element type. Its a separate reference variable
-     * to make code shorter by removing the necessity of casting to this one for
-     * some function arguments.
+     * reference to the abstract element type. It's a separate reference
+     * variable to make code shorter by removing the necessity of casting to
+     * this one for some function arguments.
      */
     private final AbstractElement element;
 
@@ -401,7 +396,7 @@ public class SteamIsobaricIsochoricThermalTransferHandler
                 nextVolume = mixtureMass * nextSpecificVolume;
                 // How much additional volume do wie have now?
                 deltaVolume = nextVolume - volume;
-                // Calculate the mass accordingly using the specific volume again:
+                // Calculate the mass acc. using the specific volume again:
                 massOut = deltaVolume / nextSpecificVolume;
             }
 
