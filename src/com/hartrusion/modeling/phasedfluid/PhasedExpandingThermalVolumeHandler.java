@@ -196,7 +196,7 @@ public class PhasedExpandingThermalVolumeHandler
         }
 
         if (updatedHeatFlows == 0 && updatedFlowsWithoutTemperature == 1) {
-            // Check if a so called reverse flow is present, this is unintended but
+            // Check if a so-called reverse flow is present, this is unintended
             // but there will be a proper solution for this.
             for (PhasedNode pn : phasedNodes) {
                 if (pn.flowUpdated(aElement)) {

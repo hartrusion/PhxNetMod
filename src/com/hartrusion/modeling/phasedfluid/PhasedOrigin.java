@@ -71,9 +71,9 @@ public class PhasedOrigin extends OpenOrigin implements PhasedElement {
 
     /**
      * Sets the heat energy which a fluid gets assigned if it comes out of this
-     * origin. Default is 1252230 (Water at 25 °C).
+     * origin. Default is 1252230 (Water at 25 °C / 298.15 K times 4200 J/kg/K)
      *
-     * @param originHeatEnergy
+     * @param originHeatEnergy in J/kg
      */
     public void setOriginHeatEnergy(double originHeatEnergy) {
         this.originHeatEnergy = originHeatEnergy;

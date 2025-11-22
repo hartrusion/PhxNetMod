@@ -49,6 +49,7 @@ import org.testng.annotations.Test;
  */
 public class PhasedExpandingThermalExchangerTest {
 
+    PhasedPropertiesWater fluidProperties;
     PhasedExpandingThermalExchanger instance;
     PhasedOrigin origin, sink;
     PhasedFlowSource flowSource;
@@ -71,9 +72,8 @@ public class PhasedExpandingThermalExchangerTest {
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
-        PhasedFluidProperties fp = new PhasedPropertiesWater();
-
-        instance = new PhasedExpandingThermalExchanger(fp);
+        fluidProperties = new PhasedPropertiesWater();
+        instance = new PhasedExpandingThermalExchanger(fluidProperties);
 
         nodeOrigin = new PhasedNode();
         nodeIn = new PhasedNode();
@@ -119,6 +119,7 @@ public class PhasedExpandingThermalExchangerTest {
 
     @AfterMethod
     public void tearDownMethod() throws Exception {
+        fluidProperties = null;
         instance = null;
         nodeOrigin = null;
         nodeIn = null;
@@ -137,7 +138,7 @@ public class PhasedExpandingThermalExchangerTest {
 
     /**
      * Tests the idle or no-flow behaviour. if nothing goes in and no thermal
-     * enrgy is transfered, the out flow of the element must also be 0,0.
+     * energy is transferred, the out flow of the element must also be 0,0.
      */
     @Test
     public void testNoFlow() {
@@ -155,8 +156,8 @@ public class PhasedExpandingThermalExchangerTest {
 
     /**
      * No thermal energy transfer with same initial conditions. If there is no
-     * thermal energy transfered and water with 25 deg Celsius is inside and
-     * water with 25 deg celsius is flowing in, it must have 25 deg celsius out
+     * thermal energy transferred and water with 25 deg Celsius is inside and
+     * water with 25 deg Celsius is flowing in, it must have 25 deg Celsius out
      * (or the heat energy representing the 25 which is 1252230) and the same
      * flow out as it has in.
      */
@@ -175,18 +176,65 @@ public class PhasedExpandingThermalExchangerTest {
         // Heat energy must be the same as from initial conditions
         assertEquals(nodeOut.getHeatEnergy(), 1252230, 1e-2);
     }
-    
+
+    /**
+     * Tests the behaviour of heating up below the point where the evaporation
+     * starts. It is expected to not have any expansion of the element at
+     * this point (flow must be 0.0 at all time) but the final heat energy
+     * will be higher.
+     */
     @Test
-    public void testHeatUp() {
+    public void testNoFlowFluidHeatUp() {
         origin.setOriginHeatEnergy(1252230); // default value
-        flowSource.setFlow(10.0); // 10 kg/s in flow
-        thForceFlow.setFlow(0.0); // no thermal flow
-        effortSource.setEffort(1e5); // ambient pressure
+        flowSource.setFlow(0.0); // zero kg/s in flow
+        thForceFlow.setFlow(10e3); // heat it up with 10 kW power
+        double heatFlow = 1e5;
+        effortSource.setEffort(heatFlow); // ambient pressure
         instance.setInitialState(1.0, 1e5, 298.15, 298.15);
 
-        run();
+        for (int steps = 0; steps <= 10; steps++) {
+            run();
+            // It is expected to never have flow as there is no expansion
+            assertEquals(nodeOut.getFlow(instance), 0.0, 1e-8);
+        }
 
-        fail("The test case is a prototype.");
+        double innerHeat = instance.getPhasedHandler().getHeatEnergy();
+        // Todo: Re-calculate the exact expected value, this is from the
+        // output, expecting the transfer in the elements handler to be
+        // correct. This will only test that the value does not change when
+        // doing changes to the class.
+        assertEquals(innerHeat, 1252240.4, 0.2);
+    }
+
+    /**
+     * Tests the behaviour of heating up from the point where the fluid starts
+     * to evaporate. This will result in some flow out of the element.
+     */
+    @Test
+    public void testEvaporatingHeatUp() {
+        double pressure = 1e5;
+        double temperature = fluidProperties.getSaturationTemperature(pressure);
+        double saturatedEnergy =
+                fluidProperties.getLiquidHeatCapacity(pressure);
+        // There is no flow but it there would be, we need to set it like this.
+        origin.setOriginHeatEnergy(saturatedEnergy);
+        flowSource.setFlow(0.0); // zero kg/s in flow
+        thForceFlow.setFlow(10e3); // heat it up with 10 kW power
+        double heatFlow = 1e5;
+        effortSource.setEffort(heatFlow); // ambient pressure
+        instance.setInitialState(1.0, pressure, temperature, temperature);
+
+        for (int steps = 0; steps <= 10; steps++) {
+            run();
+            // It is expected to have a flow out in every cycle. It's not much,
+            // something like -0.0024.
+            assertEquals(nodeOut.getFlow(instance), -0.02, 0.02);
+            // After the first iteration, it is expected to have an increase
+            // in heat energy but never 0.0.
+            if (steps >= 1) {
+                assertTrue(nodeOut.getHeatEnergy() - saturatedEnergy > 0.5);
+            }
+        }
     }
 
     private void run() {
