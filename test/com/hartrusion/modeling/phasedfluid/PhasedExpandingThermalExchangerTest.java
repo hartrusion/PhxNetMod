@@ -169,7 +169,7 @@ public class PhasedExpandingThermalExchangerTest {
      * flow out as it has in.
      */
     @Test
-    public void testFlushThrough() {
+    public void testNoHeatupFlushThrough() {
         double temperature = 298.15;
         double specHeatEnergy =
                 fluidProperties.getSpecificHeatCapacity() * temperature;
@@ -249,6 +249,31 @@ public class PhasedExpandingThermalExchangerTest {
         }
     }
 
+    /**
+     * Reverse flushing without heat transfer. It is expected to show the same
+     * behaviour as in normal direction.
+     */
+    @Test
+    public void testNoHeatupReverseFlushThrough() {
+        double temperature = 298.15;
+        double specHeatEnergy =
+                fluidProperties.getSpecificHeatCapacity() * temperature;
+        origin.setOriginHeatEnergy(specHeatEnergy); // default value
+        flowSource.setFlow(-10.0); // 10 kg/s reverse flow
+        thForceFlow.setFlow(0.0); // no thermal flow
+        effortSource.setEffort(1e5); // ambient pressure
+        instance.setInitialState(1.0, 1e5, 298.15, 298.15);
+
+        for (int steps = 0; steps <= 10; steps++) {
+            run();
+
+            // Expect exactly 10 kg/s going out of the element
+            assertEquals(nodeOut.getFlow(instance), 10.0, 1e-5);
+            // Heat energy must not change
+            assertEquals(nodeOut.getHeatEnergy(), specHeatEnergy, 1e-2);
+        }
+    }
+
     private void run() {
         thSolver.prepareCalculation();
         origin.prepareCalculation();
@@ -256,30 +281,33 @@ public class PhasedExpandingThermalExchangerTest {
         instance.prepareCalculation();
         sink.prepareCalculation();
 
+        boolean r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15;
+
         // It must be possible to solve the thermal system.
         thSolver.doCalculation();
         assertEquals(thSolver.isCalculationFinished(), true,
                 "Thermal subsystem is not in calculated state.");
         // Call the doCalculation method in the direction of the availability
         // of the solution to provide solution for the exp thermal exchanger.
-        sink.doCalculation(); // sets effort = 0 to sink node
-        effortSource.doCalculation(); // sets the effort to nodeOut
-        instance.doCalculation(); // sets effort to nodeIn where flowSource is
+        sink.doCalculation(); // sets effort = 0 to sink node and some more
         origin.doCalculation(); // sets effort to the other side of flowSc.
         flowSource.doCalculation(); // sets flow to nodes
         origin.doCalculation(); // sets the heat energy value over the flow
         flowSource.doCalculation(); // sets the heat energy value over the flow
 
-        instance.doCalculation(); // main calculation or first reverse-flow step
+        instance.doCalculation(); // main calculation or first revers flow step
+        effortSource.doCalculation(); // sets the effort to nodeOut and flow
 
         // In case of reverse-flow, this will set the requested in heat props,
-        // otherwise this will finish the calculation:
-        effortSource.doCalculation(); // sets the effort to nodeOut
-        sink.doCalculation();
+        // from the sink side (this also shows why its called reverse)
+        r1 = sink.doCalculation();
+        r2 = effortSource.doCalculation();
+        r3 = instance.doCalculation(); // second call for second part of calc
+        r4 = effortSource.doCalculation();
+        r5 = sink.doCalculation();
+        flowSource.doCalculation();
+        origin.doCalculation();
 
-        instance.doCalculation(); // main calculation for reverse flow
-        effortSource.doCalculation(); // sets flow finally
-        sink.doCalculation();
 
         // Check that all auxiliary elements are fully calculated
         assertEquals(origin.isCalculationFinished(), true,

@@ -30,6 +30,64 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Handles the heating and evaporation of a given volume with expansion. This
+ * is used for the PhasedExpandingThermalExchanger. Contrary to other network
+ * elements, the flow can be set by the handler after calculation of the
+ * expansion. This requires a certain state of the calculation to do so, the
+ * intended behavior is given if the element is connected to a reservoir where
+ * the flow can go into. It is also considered in the solvers so the element
+ * will get its values assigned differently than other elements. There are
+ * two modes of calculation.
+ * <p>
+ * Intended, normal operation:
+ * <ul>
+ * <li>Flow with assigned properties flows into the element and the connected
+ * thermal source will add or remove heat energy to the mass inside.</li>
+ * <li>The next specific heat energy will be calculated by adding the heat
+ * energy from the inflow to the existing mass and adding the thermal energy
+ * from the connected thermal network. This value will be saved and used in
+ * next calculation cycle.</li>
+ * <li>A new density will be calculated for that specific mixture. Note that
+ * it is already specific energy.</li>
+ * <li>The mass out flow fot the current time step will be calculated using
+ * the present mass minus the mass that can be in the volume according to the
+ * density and the volume and the additional mass that is inside the element.
+ * </li>
+ * <li>If there would be some kind of possible suction instead of mass out flow,
+ * the negative out value will be accumulated in a so called negativeMass
+ * variable of this instance. If there is positive mass flow again, the out flow
+ * will first fill up that negative accumulated mass before any out flow
+ * happens. This way, sucking in an unknown amount of mass with unknown energy
+ * properties is avoided. This is just a neat trick to keep a stable solution
+ * in such events.
+ * </ul>
+ * Reverse flow mode:
+ * <p>
+ * It is possible that the first flow rate that is set to the element is in an
+ * unexpected direction, instead of coming in, a flow is going out of the
+ * element first. Keep in mind that this was designed to be an evaporator where
+ * flow gets pushed through, not sucked in. But to provide a solution for this
+ * problem, the reverse flow mode is available. Maybe you want to drain the
+ * evaporator or pump fluid though it in the reverse way, this can happen in
+ * the RBMK simulator when cooling down the reactor on MPC failure or with ECCS
+ * in operation.
+ * <ul>
+ * <li>A flow out of the element is set to a node before the flow in is set.
+ * The flow out is set on the node that is not directing towards the reservoir.
+ * </li>
+ * <li>The specific energy of the current state is set to that out flow as it
+ * would also be set during normal operation.</li>
+ * <li>A flow in has to be calculated now. For the first iteration, we have to
+ * assume that we do not know how much volume change there will be due to the
+ * specific energy coming in with that flow. It was decided not to do some
+ * kind of "request" this information from the model as this brings other
+ * maintaining issues. The thermal source will be considered so any expansion
+ * or retraction by temperature changes from this source is considered. The flow
+ * will be set and the calculation cycle finishes.</li>
+ * <li>The solver or the node will assign the unknown specific heat energy and
+ * the next calculation step can begin.</li>
+ * <li>With the now available heat in value, the next specific heat of the
+ * element itself can be calculated.
  *
  * @author Viktor Alexander Hartung
  */
@@ -115,7 +173,7 @@ public class PhasedExpandingThermalVolumeHandler
         if (heatEnergyPrepared) {
             if (nextInnerHeatMass <= 0.0) {
                 throw new ModelErrorException("Evaporator element empty, "
-                        + "calulation impossible. Make sure there is always "
+                        + "calculation impossible. Make sure there is always "
                         + "mass inside the element!");
             }
             innerHeatMass = nextInnerHeatMass;
@@ -242,7 +300,7 @@ public class PhasedExpandingThermalVolumeHandler
             didSomething = true;
         } else if (!heatEnergyPrepared
                 && updatedHeatFlows == 1
-                && firstUpdatedNode != null // nullpointer warning
+                && firstUpdatedNode != null // null warning
                 && otherNode != null // another null
                 && thermalFlowUpdated
                 && pressureUpdated
@@ -417,60 +475,101 @@ public class PhasedExpandingThermalVolumeHandler
                 firstUpdatedNode.setHeatEnergy(heatEnergy, aElement);
             }
 
-            // TODO, this works better on the steam element but fuck it.
-            // just dont do that mass thing and ignore the thermal part.
-            massOut = -firstUpdatedNode.getFlow(aElement) * stepTime;
-            otherNode.setFlow(massOut, aElement, true);
-            nextHeatEnergy = heatEnergy;
-            nextInnerHeatMass = innerHeatMass;
-            heatEnergyPrepared = true;
+            // contrary to the normal operation, we do not know what gets added
+            // by the in flow, we only can consider the out flow for now.
+            energyWithoutInFlow = (innerHeatMass * heatEnergy
+                    + firstUpdatedNode.getFlow(aElement) * stepTime
+                    * firstUpdatedNode.getHeatEnergy(aElement)
+                    - thermalSource.getFlow() * stepTime)
+                    / (innerHeatMass // divided by next mass
+                    + firstUpdatedNode.getFlow(aElement) * stepTime);
 
-//            energyWithoutInFlow = ((innerHeatMass - massOut) * heatEnergy
-//                    - thermalSource.getFlow() * stepTime)
-//                    / (innerHeatMass - massOut); // divided by next mass
-//
-//            // As it can be seen we use the previous delayedInHeatEnergy here
-//            // to calculate a density. We have not yet set an flow towards
-//            // this element so this value is unknown.
-//            density = fluidProperties.getAvgDensity(
-//                    delayedInHeatEnergy, energyWithoutInFlow,
-//                    pressure);
-//
-//            massCapacity = density * volume;
-//
-//            // Same formula as above for massOut in the default case.
-//            massIn = innerHeatMass - massCapacity
-//                    + firstUpdatedNode.getFlow(aElement) * stepTime;
-//
-//            // Set this mass as the inflow to the element.
-//            // consider the mass correction from previous cycle.
-//            otherNode.setFlow(massIn - reverseOutMassCorretion,
-//                    aElement, true);
-//            
-//            waitForReverseOutProperties = true;
+            // Keep the delayed in heat energy model but there is no if around
+            // it as we have no other special cases here.
+            nextDelayedInHeatEnergy = delayedInHeatEnergy + stepTime
+                    * firstUpdatedNode.getFlow(aElement) / innerHeatMass
+                    * (firstUpdatedNode.getHeatEnergy()
+                    - delayedInHeatEnergy);
 
-            if (!previousReversOutActive) {
-                LOGGER.log(Level.WARNING,
-                        "Reverse Flow on Thermal Expanding Handler occured, "
-                        + "this is not yet implemented properly.");
-                previousReversOutActive = true;
+            // Calculate mass capacity using density and volume.
+            density = fluidProperties.getAvgDensity(
+                    nextDelayedInHeatEnergy, energyWithoutInFlow,
+                    pressure);
+            massCapacity = density * volume;
+
+            // Calculate the mass amount that has to flow into the element
+            massIn =  massCapacity - innerHeatMass
+                    - firstUpdatedNode.getFlow(aElement) * stepTime
+                    - reverseOutMassCorretion; // consider previous cycle!
+
+            //... and set it to the other node, that still has no flow.
+            otherNode.setFlow(massIn / stepTime, aElement, true);
+
+            waitForReverseOutProperties = true;
+            didSomething = true;
+        } else if (!heatEnergyPrepared
+                && waitForReverseOutProperties
+                && updatedHeatFlows == 2) {
+            // this will be called later in the second part of this calculation
+            // when the heat energy was assigned after flow got known.
+            // Re-assign nodes and make sure the correct ones are used.
+            firstUpdatedNode = null;
+            otherNode = null;
+            for (PhasedNode pn : phasedNodes) {
+                if (pn.getFlow(aElement) < 0.0) { // flow goes out
+                    firstUpdatedNode = pn;
+                } else if (pn.getFlow(aElement) > 0.0) {
+                    otherNode = pn;
+                }
+            }
+            if (firstUpdatedNode == null || otherNode == null) {
+                throw new ModelErrorException("Getting expected nodes failed.");
             }
 
-            didSomething = true;
-
-            // waitForReverseOutProperties = true;
-        } else if (waitForReverseOutProperties
-                && updatedHeatFlows == 2) { // this will be called later
             // The model will now (hopefully!) be updated as the massIn flow
             // was set above. This will allow whatever mixture calculations now
             // to happen and at some point, the proper input heat energy will
             // become available on the node with the inFlow.
-
+            // apply to the pt1 delay for the node with the in flow
             nextDelayedInHeatEnergy = delayedInHeatEnergy + stepTime
-                    * firstUpdatedNode.getFlow(aElement) / innerHeatMass
-                    * (firstUpdatedNode.getHeatEnergy() - delayedInHeatEnergy);
+                    * otherNode.getFlow(aElement) / innerHeatMass
+                    * (otherNode.getHeatEnergy() - delayedInHeatEnergy);
 
-            throw new UnsupportedOperationException("Not yet implemented.");
+            // Now the heat energy can be calculated as it was possible in
+            // normal operation.
+            energyWithoutOutflow = (innerHeatMass * heatEnergy
+                    + otherNode.getFlow(aElement) * stepTime
+                    * otherNode.getHeatEnergy(aElement)
+                    - thermalSource.getFlow() * stepTime)
+                    // divided by next mass
+                    / (innerHeatMass
+                    + otherNode.getFlow(aElement) * stepTime);
+            nextHeatEnergy = energyWithoutOutflow;
+            heatEnergyPrepared = true;
+
+            // Now, as everything is known, we can calculate the density which
+            // was depending on values which were not known before.
+            density = fluidProperties.getAvgDensity(
+                    nextDelayedInHeatEnergy, energyWithoutOutflow,
+                    pressure);
+            massCapacity = density * volume;
+
+            // Calculate how much mass was requested too much, this is the
+            // amount of mass that does not fit into the volume. It will be
+            // considered in the next cycle. By doing this, the calculation is
+            // very bad, but we get some value and behaviour, even if it's not
+            // good. Hopefully no one will ever notice.
+            // A positive value is considered to be too much in the volume so
+            // it will be less mass in requested if this value is positive.
+            reverseOutMassCorretion = innerHeatMass - massCapacity
+                    + firstUpdatedNode.getFlow(aElement)
+                    + otherNode.getFlow(aElement);
+
+            // Next mass is calculated by sum up what happened
+            nextInnerHeatMass = innerHeatMass
+                    + firstUpdatedNode.getFlow(aElement) * stepTime
+                    + otherNode.getFlow(aElement) * stepTime;
+            didSomething = true;
         }
         return didSomething;
     }
