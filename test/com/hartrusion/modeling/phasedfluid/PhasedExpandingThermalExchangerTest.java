@@ -307,8 +307,6 @@ public class PhasedExpandingThermalExchangerTest {
         instance.prepareCalculation();
         sink.prepareCalculation();
 
-        boolean r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15;
-
         // It must be possible to solve the thermal system.
         thSolver.doCalculation();
         assertEquals(thSolver.isCalculationFinished(), true,
@@ -326,11 +324,11 @@ public class PhasedExpandingThermalExchangerTest {
 
         // In case of reverse-flow, this will set the requested in heat props,
         // from the sink side (this also shows why its called reverse)
-        r1 = sink.doCalculation();
-        r2 = effortSource.doCalculation();
-        r3 = instance.doCalculation(); // second call for second part of calc
-        r4 = effortSource.doCalculation();
-        r5 = sink.doCalculation();
+        sink.doCalculation();
+        effortSource.doCalculation();
+        instance.doCalculation(); // second call for second part of calc
+        effortSource.doCalculation();
+        sink.doCalculation();
         flowSource.doCalculation();
         origin.doCalculation();
 
