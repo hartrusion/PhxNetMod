@@ -47,6 +47,7 @@ public abstract class AbstractController implements Runnable {
     private ControlCommand oldControlState;
 
     protected DoubleSupplier inputProvider;
+    protected DoubleSupplier followUpProvider;
 
     private String controllerName;
     private String componentControlState;
@@ -69,13 +70,18 @@ public abstract class AbstractController implements Runnable {
             setInput(inputProvider.getAsDouble());
         }
         
+        // Same for followup value, if provided, get it from there.
+        if (followUpProvider != null) {
+            setFollowUp(followUpProvider.getAsDouble());
+        }
+
         if ((controlState != oldControlState)) {
             // Send Manual/Auto state on change
             pcs.firePropertyChange(componentControlState,
                     oldControlState, controlState);
             oldControlState = controlState;
         }
-        
+
         // More specified controllers like PI or P will override this method
         // and call calulations of output etc here.
     }
@@ -84,18 +90,57 @@ public abstract class AbstractController implements Runnable {
         return eInput;
     }
 
+    /**
+     * Sets the input value that is used as difference which has to be
+     * controlled.
+     *
+     * @param eInput value
+     */
     public void setInput(double eInput) {
         this.eInput = eInput;
     }
 
+    /**
+     * This can be used to attach an instance that provides the input value
+     * instead of having to make some complicated set methods. Overriding the
+     * only method of the DoubleSupplier class allows this to be called with an
+     * anonymous class or lambda expression to define what to call to get the
+     * input value.
+     *
+     * @param inputProvider Instance that will provide control difference input.
+     */
     public void addInputProvider(DoubleSupplier inputProvider) {
         this.inputProvider = inputProvider;
+    }
+    
+    /**
+     * This can be used to attach an instance that provides the followup value
+     * instead of having to make some complicated set methods. Overriding the
+     * only method of the DoubleSupplier class allows this to be called with an
+     * anonymous class or lambda expression to define what to call to get the
+     * follow up value.
+     *
+     * @param followUpProvider Instance that will provide control follow up value.
+     */
+    public void addFollowUpProvider(DoubleSupplier followUpProvider) {
+        this.followUpProvider = followUpProvider;
     }
 
     public double getFollowUp() {
         return uFollowUp;
     }
 
+    /**
+     * Provides a follow-up value. The output of the controller should be forced
+     * to match this value while it's not in automatic mode to allow non-jumping
+     * output signals and smooth transitions.
+     * <p>
+     * For simple control loops, this can be the output value itself, more
+     * complex cascaded control loops might require more extensive work on this
+     * value.
+     *
+     * @param abgl value
+     */
     public void setFollowUp(double abgl) {
         this.uFollowUp = abgl;
     }
@@ -141,13 +186,9 @@ public abstract class AbstractController implements Runnable {
             controlState = ControlCommand.AUTOMATIC;
         }
     }
-    
+
     public ControlCommand getControlState() {
         return controlState;
-    }
-
-    public void gatherInput() {
-
     }
 
     /**
