@@ -200,8 +200,7 @@ public class PhasedExpandingThermalExchangerTest {
         origin.setOriginHeatEnergy(1252230); // default value
         flowSource.setFlow(0.0); // zero kg/s in flow
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
-        double heatFlow = 1e5;
-        effortSource.setEffort(heatFlow); // ambient pressure
+        effortSource.setEffort(1e5); // ambient pressure
         instance.setInitialState(1.0, 1e5, 298.15, 298.15);
 
         for (int steps = 0; steps <= 10; steps++) {
@@ -228,12 +227,10 @@ public class PhasedExpandingThermalExchangerTest {
         double temperature = fluidProperties.getSaturationTemperature(pressure);
         double saturatedEnergy =
                 fluidProperties.getLiquidHeatCapacity(pressure);
-        // There is no flow but it there would be, we need to set it like this.
         origin.setOriginHeatEnergy(saturatedEnergy);
         flowSource.setFlow(0.0); // zero kg/s in flow
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
-        double heatFlow = 1e5;
-        effortSource.setEffort(heatFlow); // ambient pressure
+        effortSource.setEffort(pressure); // ambient pressure
         instance.setInitialState(1.0, pressure, temperature, temperature);
 
         for (int steps = 0; steps <= 10; steps++) {
@@ -271,6 +268,35 @@ public class PhasedExpandingThermalExchangerTest {
             assertEquals(nodeOut.getFlow(instance), 10.0, 1e-5);
             // Heat energy must not change
             assertEquals(nodeOut.getHeatEnergy(), specHeatEnergy, 1e-2);
+        }
+    }
+
+    /**
+     * Reverse flow with heating up the element from the boiling point.
+     */
+    @Test
+    public void testReverseEvaporatingHeatUp() {
+        double pressure = 1e5;
+        double temperature = fluidProperties.getSaturationTemperature(pressure);
+        double saturatedEnergy =
+                fluidProperties.getLiquidHeatCapacity(pressure);
+        origin.setOriginHeatEnergy(saturatedEnergy);
+        sink.setOriginHeatEnergy(saturatedEnergy);
+        flowSource.setFlow(-10.0); // zero kg/s in flow
+        thForceFlow.setFlow(10e3); // heat it up with 10 kW power
+        double heatFlow = 1e5;
+        effortSource.setEffort(heatFlow); // ambient pressure
+        instance.setInitialState(1.0, pressure, temperature, temperature);
+
+        for (int steps = 0; steps <= 100; steps++) {
+            run();
+            // Something must flow out, due to expansion, delta is okay.
+            assertEquals(nodeOut.getFlow(instance), +10.0, 1.0);
+            // After the first iteration, it is expected to have an increase
+            // in heat energy as we add heat from the thermal system.
+            if (steps >= 1) {
+                assertTrue(nodeOut.getHeatEnergy() >= saturatedEnergy);
+            }
         }
     }
 

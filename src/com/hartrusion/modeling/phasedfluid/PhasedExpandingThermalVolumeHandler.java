@@ -352,8 +352,8 @@ public class PhasedExpandingThermalVolumeHandler
             // expect it and the best thing is: It can be calculated and is 
             // a stable solution for most cases we will encounter in our rbmk
             // evaporator. This delayed input temperature will be used for the
-            // 
-            // Some T1-behaviour with massflow/mass as time constant
+            // density calculation.
+            // Some T1-behavior with massflow/mass as time constant
             if (firstUpdatedNode.noHeatEnergy(aElement)
                     || firstUpdatedNode.getFlow(aElement) == 0.0) {
                 nextDelayedInHeatEnergy = delayedInHeatEnergy; // keep
@@ -475,15 +475,6 @@ public class PhasedExpandingThermalVolumeHandler
                 firstUpdatedNode.setHeatEnergy(heatEnergy, aElement);
             }
 
-            // contrary to the normal operation, we do not know what gets added
-            // by the in flow, we only can consider the out flow for now.
-            energyWithoutInFlow = (innerHeatMass * heatEnergy
-                    + firstUpdatedNode.getFlow(aElement) * stepTime
-                    * firstUpdatedNode.getHeatEnergy(aElement)
-                    - thermalSource.getFlow() * stepTime)
-                    / (innerHeatMass // divided by next mass
-                    + firstUpdatedNode.getFlow(aElement) * stepTime);
-
             // Keep the delayed in heat energy model but there is no if around
             // it as we have no other special cases here.
             nextDelayedInHeatEnergy = delayedInHeatEnergy + stepTime
@@ -491,16 +482,12 @@ public class PhasedExpandingThermalVolumeHandler
                     * (firstUpdatedNode.getHeatEnergy()
                     - delayedInHeatEnergy);
 
-            // Calculate mass capacity using density and volume.
-            density = fluidProperties.getAvgDensity(
-                    nextDelayedInHeatEnergy, energyWithoutInFlow,
-                    pressure);
-            massCapacity = density * volume;
-
             // Calculate the mass amount that has to flow into the element
-            massIn =  massCapacity - innerHeatMass
-                    - firstUpdatedNode.getFlow(aElement) * stepTime
-                    - reverseOutMassCorretion; // consider previous cycle!
+            massIn =  // massCapacity - innerHeatMass
+                    - firstUpdatedNode.getFlow(aElement) * stepTime;
+                  //  - reverseOutMassCorretion; // consider previous cycle!
+            // Todo: This is still a problem and highly unstable. For now it
+            //  does work and provide a solution but it is very bad.
 
             //... and set it to the other node, that still has no flow.
             otherNode.setFlow(massIn / stepTime, aElement, true);
@@ -550,7 +537,7 @@ public class PhasedExpandingThermalVolumeHandler
             // Now, as everything is known, we can calculate the density which
             // was depending on values which were not known before.
             density = fluidProperties.getAvgDensity(
-                    nextDelayedInHeatEnergy, energyWithoutOutflow,
+                    nextDelayedInHeatEnergy, nextHeatEnergy,
                     pressure);
             massCapacity = density * volume;
 
@@ -562,8 +549,8 @@ public class PhasedExpandingThermalVolumeHandler
             // A positive value is considered to be too much in the volume so
             // it will be less mass in requested if this value is positive.
             reverseOutMassCorretion = innerHeatMass - massCapacity
-                    + firstUpdatedNode.getFlow(aElement)
-                    + otherNode.getFlow(aElement);
+                    -firstUpdatedNode.getFlow(aElement) * stepTime
+                    -otherNode.getFlow(aElement) * stepTime;
 
             // Next mass is calculated by sum up what happened
             nextInnerHeatMass = innerHeatMass
