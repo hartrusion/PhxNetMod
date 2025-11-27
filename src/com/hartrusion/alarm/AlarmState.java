@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.hartrusion.control;
+package com.hartrusion.alarm;
 
 /**
  * Describes alarm states assigned to alarms, with NONE for no alarm. Suppressed
