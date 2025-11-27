@@ -25,6 +25,7 @@ package com.hartrusion.control;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.function.DoubleSupplier;
 
 /**
  * Monitors a double value. A threshold monitor can be added to monitor all
@@ -44,14 +45,31 @@ public abstract class ThresholdMonitor implements Runnable {
     protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     protected double value;
     protected String monitorName = "UNNAMED";
+    protected DoubleSupplier inputProvider;
 
     public void setInput(double value) {
         this.value = value;
         checkNewValue();
     }
+    
+    /**
+     * This can be used to attach an instance that provides the input value
+     * instead of having to make some complicated set methods. Overriding the
+     * only method of the DoubleSupplier class allows this to be called with an
+     * anonymous class or lambda expression to define what to call to get the
+     * input value.
+     *
+     * @param inputProvider Instance that will provide input value
+     */
+    public void addInputProvider(DoubleSupplier inputProvider) {
+        this.inputProvider = inputProvider;
+    }
 
     @Override
     public void run() {
+        if (inputProvider != null) {
+            value = inputProvider.getAsDouble();
+        }
         checkNewValue();
     }
 
