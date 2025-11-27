@@ -23,18 +23,30 @@
  */
 package com.hartrusion.alarm;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Holds all active alarm objects.
  *
  * @author Viktor Alexander Hartung
  */
-public class AlarmManager implements PropertyChangeListener {
-
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        
-    }
+public class AlarmManager {
     
+    private final Map<String, AlarmObject> alarmObjects = new ConcurrentHashMap<>();
+
+    public void setAlarm(String component,
+            AlarmState state, boolean suppressed) {
+        AlarmObject a;
+        // If the alarm object was not initialized before, create a new one.
+        if (!alarmObjects.containsKey(component)) {
+            a = new AlarmObject(component);
+            alarmObjects.put(a.getComponent(), a);
+        } else {
+            a = alarmObjects.get(component);
+        }
+        
+        a.setState(state);
+        a.setSuppressed(suppressed);
+    }
 }

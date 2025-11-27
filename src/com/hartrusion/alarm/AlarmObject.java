@@ -23,14 +23,51 @@
  */
 package com.hartrusion.alarm;
 
-import com.hartrusion.alarm.AlarmState;
-
 /**
  *
  * @author Viktor Alexander Hartung
  */
 public class AlarmObject {
+
     private String component;
     private String description;
     private AlarmState state;
+    private boolean suppressed;
+
+    AlarmObject(String name) {
+        this.component = name;
+    }
+
+    public String getComponent() {
+        return component;
+    }
+
+    @Override
+    public String toString() {
+        return component;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public AlarmState getState() {
+        return state;
+    }
+
+    public void setState(AlarmState state) {
+        this.state = state;
+    }
+
+    public boolean isSuppressed() {
+        return suppressed;
+    }
+
+    public void setSuppressed(boolean suppressed) {
+        this.suppressed = suppressed;
+    }
 }

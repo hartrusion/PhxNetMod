@@ -24,10 +24,6 @@
 package com.hartrusion.alarm;
 
 /**
- * Describes alarm states assigned to alarms, with NONE for no alarm. Suppressed
- * states have postfix _S and those are alarm states that are not active due to
- * external suppression. This happens if the alarm is just not relevant in the
- * present plant state.
  *
  * @author Viktor Alexander Hartung
  */
@@ -40,5 +36,6 @@ public enum AlarmState {
     LOW1,
     LOW2,
     MIN1,
-    MIN2
+    MIN2,
+    ACTIVE
 }

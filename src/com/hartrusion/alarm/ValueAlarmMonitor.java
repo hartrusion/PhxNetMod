@@ -24,22 +24,32 @@
 package com.hartrusion.alarm;
 
 import com.hartrusion.control.ThresholdMonitor;
+import java.util.function.BooleanSupplier;
 
 /**
- *
+ * Observes a given value and triggers alarms when set values are present.
+ * 
  * @author Viktor Alexander Hartung
  */
 public class ValueAlarmMonitor extends ThresholdMonitor {
 
     private final boolean[] active = new boolean[AlarmState.values().length];
     private final double[] threshold = new double[AlarmState.values().length];
-
+    
     private boolean suppressed = false;
+    
+    private BooleanSupplier suppressionProvider;
 
     private AlarmState alarmState, oldAlarmState;
+    
+    private AlarmManager alarmManager;
 
     @Override
     protected void checkNewValue() {
+        if (suppressionProvider != null) {
+            suppressed = suppressionProvider.getAsBoolean();
+        }
+        
         if (suppressed) {
             alarmState = AlarmState.NONE;
         } else if (active[AlarmState.MAX2.ordinal()]
@@ -71,13 +81,24 @@ public class ValueAlarmMonitor extends ThresholdMonitor {
         }
 
         if (alarmState != oldAlarmState) {
+            if (alarmManager != null) {
+                alarmManager.setAlarm(monitorName, alarmState, suppressed);
+            }
             
-            pcs.firePropertyChange(monitorName + "_Alarm",
+            pcs.firePropertyChange(monitorName + "_AlarmState",
                     oldAlarmState, alarmState);
         }
         oldAlarmState = alarmState;
     }
 
+    /**
+     * Sets the alarm to suppressed, this can be used if an alarm can be 
+     * ignored due to some other state. For example, there is no need to fire a
+     * low flow alarm if the whole part of the system is intentionally set to 
+     * offline.
+     * 
+     * @param suppressAlarm 
+     */
     private void setSuppressed(boolean suppressAlarm) {
         suppressed = suppressAlarm;
     }
@@ -89,6 +110,10 @@ public class ValueAlarmMonitor extends ThresholdMonitor {
 
     private void disableAlarm(AlarmState alarmState) {
         active[alarmState.ordinal()] = false;
+    }
+    
+    private void setAlarmManager(AlarmManager am) {
+        alarmManager = am;
     }
 
 }
