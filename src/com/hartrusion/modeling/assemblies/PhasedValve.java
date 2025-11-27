@@ -147,6 +147,10 @@ public class PhasedValve implements Runnable {
     public PhasedLinearValve getValveElement() {
         return valve;
     }
+    
+    public SetpointIntegrator getIntegrator() {
+        return swControl;
+    }
 
     /**
      * Allows processing received events by the class itself. The Property name

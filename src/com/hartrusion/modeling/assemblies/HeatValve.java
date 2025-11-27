@@ -30,7 +30,7 @@ import com.hartrusion.mvc.ActionCommand;
  * <p>
  * Received ActionCommands with the set name (to be set with initName) will be
  * used to control the value. Depending on the type, integers can be used to
- * perfom opening or closing until a int 0 value is send. Boolean values will
+ * perform opening or closing until a int 0 value is send. Boolean values will
  * either fully open or fully close the valve.
  * <p>
  * The attached monitor will fire property changes to all registered listeners
@@ -46,7 +46,7 @@ public class HeatValve implements Runnable {
     protected final HeatLinearValve valve = new HeatLinearValve();
     
     /**
-     * Generates limited values to mimic motor drive behaviour.
+     * Generates limited values to mimic motor drive behavior.
      */
     protected final SetpointIntegrator swControl
             = new SetpointIntegrator();
@@ -189,6 +189,10 @@ public class HeatValve implements Runnable {
 
     public HeatLinearValve getValveElement() {
         return valve;
+    }
+    
+    public SetpointIntegrator getIntegrator() {
+        return swControl;
     }
 
 }
