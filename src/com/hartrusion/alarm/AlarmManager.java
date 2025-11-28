@@ -25,6 +25,8 @@ package com.hartrusion.alarm;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Holds all active alarm objects.
@@ -32,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Viktor Alexander Hartung
  */
 public class AlarmManager {
-    
+
     private final Map<String, AlarmObject> alarmObjects = new ConcurrentHashMap<>();
 
     public void setAlarm(String component,
@@ -45,8 +47,13 @@ public class AlarmManager {
         } else {
             a = alarmObjects.get(component);
         }
-        
+
         a.setState(state);
         a.setSuppressed(suppressed);
+
+        // Log all alarm events
+        Logger.getLogger(AlarmManager.class.getName())
+                .log(Level.INFO, "Updated Alarm: " + component
+                        + ", State: " + state);
     }
 }

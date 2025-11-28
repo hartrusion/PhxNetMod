@@ -24,51 +24,18 @@
 package com.hartrusion.alarm;
 
 /**
- *
+ * Defines an action that will be run when a defined alarm value is reached.
+ * 
  * @author Viktor Alexander Hartung
  */
-public class AlarmObject {
-
-    private final String component;
-    private String description;
+public abstract class AlarmAction implements Runnable{
     private AlarmState state;
-    private boolean suppressed;
-    private boolean acknowledged;
-
-    AlarmObject(String name) {
-        this.component = name;
-    }
-
-    public String getComponent() {
-        return component;
-    }
-
-    @Override
-    public String toString() {
-        return component;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public AlarmState getState() {
-        return state;
-    }
-
-    public void setState(AlarmState state) {
+    
+    public AlarmAction(AlarmState state) {
         this.state = state;
     }
-
-    public boolean isSuppressed() {
-        return suppressed;
-    }
-
-    public void setSuppressed(boolean suppressed) {
-        this.suppressed = suppressed;
+    
+    public AlarmState getState() {
+        return state;
     }
 }
