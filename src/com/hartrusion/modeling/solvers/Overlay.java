@@ -213,6 +213,13 @@ public class Overlay extends ChildNetwork {
                 ft.setFlow(0.0, true);
                 continue;
             }
+            // Rare occasion: If there are just some resistors floating around
+            // and no closed circuit with resisors is present, everything will
+            // be optimized away. in such cases, all flows are zero.
+            if (childElements.isEmpty()) {
+                ft.setFlow(0.0, false);
+                continue;
+            }
             ft.setFlow(
                     ((FlowThrough) childElements.get(
                             childElementOfElement[idx])).getFlow(), false);

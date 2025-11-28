@@ -49,7 +49,7 @@ import java.util.logging.Logger;
  * next calculation cycle.</li>
  * <li>A new density will be calculated for that specific mixture. Note that
  * it is already specific energy.</li>
- * <li>The mass out flow fot the current time step will be calculated using
+ * <li>The mass out flow for the current time step will be calculated using
  * the present mass minus the mass that can be in the volume according to the
  * density and the volume and the additional mass that is inside the element.
  * </li>
@@ -208,6 +208,7 @@ public class PhasedExpandingThermalVolumeHandler
         boolean thermalFlowZero = false;
         double density, massCapacity;
         double massOut, massIn;
+        double flow, flowIn, heatedMassFlowIn;
 
         if (heatEnergyPrepared) {
             return false; // nothing more to do
@@ -381,7 +382,7 @@ public class PhasedExpandingThermalVolumeHandler
                         + firstUpdatedNode.getFlow(aElement) * stepTime;
             }
 
-            nextHeatEnergy = energyWithoutOutflow;
+            // nextHeatEnergy = energyWithoutOutflow;
 
             // The behaviour of the PhasedExpandingThermalExchanger is defined
             // to never have a kind of "suction" mass flow, but what to do if
@@ -450,6 +451,21 @@ public class PhasedExpandingThermalVolumeHandler
                 nextInnerHeatMass = innerHeatMass - outMassQuantity
                         + firstUpdatedNode.getFlow(aElement) * stepTime;
             }
+            
+            // sum up thermal energy going into element
+            heatedMassFlowIn = 0.0;
+            flowIn = 0.0;
+            for (PhasedNode pn : phasedNodes) {
+                flow = pn.getFlow(aElement);
+                if (flow != 0.0 && !pn.noHeatEnergy(aElement)) {
+                    flowIn = flowIn + flow * stepTime; // sum up
+                    heatedMassFlowIn = heatedMassFlowIn + flow * stepTime
+                            * (pn.getHeatEnergy((AbstractElement) element));
+                }
+            }
+            nextHeatEnergy = (innerHeatMass * heatEnergy
+                        - thermalSource.getFlow() * stepTime
+                        + heatedMassFlowIn) / (innerHeatMass + flowIn);
 
             heatEnergyPrepared = true;
 

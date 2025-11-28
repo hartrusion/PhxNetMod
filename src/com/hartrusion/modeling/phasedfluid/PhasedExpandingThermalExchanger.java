@@ -170,11 +170,12 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     }
 
     /**
-     *
-     * @param totalVolume
-     * @param pressure
-     * @param temperatureIn
-     * @param temperatureState
+     * Sets the initial state of the element.
+     * 
+     * @param totalVolume Volume of the element
+     * @param pressure current pressure (for getting rho)
+     * @param temperatureIn Temperature at the inlet (for distribution)
+     * @param temperatureState Temperature inside the element
      */
     public void setInitialState(double totalVolume, double pressure,
             double temperatureIn, double temperatureState) {
