@@ -27,9 +27,16 @@ import com.hartrusion.control.ThresholdMonitor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Observes a given value and triggers alarms when set values are present.
+ * <p>
+ * If an AlarmManager is known, the alarm will be set to the AlarmManager.
+ * <p>
+ * Alarm events can be defined by providing an AlarmAction class, this class
+ * has a run method which will be called once if the alarm is triggered.
  *
  * @author Viktor Alexander Hartung
  */
@@ -86,14 +93,18 @@ public class ValueAlarmMonitor extends ThresholdMonitor {
         } else if (active[AlarmState.MIN2.ordinal()]
                 && value <= threshold[AlarmState.MIN2.ordinal()]) {
             alarmState = AlarmState.MIN2;
-            higherPriority = true;
+            higherPriority = true; // min2 is the highest prio of low values.
         } else if (active[AlarmState.MIN1.ordinal()]
                 && value <= threshold[AlarmState.MIN1.ordinal()]) {
             alarmState = AlarmState.MIN1;
-            higherPriority = true;
+            higherPriority = oldAlarmState == AlarmState.LOW2
+                    || oldAlarmState == AlarmState.LOW1
+                    || oldAlarmState == AlarmState.NONE;
         } else if (active[AlarmState.LOW2.ordinal()]
                 && value <= threshold[AlarmState.LOW2.ordinal()]) {
             alarmState = AlarmState.LOW2;
+            higherPriority = oldAlarmState == AlarmState.LOW1
+                    || oldAlarmState == AlarmState.NONE;
         } else if (active[AlarmState.LOW1.ordinal()]
                 && value <= threshold[AlarmState.LOW1.ordinal()]) {
             alarmState = AlarmState.LOW1;
@@ -103,14 +114,19 @@ public class ValueAlarmMonitor extends ThresholdMonitor {
         }
 
         if (alarmState != oldAlarmState) {
+            // If there's an alarm manager set, set the
             if (alarmManager != null) {
-                alarmManager.setAlarm(monitorName, alarmState, suppressed);
+                alarmManager.fireAlarm(monitorName, alarmState, suppressed);
             }
             
-            // Run assigned alarm action
+            // Run assigned alarm action if there is one assigned to the state.
             if (higherPriority) {
                 if (actions.containsKey(alarmState)) {
                     actions.get(alarmState).run();
+                    Logger.getLogger(ValueAlarmMonitor.class.getName())
+                            .log(Level.INFO, monitorName
+                                    + " called AlarmAction due to new state "
+                                    + alarmState);
                 }
             }
 
@@ -125,7 +141,7 @@ public class ValueAlarmMonitor extends ThresholdMonitor {
      * due to some other state. For example, there is no need to fire a low flow
      * alarm if the whole part of the system is intentionally set to offline.
      *
-     * @param suppressAlarm
+     * @param suppressAlarm true to suppress this monitor.
      */
     private void setSuppressed(boolean suppressAlarm) {
         suppressed = suppressAlarm;
@@ -137,13 +153,9 @@ public class ValueAlarmMonitor extends ThresholdMonitor {
      * @param value Value where the alarm should trigger
      * @param alarmState State of the alarm which has to be set (MAX2, MIN,..)
      */
-    public void enableAlarm(double value, AlarmState alarmState) {
+    public void defineAlarm(double value, AlarmState alarmState) {
         active[alarmState.ordinal()] = true;
         threshold[alarmState.ordinal()] = value;
-    }
-
-    public void disableAlarm(AlarmState alarmState) {
-        active[alarmState.ordinal()] = false;
     }
 
     /**
@@ -152,7 +164,7 @@ public class ValueAlarmMonitor extends ThresholdMonitor {
      *
      * @param am AlarmManager instance
      */
-    public void setAlarmManager(AlarmManager am) {
+    public void registerAlarmManager(AlarmManager am) {
         alarmManager = am;
     }
 

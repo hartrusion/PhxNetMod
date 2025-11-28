@@ -37,8 +37,8 @@ public class AlarmManager {
 
     private final Map<String, AlarmObject> alarmObjects = new ConcurrentHashMap<>();
 
-    public void setAlarm(String component,
-            AlarmState state, boolean suppressed) {
+    public void fireAlarm(String component,
+                          AlarmState state, boolean suppressed) {
         AlarmObject a;
         // If the alarm object was not initialized before, create a new one.
         if (!alarmObjects.containsKey(component)) {
@@ -48,12 +48,14 @@ public class AlarmManager {
             a = alarmObjects.get(component);
         }
 
+        AlarmState oldState = a.getState();
         a.setState(state);
         a.setSuppressed(suppressed);
 
         // Log all alarm events
         Logger.getLogger(AlarmManager.class.getName())
                 .log(Level.INFO, "Updated Alarm: " + component
-                        + ", State: " + state);
+                        + ", Old state: " + oldState
+                        + ", New state: " + state);
     }
 }
