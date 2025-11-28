@@ -142,5 +142,31 @@ public class PhasedClosedSteamedReservoirTest {
                    specificHeatEnergy, 1e-8);
         }
     }
+    
+    /**
+     * Validates the initial set energy when the heat fluid is circulated. Still
+     * there is no thermal heat energy applied.
+     */
+    @Test
+    public void testValidateEnergyCirculation() {
+        double temperature = 280;
+        double specificHeatEnergy 
+                = temperature * fluidProperties.getSpecificHeatCapacity();
+        
+        reservoir.setInitialState(100, temperature);
+        heater.setInitialState(0.1, 1e5, temperature, temperature);
+        
+        flowSource.setFlow(10.0); // 10 kg/s with 100 kg in reservoir and heater
+        
+        for (int idx = 0; idx < 10; idx++) {
+            solver.prepareCalculation();
+            solver.doCalculation();
+            
+            assertEquals(reservoir.getPhasedHandler().getHeatEnergy(),
+                   specificHeatEnergy, 1e-8);
+            assertEquals(heater.getPhasedHandler().getHeatEnergy(),
+                   specificHeatEnergy, 1e-8);
+        }
+    }
 
 }

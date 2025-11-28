@@ -58,11 +58,11 @@ public class PhasedVolumeSeparationHandler
                     // negative: flow is leaving this element
                     if (isSteamOutput[phasedNodes.indexOf(pn)]) {
                         pn.setHeatEnergy(
-                                nextHeatEnergy 
+                                heatEnergy 
                                 + fluidProperties.getVaporizationHeatEnergy(),
                                 (AbstractElement) element);
                     } else {
-                        pn.setHeatEnergy(nextHeatEnergy,
+                        pn.setHeatEnergy(heatEnergy,
                                 (AbstractElement) element);
                     }
 
