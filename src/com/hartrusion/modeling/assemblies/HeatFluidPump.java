@@ -165,7 +165,7 @@ public class HeatFluidPump implements Runnable {
      * @param signalListener Instance that will receive the event changes from
      * valves and pumps.
      */
-    public void initSignalListener(PropertyChangeListener signalListener) {
+    public void registerSignalListener(PropertyChangeListener signalListener) {
         pcs.addPropertyChangeListener(signalListener);
         suctionMonitor.addPropertyChangeListener(signalListener);
         dischargeMonitor.addPropertyChangeListener(signalListener);

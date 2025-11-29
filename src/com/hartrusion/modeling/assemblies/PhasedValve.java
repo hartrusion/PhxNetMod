@@ -63,7 +63,7 @@ public class PhasedValve implements Runnable {
      *
      * @param h reference to ParameterHandler
      */
-    public void initParameterHandler(ParameterHandler h) {
+    public void registerParameterHandler(ParameterHandler h) {
         outputValues = h;
     }
 
@@ -72,7 +72,7 @@ public class PhasedValve implements Runnable {
      * @param signalListener Instance that will receive the event changes from
      * valves and pumps.
      */
-    public void initSignalListener(PropertyChangeListener signalListener) {
+    public void registerSignalListener(PropertyChangeListener signalListener) {
         pcs.addPropertyChangeListener(signalListener);
         monitor.addPropertyChangeListener(signalListener);
     }

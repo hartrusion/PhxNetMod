@@ -59,8 +59,8 @@ public class PhasedValveControlled extends PhasedValve {
     }
 
     @Override
-    public void initSignalListener(PropertyChangeListener signalListener) {
-        super.initSignalListener(signalListener);
+    public void registerSignalListener(PropertyChangeListener signalListener) {
+        super.registerSignalListener(signalListener);
         controller.addPropertyChangeListener(signalListener);
     }
 
@@ -70,7 +70,7 @@ public class PhasedValveControlled extends PhasedValve {
      *
      * @param controller
      */
-    public void initController(AbstractController controller) {
+    public void registerController(AbstractController controller) {
         controller.setName(name);
         this.controller = controller;
     }

@@ -53,7 +53,7 @@ public class Setpoint extends SetpointIntegrator {
      *
      * @param h reference to ParameterHandler
      */
-    public void initParameterHandler(ParameterHandler h) {
+    public void registerParameterHandler(ParameterHandler h) {
         outputValues = h;
     }
 

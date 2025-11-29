@@ -59,8 +59,8 @@ public class HeatValveControlled extends HeatValve {
     }
 
     @Override
-    public void initSignalListener(PropertyChangeListener signalListener) {
-        super.initSignalListener(signalListener);
+    public void registerSignalListener(PropertyChangeListener signalListener) {
+        super.registerSignalListener(signalListener);
         if (controller != null) {
             controller.addPropertyChangeListener(signalListener);
         }
@@ -72,7 +72,7 @@ public class HeatValveControlled extends HeatValve {
      *
      * @param controller
      */
-    public void initController(AbstractController controller) {
+    public void registerController(AbstractController controller) {
         controller.setName(name);
         // Add all listeners which are known to this class already
         PropertyChangeListener[] listeners = pcs.getPropertyChangeListeners();
