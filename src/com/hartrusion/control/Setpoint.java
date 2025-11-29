@@ -60,7 +60,9 @@ public class Setpoint extends SetpointIntegrator {
     @Override
     public void run() {
         super.run();
-        outputValues.setParameterValue(name, value);
+        if (outputValues != null) {
+            outputValues.setParameterValue(name, value);
+        }
     }
 
     /**
