@@ -66,7 +66,7 @@ public class PIControl extends AbstractController {
             xIntegral = uMax - proportionalPart;
         } else if (sumControl < uMin) {
             uOutput = uMin;
-            xIntegral = uMin + proportionalPart;
+            xIntegral = uMin - proportionalPart;
         } else { // default: sum up to integrate
             uOutput = sumControl;
             xIntegral = integralPart; // assign what was summed up previously
