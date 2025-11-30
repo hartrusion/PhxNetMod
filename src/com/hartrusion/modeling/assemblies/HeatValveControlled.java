@@ -84,8 +84,6 @@ public class HeatValveControlled extends HeatValve {
 
     @Override
     public void run() {
-        controller.run(); // updates controller output
-
         // Write the output of the controller to the Valve SWI if the
         // controller is in auto mode
         if (!controller.isManualMode()) {
@@ -96,6 +94,8 @@ public class HeatValveControlled extends HeatValve {
 
         // Follow-Up value is the valves position
         controller.setFollowUp(swControl.getOutput());
+        
+        controller.run(); // updates controller output
     }
 
     @Override

@@ -41,7 +41,7 @@ public class PIControl extends AbstractController {
         
         double dIntegral;
 
-        if (stopIntegrator) {
+        if (stopIntegrator || controlState != ControlCommand.AUTOMATIC) {
             dIntegral = 0;
         } else {
             dIntegral = eInput * stepTime / TN;
@@ -52,7 +52,7 @@ public class PIControl extends AbstractController {
         // Manual mode sets the integrator properly so the output matches the
         // followUp input value.
         if (controlState != ControlCommand.AUTOMATIC) {
-            xIntegral = uFollowUp - dIntegral - proportionalPart;
+            xIntegral = uFollowUp - proportionalPart;
         }
 
         double integralPart = xIntegral + dIntegral;
