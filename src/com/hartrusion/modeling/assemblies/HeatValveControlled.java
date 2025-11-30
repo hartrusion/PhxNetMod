@@ -95,9 +95,7 @@ public class HeatValveControlled extends HeatValve {
         super.run(); // sets value to SWI, update SWI, set valve value.
 
         // Follow-Up value is the valves position
-        if (controller.isManualMode()) {
-            controller.setFollowUp(swControl.getOutput());
-        }
+        controller.setFollowUp(swControl.getOutput());
     }
 
     @Override
@@ -118,15 +116,19 @@ public class HeatValveControlled extends HeatValve {
                 // remember state to have the correct state at the end
                 // of this user operation.
                 outputOverride = !controller.isManualMode();
+                controller.setManualMode(true);
                 operateOpenValve(); // set swi to max
             }
             case OUTPUT_DECREASE -> {
                 outputOverride = !controller.isManualMode();
+                controller.setManualMode(true);
                 operateCloseValve(); // set swi to max
             }
             case OUTPUT_CONTINUE -> {
                 stopValve(); // set SWI to current value
                 if (outputOverride) {
+                    // If the output was to be changed during automatic, switch
+                    // the controller back to auto mode.
                     controller.setManualMode(false);
                     outputOverride = false;
                 }

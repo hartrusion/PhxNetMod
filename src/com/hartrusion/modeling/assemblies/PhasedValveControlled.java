@@ -88,10 +88,7 @@ public class PhasedValveControlled extends PhasedValve {
         super.run(); // sets value to SWI, update SWI, set valve value.
 
         // Follow-Up value is the valves position
-        if (controller.isManualMode()) {
-            // For non-jump behaviour of output
-            controller.setFollowUp(swControl.getOutput());
-        }
+        controller.setFollowUp(swControl.getOutput());
     }
 
     @Override
@@ -112,15 +109,19 @@ public class PhasedValveControlled extends PhasedValve {
                 // remember state to have the correct state at the end
                 // of this user operation.
                 outputOverride = !controller.isManualMode();
+                controller.setManualMode(true);
                 operateOpenValve(); // set swi to max
             }
             case OUTPUT_DECREASE -> {
                 outputOverride = !controller.isManualMode();
+                controller.setManualMode(true);
                 operateCloseValve(); // set swi to max
             }
             case OUTPUT_CONTINUE -> {
                 stopValve(); // set SWI to current value
                 if (outputOverride) {
+                    // If the output was to be changed during automatic, switch
+                    // the controller back to auto mode.
                     controller.setManualMode(false);
                     outputOverride = false;
                 }
