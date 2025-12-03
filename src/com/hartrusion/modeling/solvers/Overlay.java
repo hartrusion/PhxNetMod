@@ -184,6 +184,7 @@ public class Overlay extends ChildNetwork {
     @Override
     public void doCalculation() {
         FlowThrough ft;
+        boolean allOtherElementsOpen;
 
         // First, origins and sources need to be calculated to prevent setting
         // efforts or flow back to them.
@@ -260,6 +261,56 @@ public class Overlay extends ChildNetwork {
             }
             nodes.get(idx).setEffort(
                     childNodes.get(childNodeOfNode[idx]).getEffort());
+        }
+        // It is possible that an element or node got merged away and the solver
+        // applied the wrong effort - as the effort was simply guessed and the
+        // node floated on the element alone. This is not that bad as it does
+        // not affect the flows which are transfered out of this overlay but 
+        // it produces a warning. Therefore check for bridged elements with
+        // different efforts and try to fix this before the warning gets thrown.
+        for (AbstractElement e : elements) {
+            if (e.getElementType() != ElementType.BRIDGED) {
+                continue;
+            }
+            if (Math.abs(e.getNode(0).getEffort()
+                    - e.getNode(1).getEffort()) <= 1e-2) {
+                continue; // value is okay
+            }
+            // Here: We reached a bridged element with too much difference on
+            // effort on both node.
+            // Check if node0 has only open elements besides this element.
+            allOtherElementsOpen = true;
+            for (int idx = 0; idx < e.getNode(0).getNumberOfElements(); idx++) {
+                if (e.getNode(0).getElement(idx) == e) {
+                    continue; // self
+                }
+                if (e.getNode(0).getElement(idx).getElementType()
+                        != ElementType.OPEN) {
+                    allOtherElementsOpen = false;
+                    break;
+                }
+            }
+            if (allOtherElementsOpen) {
+                // Copy effort from node 1 to the de-facto floating node 0.
+                e.getNode(0).setEffort(e.getNode(1).getEffort());
+                continue; // ok, fixed
+            }
+            // if node0 was unsucessful, check with node1
+            allOtherElementsOpen = true;
+            for (int idx = 0; idx < e.getNode(1).getNumberOfElements(); idx++) {
+                if (e.getNode(1).getElement(idx) == e) {
+                    continue; // self
+                }
+                if (e.getNode(1).getElement(idx).getElementType()
+                        != ElementType.OPEN) {
+                    allOtherElementsOpen = false;
+                    break;
+                }
+            }
+            if (allOtherElementsOpen) {
+                // Copy effort from node 0 to the de-facto floating node 1.
+                e.getNode(1).setEffort(e.getNode(0).getEffort());
+            } // finished. check next element.
         }
 
         // Another run will ensure missing values will be considered now.

@@ -309,5 +309,11 @@ public class OverlayTest {
         // the same, but it is not. 
         assertEquals(Math.abs(n[2].getEffort() - n[4].getEffort()),
                 0.0, 1.0e-4);
+        // This happened due to the simplification that is made in the overlay
+        // layer if an effort source got merged and there is simply not enough
+        // information available and a note becomes floating. This could be
+        // solved by skipping the overlay use at all (the superposition can use
+        // the recursive simplifier instead) but this will risk too much 
+        // complexity and the need of more star polygon transforms.
     }
 }
