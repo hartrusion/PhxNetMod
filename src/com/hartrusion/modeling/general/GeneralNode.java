@@ -147,7 +147,7 @@ public class GeneralNode {
             fp.setFlowUpdated(false);
         }
     }
-    
+
     /**
      * Set effort value for this node and connected elements. Calling this
      * method will mark the effort as updated. Effort will be the same value on
@@ -351,13 +351,17 @@ public class GeneralNode {
      * @return true: Flow was updated
      */
     public boolean flowUpdated(AbstractElement e) {
+        if (!connectedElements.contains(e)) {
+            throw new IllegalArgumentException(
+                    "Provided element not registered with node.");
+        }
         return flowToElements.get(connectedElements.indexOf(e)).isFlowUpdated();
     }
 
     /**
-     * Returns weather all flow values connected to this nodes were updated. Flow
-     * value represents energy storage by having a flow motion, like a moving
-     * mass. It can be stored in Inductance elements. The flow value is
+     * Returns weather all flow values connected to this nodes were updated.
+     * Flow value represents energy storage by having a flow motion, like a
+     * moving mass. It can be stored in Inductance elements. The flow value is
      * considered as updated if setFlow is called after prepareCalculation was
      * called.
      *
@@ -389,6 +393,16 @@ public class GeneralNode {
      */
     public AbstractElement getElement(int idx) {
         return connectedElements.get(idx);
+    }
+    
+    /**
+     * Checks if a provided element is registered to this node.
+     * 
+     * @param e AbstractElement to check
+     * @return true, if the provided Element is registered at this node.
+     */
+    public boolean isElementRegistered(AbstractElement e) {
+        return connectedElements.contains(e);
     }
 
     /**

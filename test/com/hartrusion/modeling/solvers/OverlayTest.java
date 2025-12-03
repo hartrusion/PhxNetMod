@@ -23,7 +23,6 @@
  */
 package com.hartrusion.modeling.solvers;
 
-import com.hartrusion.modeling.solvers.Overlay;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.general.ClosedOrigin;
 import com.hartrusion.modeling.general.EffortSource;
@@ -37,14 +36,14 @@ import org.testng.annotations.Test;
 
 /**
  * Overlay class is used by SuperPosition solver, which is the default solver
- * used for transfer network solver. Therefore, this overlay gets tested most
- * of the time. However, as networks became more complex, new situations
- * occurred and had to be handled, leading to situations where the overlay
- * has to act accordingly to make the simplification in a proper way. This
- * test will put the elements together as the SuperPosition solver would do and
- * recreates difficult scenarios to trigger the more complex algorithms from the
- * overlay simplification process.
- * 
+ * used for transfer network solver. Therefore, this overlay gets tested most of
+ * the time. However, as networks became more complex, new situations occurred
+ * and had to be handled, leading to situations where the overlay has to act
+ * accordingly to make the simplification in a proper way. This test will put
+ * the elements together as the SuperPosition solver would do and recreates
+ * difficult scenarios to trigger the more complex algorithms from the overlay
+ * simplification process.
+ *
  * @author Viktor Alexander Hartung
  */
 public class OverlayTest {
@@ -69,7 +68,6 @@ public class OverlayTest {
      * Overlay Has to merge ports n3 to n4 and n5 to n0, this effectively
      * shortens a lot of elements. It failed to build the network at first,
      * therefore this is now a test case to make sure it keeps working.
-     *
      */
     @Test
     public void testCheckForBridgedPaths() {
@@ -184,4 +182,132 @@ public class OverlayTest {
                 "No full solution was provided.");
     }
 
+    /**
+     * This layer of a superposition solver provided the correct solution but an
+     * internal check of one of the resistors failed and reported an illegal
+     * effort value difference on a bridged element. This is to further examine
+     * the issue.
+     */
+    @Test
+    public void bridgedElementEffortValidation() {
+        // instance to test and examine
+        Overlay instance = new Overlay();
+
+        // Generate elements
+        GeneralNode[] n = new GeneralNode[10];
+        LinearDissipator[] r = new LinearDissipator[12];
+        EffortSource u = new EffortSource(PhysicalDomain.ELECTRICAL);
+        ClosedOrigin gnd = new ClosedOrigin(PhysicalDomain.ELECTRICAL);
+        for (int idx = 0; idx < n.length; idx++) { // init
+            n[idx] = new GeneralNode(PhysicalDomain.ELECTRICAL);
+            n[idx].setName("n" + idx);
+        }
+        for (int idx = 0; idx < r.length; idx++) { // init
+            r[idx] = new LinearDissipator(PhysicalDomain.ELECTRICAL);
+            r[idx].setName("R" + idx);
+        }
+
+        u.setEffort(19561);
+        r[0].setResistanceParameter(1428.57);
+        r[1].setOpenConnection();
+        r[2].setOpenConnection();
+        r[3].setOpenConnection();
+        r[4].setBridgedConnection();
+        r[5].setBridgedConnection();
+        r[6].setOpenConnection();
+        r[7].setOpenConnection();
+        r[8].setBridgedConnection();
+        r[9].setBridgedConnection();
+        r[10].setBridgedConnection();
+        r[11].setBridgedConnection();
+
+        // build network exactly like it was noted from debugging
+        n[0].registerElement(r[0]);
+        n[0].registerElement(r[1]);
+        n[0].registerElement(r[2]);
+        n[0].registerElement(r[3]);
+        n[1].registerElement(r[0]);
+        n[1].registerElement(u);
+        n[2].registerElement(r[1]);
+        n[2].registerElement(r[4]);
+        n[3].registerElement(r[2]);
+        n[3].registerElement(r[5]);
+        n[4].registerElement(r[3]);
+        n[4].registerElement(r[4]);
+        n[4].registerElement(r[5]);
+        n[4].registerElement(r[6]);
+        n[4].registerElement(r[7]);
+        n[5].registerElement(r[6]);
+        n[5].registerElement(r[8]);
+        n[6].registerElement(r[7]);
+        n[6].registerElement(r[9]);
+        n[7].registerElement(r[8]);
+        n[7].registerElement(r[10]);
+        n[8].registerElement(r[9]);
+        n[8].registerElement(r[11]);
+        n[9].registerElement(u);
+        n[9].registerElement(r[10]);
+        n[9].registerElement(r[11]);
+        n[9].registerElement(gnd);
+
+        gnd.registerNode(n[9]);
+        u.registerNode(n[9]);
+        u.registerNode(n[1]);
+        r[0].registerNode(n[0]);
+        r[0].registerNode(n[1]);
+        r[1].registerNode(n[2]);
+        r[1].registerNode(n[0]);
+        r[2].registerNode(n[3]);
+        r[2].registerNode(n[0]);
+        r[3].registerNode(n[4]);
+        r[3].registerNode(n[0]);
+        r[4].registerNode(n[2]);
+        r[4].registerNode(n[4]);
+        r[5].registerNode(n[3]);
+        r[5].registerNode(n[4]);
+        r[6].registerNode(n[5]);
+        r[6].registerNode(n[4]);
+        r[7].registerNode(n[6]);
+        r[7].registerNode(n[4]);
+        r[8].registerNode(n[7]);
+        r[8].registerNode(n[5]);
+        r[9].registerNode(n[8]);
+        r[9].registerNode(n[6]);
+        r[10].registerNode(n[9]);
+        r[10].registerNode(n[7]);
+        r[11].registerNode(n[9]);
+        r[11].registerNode(n[8]);
+
+        for (int idx = 0; idx < n.length; idx++) { // init
+            instance.registerNode(n[idx]);
+        }
+
+        instance.registerElement(r[0], false, false);
+        instance.registerElement(u, false, false);
+        instance.registerElement(r[1], false, false);
+        instance.registerElement(r[2], false, false);
+        instance.registerElement(r[3], false, false);
+        instance.registerElement(r[4], false, true);
+        instance.registerElement(r[5], false, true);
+        instance.registerElement(r[6], false, false);
+        instance.registerElement(r[7], false, false);
+        instance.registerElement(r[8], false, false);
+        instance.registerElement(r[9], false, false);
+        instance.registerElement(r[10], false, true);
+        instance.registerElement(r[11], false, true);
+        instance.registerElement(gnd, false, false);
+
+        instance.overlaySetup(); // fails with exception if not working
+
+        instance.prepareCalculation();
+        instance.doCalculation();
+
+        assertTrue(instance.isCalculationFinished());
+
+        // Problem: n[2] and n[4] are shorted with r[4] which is set as
+        // bridged connection. The effort value is therefor expected to be
+        // the same, but it is not. 
+        assertEquals(Math.abs(n[2].getEffort() - n[4].getEffort()),
+                0.0, 1.0e-4);
+    }
 }

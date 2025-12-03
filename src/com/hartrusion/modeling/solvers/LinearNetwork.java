@@ -175,6 +175,15 @@ public abstract class LinearNetwork {
     public void registerElement(AbstractElement e) {
         int idx;
         if (!elements.contains(e)) {
+            // check that registered connections between the element and the
+            // nodes are valid.
+            for (idx = 0; idx < e.getNumberOfNodes(); idx++) {
+                if (!e.getNode(idx).isElementRegistered(e)) {
+                    throw new ModelErrorException("Element is registered at a "
+                            + "node that does not know the element.");
+                }
+            }
+
             // keep track of node0/node1 array size
             if (node0idx.length <= elements.size()) {
                 int[] node2idx = new int[node0idx.length + 1];
