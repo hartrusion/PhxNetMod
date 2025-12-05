@@ -61,7 +61,9 @@ public class PhasedValveControlled extends PhasedValve {
     @Override
     public void registerSignalListener(PropertyChangeListener signalListener) {
         super.registerSignalListener(signalListener);
-        controller.addPropertyChangeListener(signalListener);
+        if (controller != null) {
+            controller.addPropertyChangeListener(signalListener);
+        }
     }
 
     /**
@@ -72,7 +74,13 @@ public class PhasedValveControlled extends PhasedValve {
      */
     public void registerController(AbstractController controller) {
         controller.setName(name);
+        // Add all listeners which are known to this class already
+        PropertyChangeListener[] listeners = pcs.getPropertyChangeListeners();
+        for (PropertyChangeListener l : listeners) {
+            controller.addPropertyChangeListener(l);
+        }
         this.controller = controller;
+        controller.setMinOutput(-1.0);
     }
 
     @Override

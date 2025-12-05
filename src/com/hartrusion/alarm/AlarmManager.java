@@ -29,16 +29,25 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Holds all active alarm objects.
+ * Holds all active alarm objects. It manages those objects by itself, meaning
+ * it also generates the alarm objects if they do not exist yest.
  *
  * @author Viktor Alexander Hartung
  */
 public class AlarmManager {
 
-    private final Map<String, AlarmObject> alarmObjects = new ConcurrentHashMap<>();
+    private final Map<String, AlarmObject> alarmObjects
+            = new ConcurrentHashMap<>();
 
+    /**
+     * Sets an alarm. Can be used to update or initialize an AlarmObject.
+     *
+     * @param component To identify the alarm itself
+     * @param state Alarm state
+     * @param suppressed The alarm is suppressed
+     */
     public void fireAlarm(String component,
-                          AlarmState state, boolean suppressed) {
+            AlarmState state, boolean suppressed) {
         AlarmObject a;
         // If the alarm object was not initialized before, create a new one.
         if (!alarmObjects.containsKey(component)) {
@@ -57,5 +66,33 @@ public class AlarmManager {
                 .log(Level.INFO, "Updated Alarm: " + component
                         + ", Old state: " + oldState
                         + ", New state: " + state);
+    }
+
+    /**
+     * Checks if a provided alarm is active. Alarms with higher priority will
+     * also count for lower properties, for example, if an alarm is present with
+     * state MAX2 and the provided state argument is HIGH2, the method will
+     * return true as MAX2 is of a higher value than HIGH2.
+     *
+     * @param component String to identify the alarm object
+     * @param state AlarmState to check
+     * @return true if the alarm with given or higher priority state is active.
+     */
+    public boolean isAlarmActive(String component, AlarmState state) {
+        if (!alarmObjects.containsKey(component)) {
+            return false; // an unknown alarm can not be active.
+        }
+        AlarmObject alarmObject = alarmObjects.get(component);
+        // Those to states require strict compare.
+        if (state == AlarmState.NONE
+                || state == AlarmState.ACTIVE) {
+            return alarmObject.getState() == state;
+        }
+        // is there an alarm active at all? 
+        if (alarmObject.getState() == AlarmState.NONE) {
+            return false;
+        }
+        // check if equals or even a higher priority is active. 
+        return ComparePriority.includes(alarmObject.getState(), state);
     }
 }

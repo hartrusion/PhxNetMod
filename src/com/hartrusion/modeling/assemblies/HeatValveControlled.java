@@ -80,6 +80,7 @@ public class HeatValveControlled extends HeatValve {
             controller.addPropertyChangeListener(l);
         }
         this.controller = controller;
+        controller.setMinOutput(-1.0);
     }
 
     @Override

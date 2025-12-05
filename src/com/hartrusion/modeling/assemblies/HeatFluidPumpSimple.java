@@ -33,6 +33,7 @@ import com.hartrusion.modeling.heatfluid.HeatNode;
 import com.hartrusion.mvc.ActionCommand;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.BooleanSupplier;
 
 /**
  * Represents an assembly of a pump with a discharge valve. A working point has
@@ -68,10 +69,12 @@ public class HeatFluidPumpSimple implements Runnable {
     private boolean ready;
     private Instant stateTime; // for state machine control
     private Instant switchOnTime;
+    
+    private boolean safeOff = true;
+    private BooleanSupplier safeOffProvider;
 
     /**
      * Describes the state of the startup (and shutdown) procedure.
-     *
      */
     private int state;
 
@@ -154,6 +157,9 @@ public class HeatFluidPumpSimple implements Runnable {
 
     @Override
     public void run() {
+        if (safeOffProvider != null) {
+            safeOff = safeOffProvider.getAsBoolean();
+        }
         dischargeControl.run();
 
         if (pumpState == PumpState.RUNNING) {
@@ -179,7 +185,9 @@ public class HeatFluidPumpSimple implements Runnable {
         // get current time
         Instant now = Instant.now();
 
-        if (switchOnTime == null) {
+        if (!safeOff) {
+            ready = false;
+        } else if (switchOnTime == null) {
             ready = dischargeControl.getOutput() <= 1.0;
         } else {
             // if there is a switch-on-time recorded, some time must pass as 
@@ -292,5 +300,28 @@ public class HeatFluidPumpSimple implements Runnable {
 
     public HeatLinearValve getDischargeValve() {
         return dischargeValve;
+    }
+    
+    /**
+     * Adds an external provider which defines criteria for safe off of this
+     * pump assembly. This can be used with an anonymous class or lambda.
+     * 
+     * @param safeOffProvider a BooleanSupplier which returns FALSE for OFF
+     */
+    public void addSafeOffProvider(BooleanSupplier safeOffProvider) {
+        this.safeOffProvider = safeOffProvider;
+    }
+
+    
+    public boolean isSafeOff() {
+        return safeOff;
+    }
+
+    public void setSafeOff(boolean safeOff) {
+        if (safeOffProvider != null) {
+            throw new IllegalArgumentException("A safeOffProvider is set, "
+            + "using this method makes no sense.");
+        }
+        this.safeOff = safeOff;
     }
 }

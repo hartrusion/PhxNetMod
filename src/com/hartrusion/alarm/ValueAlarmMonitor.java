@@ -37,6 +37,9 @@ import java.util.logging.Logger;
  * <p>
  * Alarm events can be defined by providing an AlarmAction class, this class
  * has a run method which will be called once if the alarm is triggered.
+ * <p>
+ * This does not generate AlarmObjects. Purpose of this class is to monitor 
+ * a value and generate alarms by observing to the value.
  *
  * @author Viktor Alexander Hartung
  */
