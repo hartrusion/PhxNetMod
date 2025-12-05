@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.hartrusion.modeling.assemblies;
+package com.hartrusion.modeling.automated;
 
 /**
  * Used for automation of pump state for more realistic switching behavior.

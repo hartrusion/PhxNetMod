@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.hartrusion.modeling.assemblies;
+package com.hartrusion.modeling.automated;
 
 import com.hartrusion.control.AbstractController;
 import com.hartrusion.control.ControlCommand;
@@ -29,15 +29,10 @@ import com.hartrusion.mvc.ActionCommand;
 import java.beans.PropertyChangeListener;
 
 /**
- * Extends the Heat valve to a controlled heat valve by providing a controller
- * instance and means of accessing it, running it and process events that
- * control the controller.
- * <p>
- * To get the
  *
  * @author Viktor Alexander Hartung
  */
-public class HeatValveControlled extends HeatValve {
+public class PhasedValveControlled extends PhasedValve {
 
     private AbstractController controller;
 
