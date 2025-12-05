@@ -172,13 +172,28 @@ public class LinearDissipator extends FlowThrough {
                     && nodes.get(1).effortUpdated()) {
                 diff = Math.abs(nodes.get(0).getEffort()
                         - nodes.get(1).getEffort());
-                if (diff > 1e-2) { // previous:  1e-8
-                    // reducig from 1e-3 to 1e-2 now, seems to be a real issue
-                    // during valve opening and closing O.o
+                if (diff > 1e-2) {
+                    // update 1: reduce diff from 1e-8 to 1e-3.
+                    // update 2: reducig from 1e-3 to 1e-2 now, seems to be a 
+                    // real issue during valve opening and closing O.o
+                    // update 3: remove Exception, log a warning instead.
                     // throw new CalculationException(
                     //        "Different effort on nodes of bridged element.");
-                    LOGGER.log(Level.WARNING, "Different effort on nodes of "
-                            + "bridged element: " + diff);
+                    // update 4: The issue comes from Overlay class and the
+                    // simplificationt there not to be compatible with the
+                    // superposition solver. This was fixed by adding a small
+                    // workaround in overlay.
+                    // update 5: This workaround is not good, let's add the
+                    // flow too. The issue only happens if there is zero flow 
+                    // and due to the zero flow, the overlay made some bad
+                    // simplification.
+                    if (nodes.get(0).getFlow(this) > 1e-6
+                            || nodes.get(0).getFlow(this) < -1e-6
+                            || nodes.get(1).getFlow(this) > 1e-6
+                            || nodes.get(1).getFlow(this) < -1e-6) {
+                        LOGGER.log(Level.WARNING, "Different effort on nodes "
+                                + "of bridged element: " + diff);
+                    }
                 }
             }
         }
