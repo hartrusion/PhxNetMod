@@ -131,12 +131,18 @@ public class PhasedPropertiesWater implements
         // constant effort value.
         double integral = 0.0;
 
-        // Left part with constant fluid density
+        // Calculate the integral by simply adding surface areas. The integral
+        // goes from heatEnergyStart to heatEnergyEnd. We will simply add the 
+        // parts which are below the lines depending on start and end.
+        
+        // Left part with constant fluid density - this is only needed if start
+        // value is less than heSatFluid. Add iff necessary.
         if (heatEnergyStart < heatEnergySaturatedFluid) {
+            // end is higher than the fluid part: have only the part up to satF.
             if (heatEnergyEnd >= heatEnergySaturatedFluid) {
                 integral = (heatEnergySaturatedFluid - heatEnergyStart)
                         * getDensityLiquid(effortValue);
-            } else {
+            } else { // only liquid:
                 integral = (heatEnergyEnd - heatEnergyStart)
                         * getDensityLiquid(effortValue);
             }
@@ -144,6 +150,8 @@ public class PhasedPropertiesWater implements
         // Evaporation part in the middle, this is a straight line downwards.
         if (heatEnergyStart < heatEnergySaturatedGas
                 && heatEnergyEnd > heatEnergySaturatedFluid) {
+            // x1: heatEnergy start point in that middle part
+            // x2: heatEnergy end point in that middle part
             double x1, x2, y1, y2;
             if (heatEnergyStart < heatEnergySaturatedFluid) {
                 x1 = heatEnergySaturatedFluid;
@@ -164,10 +172,19 @@ public class PhasedPropertiesWater implements
                     + (x2-x1) * (y1-y2) * 0.5; // triangle part
                     
         }
+        // Vapor part at the right side
         if (heatEnergyEnd > heatEnergySaturatedGas) {
-            throw new UnsupportedOperationException("Todo, not yet implemented");
+            // Start point is below saturated gas point: start at that point,
+            // rest was added above.
+            if (heatEnergyStart <= heatEnergySaturatedGas) {
+                integral = (heatEnergyEnd - heatEnergySaturatedGas)
+                        * getDensityVapor(effortValue);
+            } else { // gas only:
+                integral = (heatEnergyEnd - heatEnergyStart)
+                        * getDensityVapor(effortValue);
+            }
         }
-        
+                
         // calculate average
         return integral / (heatEnergyEnd - heatEnergyStart);
     }
