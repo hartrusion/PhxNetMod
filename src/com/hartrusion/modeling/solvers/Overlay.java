@@ -44,15 +44,13 @@ import com.hartrusion.modeling.general.ClosedOrigin;
  * this step for one layer and pass the network for further simplification to a
  * different algorithm. This algorithm is fixed and will be the
  * RecursiveSimplifier, but may be changed later. Its no matter to the user.
- *
  * <p>
- * The replacement of shorcuts and open connections will not be done for all
+ * The replacement of shortcuts and open connections will not be done for all
  * elements, this is why the registerElement has two additional arguments to
- * sppecify which elements has to be replaced. LinearDissipators which will
- * represent a valve for example can change their behaviour between steps,
+ * specify which elements has to be replaced. LinearDissipators which will
+ * represent a valve for example can change their behavior between steps,
  * therefore they will be kept as open connections and wont be replaced by
- * mergin the nodes.
- *
+ * merging the nodes.
  * <p>
  * The superposition layer will be added to this network (elements and nodes
  * lists). This class then holds childNodes and childElements, which form a
@@ -75,14 +73,14 @@ public class Overlay extends ChildNetwork {
 
     /**
      * Marks the element on [index] of elements list which was an effort source
-     * and is no longer a soure in this network. It was replaced with a shortcut
-     * in parent network and this overlay will try to optimize this.
+     * and is no longer a source in this network. It was replaced with a 
+     * shortcut in parent network and this overlay will try to optimize this.
      */
     private boolean[] wasEffortSource;
 
     /**
      * Marks the element on [index] of elements list which was a flow source and
-     * is no longer a soure in this network. It was replaced with an open
+     * is no longer a source in this network. It was replaced with an open
      * connection in parent network and this overlay will try to optimize this.
      */
     private boolean[] wasFlowSource;
@@ -97,7 +95,7 @@ public class Overlay extends ChildNetwork {
      * Holds information on which node of element is merged with another node of
      * parent network. Index is the node index of the parent network, value is
      * the node which this index is merged to. This is a result of shortcuts
-     * from replaced effort sources. Note that this is refering to the parent
+     * from replaced effort sources. Note that this is referring to the parent
      * network so it has to be considered when creating child networks!
      */
     private int[] nodeMergedWith;
@@ -407,9 +405,8 @@ public class Overlay extends ChildNetwork {
      * When nodes and elements were added, this will setup the whole network
      * including the underlaying solvers needed to provide a solution back to
      * those added elements.
-     *
      * <p>
-     * This method just calls the indivual steps, they are grouped like this to
+     * This method just calls the individual steps, they are grouped like this to
      * keep this class a little more organized.
      */
     public void overlaySetup() {
