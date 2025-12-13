@@ -50,6 +50,16 @@ public class LinearDissipator extends FlowThrough {
     protected double resistance = 10.0; // main parameter
     private double externalDeltaEffort;
     private boolean externalDeltaEffortKnown;
+    
+    /**
+     * Disables all validation checks.
+     */
+    private boolean noChecks;
+    
+    /**
+     * Remembers that a validation failed to prevent spamming the logs.
+    */
+    private boolean diffErrorOccured;
 
     /**
      * Creates an instance of a linear dissipator with a given resistance value,
@@ -61,7 +71,7 @@ public class LinearDissipator extends FlowThrough {
         super(domain);
         elementType = ElementType.DISSIPATOR;
     }
-
+    
     /**
      * Creates an instance of a linear dissipator which will either be a
      * shortcut or an open connection
@@ -151,6 +161,9 @@ public class LinearDissipator extends FlowThrough {
     public boolean doCalculation() {
         boolean retVal = calculateOhmsLaw();
         double diff;
+        if (noChecks) { // no more checks to validate results.
+            return retVal;
+        }
         // Perform some additional checks to validate results
         if (elementType == ElementType.OPEN) {
             if (nodes.get(0).flowUpdated(this)
@@ -191,8 +204,13 @@ public class LinearDissipator extends FlowThrough {
                             || nodes.get(0).getFlow(this) < -1e-6
                             || nodes.get(1).getFlow(this) > 1e-6
                             || nodes.get(1).getFlow(this) < -1e-6) {
-                        LOGGER.log(Level.WARNING, "Different effort on "
-                                + "nodes of bridged element: " + diff);
+                        if (!diffErrorOccured) {
+                            LOGGER.log(Level.WARNING, "Different effort on "
+                                    + "nodes of bridged element: " + diff);
+                        }
+                        diffErrorOccured = true; // throw warning only once.
+                    } else {
+                        diffErrorOccured = false;
                     }
                 }
             }
@@ -324,6 +342,23 @@ public class LinearDissipator extends FlowThrough {
     @Override
     public void setStepTime(double dt) {
         // this class does not use step time
+    }
+    
+    /**
+     * Disables validations of effort, flow and resistance values. Usually, 
+     * after calculation or assigning values, the element would check if those 
+     * are valid. It is likely that some solvers do set values and no 
+     * calculation by the element itself are necessary, in this case, those 
+     * checks help to detect bugs or artifacts. However, the overlay class does 
+     * some kind of simplification where assumptions of the network itself do 
+     * not match the overlays parent network layer. As only flow values are of 
+     * interest, this is not an issue but would throw warnings. For this case, 
+     * those checks can be disabled.
+     * 
+     * @param noChecks 
+     */
+    public void setNoChecks(boolean noChecks) {
+        this.noChecks = noChecks;
     }
 
 }
