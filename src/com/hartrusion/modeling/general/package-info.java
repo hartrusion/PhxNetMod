@@ -24,7 +24,6 @@
 /**
  * General components can be used for modeling dynamic systems for simple
  * disciplines as well as simple electronic circuits.
- *
  * <p>
  * This table shows how the elements and variables are used across different
  * domains:
@@ -36,14 +35,9 @@
  * Electric   Voltage    Current     Capacitor    Coil           Resistor
  * Thermal    Temp.      Heat flow   Mass         n/a            Heat transfer
  * </pre>
- *
  * <p>
  * Those generalized elements will be used no matter which domain is in use.
  * "HeatFluid" will allow to transport a heated fluid with interfaces to other
  * domain.
- * 
- * <p>
- * 
- *
  */
 package com.hartrusion.modeling.general;

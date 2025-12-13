@@ -30,12 +30,10 @@ import com.hartrusion.modeling.PhysicalDomain;
 /**
  * Stores effort energy. To properly finish calculation, all nodes must have set
  * flow variables.
- *
  * <p>
  * Capacitances have to be further classified as self or mutual capacitances.
  * The class is therefore an abstract class, representing the need for further
  * clarification of what kind of capacitance it is.
- *
  * <p>
  * effort = tau * integral(flow), with tau = 1/time constant
  *

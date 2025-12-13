@@ -28,6 +28,8 @@ import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 
 /**
+ * An abstract class that has further to be defined into a more precise origin
+ * class. An origin is a coordinate system for the model.
  *
  * @author Viktor Alexander Hartung
  */

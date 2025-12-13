@@ -31,11 +31,10 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
  * coordinate system origin. It allows any flow in and out and just forces the
  * effort value, therefore it's called open origin. If the model is not a closed
  * loop, open origins will be used to allow a flow into or out of the model.
- *
  * <p>
- * While it is possible and intended to have multiple orgins, also with multiple
- * effort values, it is not intendet to change the effort after the model was
- * set up. For changing effort values, an effort source must be used.
+ * While it is possible and intended to have multiple origins, also with
+ * multiple effort values, it is not intended to change the effort after the
+ * model was set up. For changing effort values, an effort source must be used.
  *
  * @author Viktor Alexander Hartung
  */
@@ -70,7 +69,7 @@ public class OpenOrigin extends Origin {
     }
 
     /**
-     * Returns wether the flow to or from this element is in an updated state
+     * Returns weather the flow to or from this element is in an updated state
      * for this calculation run.
      *
      * @return true, if value was set.

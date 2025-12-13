@@ -42,7 +42,7 @@ import static com.hartrusion.util.ArraysExt.newArrayLength;
  * The purpose of this was to model a steam drum with separation of steam and
  * water on the out flow, however, due to the way its modeled the drum must
  * never be empty and should always contain an amount of water that makes the
- * steam part above the water negletably small.
+ * steam part above the water neglectably small.
  *
  * @author Viktor Alexander Hartung
  */
@@ -55,7 +55,7 @@ public class SteamSaturatedSeparationHandler implements SteamHandler {
 
     /**
      * For saturated steam, this value defines what phase of the steam will be
-     * assigned to a port if its leaving the element which has this handler
+     * assigned to a port if it's leaving the element which has this handler
      * assigned.
      */
     private boolean[] isLiquidNode = new boolean[1];
@@ -67,15 +67,15 @@ public class SteamSaturatedSeparationHandler implements SteamHandler {
 
     /**
      * A reference to a steam element which has this handler assigned as a
-     * reference to the abstract element type. Its a separate reference variable
-     * to make code shorter by removing the necessity of casting to this one for
-     * some function arguments.
+     * reference to the abstract element type. It's a separate reference
+     * variable to make code shorter by removing the necessity of casting to
+     * this one for some function arguments.
      */
     private final AbstractElement element;
 
     /**
-     * Marks the availibility of enthalpySaturatedLiquid and Gas variables and
-     * prevents need for calulation on each call as this always calls a steam
+     * Marks the availability of enthalpySaturatedLiquid and Gas variables and
+     * prevents need for calculation on each call as this always calls a steam
      * table function.
      */
     private boolean staticPropertiesCalculated;
@@ -161,12 +161,12 @@ public class SteamSaturatedSeparationHandler implements SteamHandler {
         this.propertyTable = propertyTable;
     }
 
-    public void initState(double initialTtemperature, double storedMass,
+    public void initState(double initialTemperature, double storedMass,
             double lowTemperature, double highTemperature, double pressure) {
         double lowPressure, highPressure;
 
         totalMass = storedMass;
-        steamProperties[0] = initialTtemperature;
+        steamProperties[0] = initialTemperature;
 
         lowPressure = propertyTable.get("pSat_T", lowTemperature);
         highPressure = propertyTable.get("pSat_T", highTemperature);
@@ -182,10 +182,10 @@ public class SteamSaturatedSeparationHandler implements SteamHandler {
         b = highTemperature - m * highSpecEnthalpy;
 
         // reverse this to get the initial spec enthalpy that corresponds to
-        // the given inital temperature. We cheat the temperature to the state 
-        // inital value this way instead of enthalpy. Instead of T = m*h + b we
+        // the given initial temperature. We cheat the temperature to the state
+        // initial value this way instead of enthalpy. Instead of T = m*h + b we
         // need T - b = m*h ; h = (T-b)/m
-        steamProperties[1] = (initialTtemperature - b) / m;
+        steamProperties[1] = (initialTemperature - b) / m;
 
         // for now, we will not use spec. entropy and X in the entire class.
         totalMass = storedMass;

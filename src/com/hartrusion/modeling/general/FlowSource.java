@@ -81,7 +81,7 @@ public class FlowSource extends FlowThrough {
      * Sets the flow value on this source, not calling any model updates. Used
      * to parametrize the model.
      *
-     * @param f
+     * @param f Flow value to set.
      */
     public void setFlow(double f) {
         flow = f;

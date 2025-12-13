@@ -30,7 +30,6 @@ import com.hartrusion.modeling.PhysicalDomain;
  * Raises effort between two nodes. If the set effort is positive, the effort on
  * node 1 will be higher than on node 0 by that value. This is according to the
  * convention that positive flow also goes in on node 0 and out of node 1.
- *
  * <p>
  * Must be connected to two nodes!
  *

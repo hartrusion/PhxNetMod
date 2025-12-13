@@ -30,11 +30,9 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
  * Self capacitance is the ability to "just" store the effort energy. It will be
  * the same effort value on all nodes, and it will also enforce the effort value
  * to all those connected nodes.
- *
  * <p>
  * Behaviour: flow = C * dEffort/dt or effort = 1/C * int(flow) whereas in
  * general terms C is referred as the time constant tau for general elements.
- *
  * <p>
  * Flow that goes into this will sup up as effort and not leave the element. It
  * represents a hydraulic tank or a thermal mass.

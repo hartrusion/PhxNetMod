@@ -29,18 +29,18 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
 
 /**
  * Stores flow energy. While at first glance it sounds like this would just
- * store flow energy to relase it later, it also acts as a flow limitation. Try
- * imagine pushing a car, you will feel the force with your hand as you apply
- * force to move a big mass. While not beeing present too much in hydraulic
+ * store flow energy to release it later, it also acts as a flow limitation. Try
+ * to imagine pushing a car, you will feel the force with your hand as you apply
+ * force to move a big mass. While not being present too much in hydraulic
  * systems, this is a base class for mechanical systems which always consider
  * moving masses.
- *
+ * <p>
  * Supports 1 or 2 nodes where it will force its flow variables onto. More than
  * 2 nodes are not supported as this would require knowledge about how flow is
  * distributed.
- *
+ * <p>
  * Positive flow value on this element means: flow into node 0, out of node 1.
- *
+ * <p>
  * flow = tau * integral(effort)
  *
  * @author Viktor Alexander Hartung
@@ -82,7 +82,7 @@ public class Inductance extends EnergyStorage {
     public boolean doCalculation() {
         boolean didSomething = false;
 
-        // state value is forced upon connected nodes to let other elments
+        // state value is forced upon connected nodes to let other elements
         // via nodes know about state value.
         if (!nodes.get(0).flowUpdated(this)) {
             nodes.get(0).setFlow(stateValue, this, true);

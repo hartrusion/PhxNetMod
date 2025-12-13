@@ -34,9 +34,9 @@ import java.util.logging.Logger;
  * nodes to be used. Does not store energy and therefore has no state space
  * variable. Allows different effort values on each node and has same flow value
  * on both nodes.
- *
+ * <p>
  * Linear: effort = flow * resistance;
- *
+ * <p>
  * As the effort rises with positive flow the direction has to be into this
  * element for positive flow values.
  *
@@ -117,7 +117,7 @@ public class LinearDissipator extends FlowThrough {
     }
 
     /**
-     * Returs resistance value. Resistance = Effort / Flow.
+     * Returns resistance value. Resistance = Effort / Flow.
      *
      * @return Resistance value
      */
@@ -129,7 +129,7 @@ public class LinearDissipator extends FlowThrough {
      * Calculates and returns conductance value. Conductance = 1/Resistance =
      * Flow / Effort.
      *
-     * @return
+     * @return Conductance value
      */
     public double getConductance() {
         if (elementType == ElementType.OPEN) {
@@ -151,7 +151,7 @@ public class LinearDissipator extends FlowThrough {
     public boolean doCalculation() {
         boolean retVal = calculateOhmsLaw();
         double diff;
-        // Perfom some additional checks to validate results
+        // Perform some additional checks to validate results
         if (elementType == ElementType.OPEN) {
             if (nodes.get(0).flowUpdated(this)
                     && nodes.get(1).flowUpdated(this)) {
@@ -174,13 +174,13 @@ public class LinearDissipator extends FlowThrough {
                         - nodes.get(1).getEffort());
                 if (diff > 1e-2) {
                     // update 1: reduce diff from 1e-8 to 1e-3.
-                    // update 2: reducig from 1e-3 to 1e-2 now, seems to be a 
+                    // update 2: reducing from 1e-3 to 1e-2 now, seems to be a
                     // real issue during valve opening and closing O.o
                     // update 3: remove Exception, log a warning instead.
                     // throw new CalculationException(
                     //        "Different effort on nodes of bridged element.");
                     // update 4: The issue comes from Overlay class and the
-                    // simplificationt there not to be compatible with the
+                    // simplification there not to be compatible with the
                     // superposition solver. This was fixed by adding a small
                     // workaround in overlay.
                     // update 5: This workaround is not good, let's add the
@@ -191,8 +191,8 @@ public class LinearDissipator extends FlowThrough {
                             || nodes.get(0).getFlow(this) < -1e-6
                             || nodes.get(1).getFlow(this) > 1e-6
                             || nodes.get(1).getFlow(this) < -1e-6) {
-                        LOGGER.log(Level.WARNING, "Different effort on nodes "
-                                + "of bridged element: " + diff);
+                        LOGGER.log(Level.WARNING, "Different effort on "
+                                + "nodes of bridged element: " + diff);
                     }
                 }
             }
@@ -323,7 +323,7 @@ public class LinearDissipator extends FlowThrough {
 
     @Override
     public void setStepTime(double dt) {
-        // this class does not use steptime
+        // this class does not use step time
     }
 
 }

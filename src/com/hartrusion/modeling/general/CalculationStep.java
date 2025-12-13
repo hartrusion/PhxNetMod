@@ -67,15 +67,15 @@ public interface CalculationStep {
      * the element is able to set something. This has to be called on each
      * element until the whole model is calculated.
      *
-     * @return true if something was calculated. false: nothing was calulated,
+     * @return true if something was calculated. false: nothing was calculated,
      * also if everything is finished and there is nothing to do.
      */
     public boolean doCalculation();
 
     /**
-     * Checks weather the calculation is complete for current cycle. This is true
-     * if all values on all nodes connected to this element have their values
-     * updated.
+     * Checks weather the calculation is complete for current cycle. This is
+     * true if all values on all nodes connected to this element have their
+     * values updated.
      *
      * @return true: Calculation for current cycle is finished.
      */

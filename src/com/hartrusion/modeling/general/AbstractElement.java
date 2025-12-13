@@ -303,10 +303,10 @@ public abstract class AbstractElement implements CalculationStep,
      * the element itself but represents a connection to another network, for
      * example, a heat exchanger volume has a thermal network connected to it
      * and this coupled element can be a reference between those tho domains.
-     * Its not required for the network to work but for the solver to be able to
-     * see that there is something else he has to take care of.
+     * It's not required for the network to work but for the solver to be
+     * able to see that there is something else he has to take care of.
      *
-     * @param coupledElement
+     * @param coupledElement An element that has some connection with this one.
      */
     public void setCoupledElement(AbstractElement coupledElement) {
         this.coupledElement = coupledElement;

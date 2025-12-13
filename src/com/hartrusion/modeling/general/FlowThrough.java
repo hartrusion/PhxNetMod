@@ -119,7 +119,7 @@ public abstract class FlowThrough extends AbstractElement {
      * to set a different element type like an open connection or a shortcut to
      * this specific element.
      *
-     * @param t
+     * @param t new ElementType
      */
     public void setElementType(ElementType t) {
         this.elementType = t;

@@ -432,8 +432,8 @@ public class GeneralNode {
 
 /**
  * Holds properties for flow value. nodes have multiple connections for flow and
- * as it is different for each connection it has to be saved wether the value is
- * calulated and updated.
+ * as it is different for each connection it has to be saved weather the value
+ * is calculated and updated.
  *
  * @author Viktor Alexander Hartung
  */
@@ -456,7 +456,7 @@ class FlowProperties {
 
     public void setFlowValue(double flowValue) {
         // Eliminate negative Zeros which can occur by having a sum of
-        // zero flows where flow balance was calulated.
+        // zero flows where flow balance was calculated.
         if (flowValue == 0.0 && Double.compare(flowValue, 0.0) != 0) {
             flowValue = 0.0;
         }

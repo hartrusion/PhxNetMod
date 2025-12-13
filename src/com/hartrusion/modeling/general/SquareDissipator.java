@@ -33,13 +33,10 @@ import com.hartrusion.modeling.PhysicalDomain;
  * nodes to be used. Does not store energy and therefore has no state space
  * variable. Allows different effort values on each node and has same flow value
  * on both nodes.
- *
  * <p>
  * DO NOT USE! IT'S NOT WORKING! Behaves horribly for discrete time steps.
- *
  * <p>
  * Square formula: effort = flow^2 * zeta;
- *
  * <p>
  * As the effort rises with positive flow the direction has to be into this
  * element for positive flow values.
@@ -70,10 +67,8 @@ public class SquareDissipator extends FlowThrough {
      * a shortcut, instead of using setZetaParameter, there can just be two
      * values be set, like the flow and pressure drop of a fully open valve on
      * full power.
-     *
      * <p>
      * effort = flow^2 * zeta;
-     *
      * <p>
      * flow = sqrt(effort) 
      *
@@ -148,7 +143,6 @@ public class SquareDissipator extends FlowThrough {
                 didSomething = true;
             }
         }
-
         return didSomething;
     }
     

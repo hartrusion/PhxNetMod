@@ -30,12 +30,10 @@ package com.hartrusion.modeling.general;
  * do nothing at all, depending on what kind of element it is. This is the way
  * the effort and flow information are passed through the model as far as
  * possible.
- *
  * <p>
  * Calling the methods will only pass on information but not trigger any
  * calculation at all. Calculations will be done using the CalculationStep
  * interface.
- *
  * <p>
  * It is meant that methods of this interface are getting called by the node
  * instances.
@@ -49,7 +47,7 @@ public interface GeneralElement {
      * set-only thing, they will eventually pass through this element and
      * continue setting to other elements, but they will never trigger a
      * calculation. As effort will be saved in nodes, it might not have any
-     * consequence at all.
+     * consequence.
      *
      * @param effort Effort set from node to this element
      * @param source GeneralNode calling the function to identify source
