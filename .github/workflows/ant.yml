@@ -9,6 +9,12 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      utils_repo:
+        description: 'Repository mit dem neuesten Utils-Artefakt (owner/repo)'
+        required: true
+        default: 'hartrusion/Utils'
 
 # Allow this workflow to delete older artifacts via the GITHUB_TOKEN
 permissions:
