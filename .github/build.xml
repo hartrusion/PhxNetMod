@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="PhxNetMod" default="build-all" basedir="..">
+  <!-- Konfiguration -->
+  <property name="src.dir" value="src"/>
+  <property name="test.src.dir" value="test"/>
+  <property name="lib.dir" value="lib"/>
+  <property name="build.dir" value="build"/>
+  <property name="classes.dir" value="${build.dir}/classes"/>
+  <property name="test.classes.dir" value="${build.dir}/test-classes"/>
+  <property name="dist.dir" value="dist"/>
+  <property name="jar.name" value="PhxNetMod.jar"/>
+  <!-- TestNG jar wird per Workflow als Property übergeben oder liegt in lib/ -->
+  <property name="testng.jar" value="${lib.dir}/testng-6.14.3.jar"/>
+
+  <target name="init">
+    <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${test.classes.dir}"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${lib.dir}"/>
+  </target>
+
+  <!-- Optional: normalize/umbenennen des Utils-JARs (falls der Download unterschiedliche Namen hat) -->
+  <target name="resolve-utils" depends="init">
+    <!-- Falls bereits utils.jar existiert, nichts tun -->
+    <available file="${lib.dir}/utils.jar" property="utils.present"/>
+    <condition property="utils.copy">
+      <and>
+        <not><isset property="utils.present"/></not>
+        <resourcecount when="greater" count="0">
+          <fileset dir="${lib.dir}">
+            <include name="*utils*.jar"/>
+            <include name="utils-*.jar"/>
+          </fileset>
+        </resourcecount>
+      </and>
+    </condition>
+
+    <echo message="utils.present=${utils.present}, utils.copy=${utils.copy}"/>
+
+    <copy todir="${lib.dir}" overwrite="true" verbose="true" preservelastmodified="true">
+      <fileset dir="${lib.dir}">
+        <include name="*utils*.jar"/>
+        <include name="utils-*.jar"/>
+      </fileset>
+      <filterchain>
+        <!-- keine Filter nötig -->
+      </filterchain>
+    </copy>
+
+    <!-- Falls mehrere JARs gefunden wurden, optional nur erster verwenden -->
+    <script language="javascript"><![CDATA[
+      // optional: select a single utils jar and rename to utils.jar
+    ]]></script>
+
+    <!-- Rename first matching jar to utils.jar for stable classpath (falls vorhanden) -->
+    <condition property="hasAnyUtilsJar">
+      <resourcecount when="greater" count="0">
+        <fileset dir="${lib.dir}">
+          <include name="*utils*.jar"/>
+          <include name="utils-*.jar"/>
+        </fileset>
+      </resourcecount>
+    </condition>
+
+    <fail message="Keine Utils-JAR gefunden in ${lib.dir}" unless="hasAnyUtilsJar"/>
+    <echo message="Resolved Utils jar in ${lib.dir}"/>
+  </target>
+
+  <target name="compile" depends="resolve-utils">
+    <!-- Compile main sources -->
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false" debug="true">
+      <classpath>
+        <fileset dir="${lib.dir}">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+
+    <!-- Compile tests -->
+    <mkdir dir="${test.classes.dir}"/>
+    <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}" includeantruntime="false" debug="true">
+      <classpath>
+        <pathelement location="${classes.dir}"/>
+        <fileset dir="${lib.dir}">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="test" depends="compile">
+    <!-- Erwartet eine TestNG-Suite unter Tests/testng.xml -->
+    <available file=".github/testng.xml" property="has.testng.xml"/>
+    <fail message="Keine Testsuite Tests/testng.xml gefunden. Bitte anlegen oder anpassen." unless="has.testng.xml"/>
+
+    <echo message="Running TestNG tests using ${testng.jar}"/>
+
+    <java classname="org.testng.TestNG" fork="true" failonerror="true">
+      <classpath>
+        <pathelement location="${testng.jar}"/>
+        <pathelement location="${classes.dir}"/>
+        <pathelement location="${test.classes.dir}"/>
+        <fileset dir="${lib.dir}">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+      <arg value="${test.src.dir}/testng.xml"/>
+    </java>
+  </target>
+
+  <target name="jar" depends="test">
+    <jar destfile="${dist.dir}/${jar.name}" basedir="${classes.dir}">
+      <manifest>
+        <attribute name="Implementation-Title" value="PhxNetMod"/>
+        <attribute name="Implementation-Version" value="${DSTAMP}-${TSTAMP}"/>
+      </manifest>
+    </jar>
+    <echo message="Created ${dist.dir}/${jar.name}"/>
+  </target>
+
+  <target name="build-all" depends="jar">
+    <echo message="Build successful: ${dist.dir}/${jar.name}"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete dir="${dist.dir}"/>
+  </target>
+</project>
