@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="PhxNetMod" default="build" basedir="..">
+<project name="PhxNetMod" default="jar" basedir="..">
   <!-- Konfiguration -->
   <property name="src.dir" value="src"/>
   <property name="lib.dir" value="lib"/>
@@ -14,14 +14,13 @@
     <mkdir dir="${lib.dir}"/>
   </target>
 
-  <target name="check-utils" depends="init">
+  <!--target name="check-utils" depends="init">
     <available file="${lib.dir}/utils.jar" property="utils.present"/>
     <fail message="Error: ${lib.dir}/utils.jar not found (should be automatically placed here by ant.yml)" unless="utils.present"/>
     <echo message="Found ${lib.dir}/utils.jar"/>
-  </target>
+  </target-->
 
-  <target name="compile" depends="check-utils">
-    <mkdir dir="${classes.dir}"/>
+  <target name="compile" depends="init">
     <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false" debug="true">
       <classpath>
         <fileset dir="${lib.dir}">
