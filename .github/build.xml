@@ -5,16 +5,15 @@
   <property name="lib.dir" value="lib"/>
   <property name="build.dir" value="build"/>
   <property name="classes.dir" value="${build.dir}/classes"/>
-  <property name="dist.dir" value="dist"/>
+  <property name="jar.dir" value="${build.dir}/jar"/>
   <property name="jar.name" value="PhxNetMod.jar"/>
 
   <target name="init">
     <mkdir dir="${classes.dir}"/>
-    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${jar.dir}"/>
     <mkdir dir="${lib.dir}"/>
   </target>
 
-  <!-- Stelle sicher, dass lib/utils.jar vorhanden ist (ansonsten Fehler) -->
   <target name="check-utils" depends="init">
     <available file="${lib.dir}/utils.jar" property="utils.present"/>
     <fail message="Error: ${lib.dir}/utils.jar not found (should be automatically placed here by ant.yml)" unless="utils.present"/>
@@ -33,21 +32,12 @@
   </target>
 
   <target name="jar" depends="compile">
-    <jar destfile="${dist.dir}/${jar.name}" basedir="${classes.dir}">
-      <manifest>
-        <attribute name="Implementation-Title" value="PhxNetMod"/>
-        <attribute name="Implementation-Version" value="${DSTAMP}-${TSTAMP}"/>
-      </manifest>
-    </jar>
-    <echo message="Created ${dist.dir}/${jar.name}"/>
-  </target>
-
-  <target name="build" depends="jar">
-    <echo message="Build finished: ${dist.dir}/${jar.name}"/>
+    <jar destfile="${jar.dir}/${jar.name}" basedir="${classes.dir}"/>
+    <echo message="Build finished: ${jar.dir}/${jar.name}"/>
   </target>
 
   <target name="clean">
     <delete dir="${build.dir}"/>
-    <delete dir="${dist.dir}"/>
+    <delete dir="${jar.dir}"/>
   </target>
 </project>
