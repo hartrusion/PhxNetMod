@@ -16,16 +16,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '17'
 
-      - name: Install ant, unzip, jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ant unzip jq
+# This was added by github copilot but is not necessary as those packages are
+# already installed.
+#      - name: Install ant, unzip, jq
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y ant unzip jq
 
       - name: Prepare lib directory
         run: mkdir -p lib
@@ -60,7 +62,7 @@ jobs:
           echo "Downloaded Package.zip"
           unzip -l Package.zip
 
-      - name: Extract and utils.jar
+      - name: Extract utils.jar
         run: |
           set -e
           # Extrahiere utils.jar aus Package.zip nach lib/
@@ -73,7 +75,7 @@ jobs:
           ls -la lib
 
       - name: Run Ant build
-        run: ant -buildfile .github/build.xml jar
+        run: ant -buildfile .github/build.xml
 
       - name: Upload JAR Artifact
         uses: actions/upload-artifact@v4
