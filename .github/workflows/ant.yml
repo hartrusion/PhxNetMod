@@ -82,13 +82,13 @@ jobs:
           ls -la lib
 
       - name: Run Ant build
-        run: ant -buildfile .github/build.xml
+        run: ant -buildfile .github/build.xml jar
 
       - name: Upload JAR Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Package
-          path: dist/*.jar
+          path: build/jar/*.jar
           # optional: if-no-files-found: warn
 
   probe-artifacts:
