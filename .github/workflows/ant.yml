@@ -33,7 +33,7 @@ jobs:
       - name: Find latest Utils artifact (hartrusion/Utils)
         id: find_artifact
         env:
-          API_REPO: "hartrusion/Utils"
+          API_REPO: "hartrusion/utils"
           TOKEN: ${{ github.token }}
         run: |
           set -e
@@ -56,24 +56,13 @@ jobs:
           ART_ID=${{ steps.find_artifact.outputs.artifact_id }}
           echo "Downloading artifact $ART_ID from ${API_REPO}..."
           ZIP_URL="https://api.github.com/repos/${API_REPO}/actions/artifacts/${ART_ID}/zip"
-          curl -L -H "Authorization: token ${TOKEN}" -o artifact.zip "$ZIP_URL"
-          echo "Downloaded artifact.zip"
-          unzip -l artifact.zip
+          curl -L -H "Authorization: token ${TOKEN}" -o Package.zip "$ZIP_URL"
+          echo "Downloaded Package.zip"
+          unzip -l Package.zip
 
-      - name: Extract Package.zip and utils.jar
+      - name: Extract and utils.jar
         run: |
           set -e
-          # Prüfe, ob Package.zip im Artifact vorhanden ist
-          if ! unzip -l artifact.zip | awk '{print $4}' | grep -q '^Package.zip$'; then
-            echo "Package.zip not found inside artifact.zip"
-            exit 1
-          fi
-          # Extrahiere Package.zip aus artifact.zip
-          unzip -j -o artifact.zip 'Package.zip' -d . || (echo "Failed to extract Package.zip" && exit 1)
-          if [ ! -f Package.zip ]; then
-            echo "Extraction failed: Package.zip missing"
-            exit 1
-          fi
           # Extrahiere utils.jar aus Package.zip nach lib/
           if ! unzip -l Package.zip | awk '{print $4}' | grep -q '^utils.jar$'; then
             echo "utils.jar not found inside Package.zip"
