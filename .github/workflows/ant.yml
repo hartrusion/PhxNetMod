@@ -9,12 +9,6 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:
-    inputs:
-      utils_repo:
-        description: 'Repository mit dem neuesten Utils-Artefakt (owner/repo)'
-        required: true
-        default: 'hartrusion/Utils'
 
 # Allow this workflow to delete older artifacts via the GITHUB_TOKEN
 permissions:
@@ -50,11 +44,11 @@ jobs:
         run: |
           set -e
           echo "Searching artifacts in repo: $UTILS_REPO"
-          API="https://api.github.com/repos/${UTILS_REPO}/actions/artifacts"
+          API="https://api.github.com/repos/hartrusion/Utils/actions/artifacts"
           # get first non-expired artifact (sorted by returned order, usually newest first)
           ARTIFACT_ID=$(curl -s -H "Authorization: token ${TOKEN}" "${API}" | jq -r '.artifacts[] | select(.expired==false) | .id' | head -n1)
           if [ -z "$ARTIFACT_ID" ] || [ "$ARTIFACT_ID" = "null" ]; then
-            echo "No artifact found in ${UTILS_REPO}"
+            echo "No artifact found in Utils"
             exit 1
           fi
           echo "artifact_id=${ARTIFACT_ID}" >> $GITHUB_OUTPUT
@@ -67,8 +61,8 @@ jobs:
         run: |
           set -e
           ART_ID=${{ steps.find_artifact.outputs.artifact_id }}
-          echo "Downloading artifact $ART_ID from ${UTILS_REPO}..."
-          ZIP_URL="https://api.github.com/repos/${UTILS_REPO}/actions/artifacts/${ART_ID}/zip"
+          echo "Downloading artifact $ART_ID from hartrusion/Utils..."
+          ZIP_URL="https://api.github.com/repos/hartrusion/Utils/actions/artifacts/${ART_ID}/zip"
           curl -L -H "Authorization: token ${TOKEN}" -o utils_art.zip "$ZIP_URL"
           # extract any .jar files into lib/
           unzip -j -o utils_art.zip '*.jar' -d lib || true
