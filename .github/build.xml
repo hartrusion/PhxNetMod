@@ -6,7 +6,7 @@
   <property name="build.dir" value="build"/>
   <property name="classes.dir" value="${build.dir}/classes"/>
   <property name="jar.dir" value="${build.dir}/jar"/>
-  <property name="jar.name" value="PhxNetMod.jar"/>
+  <property name="jar.name" value="PhxNetMod-SNAPSHOT.jar"/>
 
   <target name="init">
     <mkdir dir="${classes.dir}"/>
