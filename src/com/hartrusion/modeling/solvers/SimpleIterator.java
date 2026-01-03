@@ -43,7 +43,7 @@ public class SimpleIterator {
     int lastNonResistanceIndex = 0;
 
     /**
-     * Adds an element to the list of elements which shall recceive a solution
+     * Adds an element to the list of elements which shall receive a solution
      * by this solver. Origins and sources will be automatically priorized so
      * there is no need to consider an order of adding for those.
      *
@@ -91,6 +91,9 @@ public class SimpleIterator {
      * from the sources and origins first.
      */
     public void doCalculationOnEnforcerElements() {
+        if (calc.size() <= 0) {
+            return; // prevent running over an empty list
+        }
         boolean didSomething;
         int iterations = 0;
         while (true) {
@@ -107,7 +110,7 @@ public class SimpleIterator {
             }
         }
     }
-    
+
     /**
      * Calls calculation on all elements of this network until no further
      * calculation is possible.
