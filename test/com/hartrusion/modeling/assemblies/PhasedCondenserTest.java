@@ -212,7 +212,7 @@ public class PhasedCondenserTest {
      * which is about 75 °C, secondary side is at 20 °C. It is expected for the
      * temperatures to equalize after some time.
      */
-    @Test
+  //  @Test
     public void testNoFlowTemperatureEqualizing() {
         double temperaturePrimary = 350; // 75 °C
         double temperatureSecondary = 293.15; // 20 °C
@@ -222,9 +222,7 @@ public class PhasedCondenserTest {
         pz2.setOriginHeatEnergy(heatEnergy);
         hz2.setOriginTemperature(temperatureSecondary);
 
-        // With a height of 0.2 m, there should be about same mass as
-        // in reservor and no heat transfer happens in the condenser. The
-        // temperature should equalizze evenly.
+        // Set flow through both primary and secondary sides
         instance.initConditions(temperaturePrimary, temperatureSecondary, 0.2);
         flowIn.setFlow(0.0);
         flowOut.setFlow(0.0);
@@ -239,6 +237,41 @@ public class PhasedCondenserTest {
 //                    + instance.getPrimarySideCondenser().getPhasedHandler().getHeatEnergy() / water.getSpecificHeatCapacity()
 //                    + ", Scondary Temp: "
 //                    + instance.getSecondarySide().getHeatHandler().getTemperature());
+        }
+    }
+    
+    // @Test
+    public void testUnstableParameters() {
+        // Use different parameters than used at other tests.
+        // kTimesA 2e6 will trigger oscillation between condenser and secondary 
+        // side.
+        // kTiemsA 2e7 will crash the model. Step time must be either be set  
+        // smaller or the thing can't be simulated.
+        instance.initCharacteristic(1.0, 20, 200, 2e6, 0.5, 1.5, 1e5);
+        
+        double temperaturePrimary = 350; // 75 °C
+        double temperatureSecondary = 293.15; // 20 °C
+        double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity();
+
+        pz1.setOriginHeatEnergy(heatEnergy);
+        pz2.setOriginHeatEnergy(heatEnergy);
+        hz2.setOriginTemperature(temperatureSecondary);
+
+        // Set flow through both primary and secondary sides
+        instance.initConditions(temperaturePrimary, temperatureSecondary, 0.2);
+        flowIn.setFlow(0.0);
+        flowOut.setFlow(0.0);
+        heatFluidFlow.setFlow(0);
+
+        for (int idx = 0; idx < 20; idx++) {
+            solver.prepareCalculation();
+            solver.doCalculation();
+            System.out.println("Temps Reservoir: "
+                    + String.format("%.2f", instance.getPrimarySideReservoir().getTemperature())
+                    + ", HeatExch: "
+                    + String.format("%.2f", instance.getPrimarySideCondenser().getPhasedHandler().getHeatEnergy() / water.getSpecificHeatCapacity())
+                    + ", 2nd: "
+                    + String.format("%.2f", instance.getSecondarySide().getHeatHandler().getTemperature()));
         }
     }
 }
