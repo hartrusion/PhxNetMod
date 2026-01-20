@@ -60,7 +60,7 @@ public class HeatNoMassExchangerHandler implements HeatHandler {
      */
     private double specHeatCap = 4186;
 
-    private double ntu = 10;
+    private double ntu = 0.9;
 
     /**
      * Marks the calculation state as finished, this is faster than checking a
