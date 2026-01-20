@@ -34,7 +34,7 @@ import com.hartrusion.modeling.thermal.ThermalInflowAdjustedResistance;
  * goes in node 0 and out of node 1 on one side and into node 1 and out of node
  * 0 on the other side. If both have flow in equal direction, it will behave as
  * a equal flow heat exchanger.
- *
+ * <p>
  * Usage:
  * <ul>
  * <li>Create instance</li>
@@ -163,7 +163,7 @@ public class HeatExchanger {
     }
 
     /**
-     * Acess the heat nodes which are connected with this heat exchanger.
+     * Access the heat nodes which are connected with this heat exchanger.
      *
      * @param identifier can be PRIMARY_IN (1), PRIMARY_OUT (2), SECONDARY_IN
      * (3), SECONDARY_OUT (4)
