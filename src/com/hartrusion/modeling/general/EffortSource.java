@@ -93,6 +93,9 @@ public class EffortSource extends FlowThrough {
 
     @Override
     public void setEffort(double effort, GeneralNode source) {
+        if (!effortUpdated) { // value not yet known
+            return; // wait
+        }
         if (nodes.indexOf(source) == 0) {
             if (!nodes.get(1).effortUpdated()) { // avoid loops etc
                 nodes.get(1).setEffort(effort + this.effort, this, true);
@@ -106,6 +109,9 @@ public class EffortSource extends FlowThrough {
 
     @Override
     public boolean doCalculation() {
+        if (!effortUpdated) { // value not yet known
+            return false; // wait
+        }
         // check if 1 of 2 efforts is updated, then update second node.
         // should not be necessary as the element always passes through as
         // soon as one effort is known. 
