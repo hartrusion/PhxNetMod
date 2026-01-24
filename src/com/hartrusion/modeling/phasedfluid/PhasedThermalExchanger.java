@@ -79,7 +79,7 @@ public class PhasedThermalExchanger extends FlowThrough
             // Call assembly prepare
             externalPhasedCondenserAssembly.prepareCalculation();
         }
-        thermalEffortSource.resetEffortUpdated();
+        // thermalEffortSource.resetEffortUpdated();
         super.prepareCalculation();
         phasedHandler.preparePhasedCalculation();
         if (thermalOrigin != null) {

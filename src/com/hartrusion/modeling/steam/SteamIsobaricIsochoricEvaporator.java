@@ -120,7 +120,7 @@ public class SteamIsobaricIsochoricEvaporator extends AbstractElement
 
     @Override
     public void prepareCalculation() {
-        thermalEffortSource.resetEffortUpdated();
+        // thermalEffortSource.resetEffortUpdated();
         super.prepareCalculation(); // calls prep calc on all nodes
         steamHandler.prepareSteamCalculation();
         if (thermalOrigin != null) {

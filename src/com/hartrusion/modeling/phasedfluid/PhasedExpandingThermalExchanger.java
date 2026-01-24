@@ -112,7 +112,7 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
 
     @Override
     public void prepareCalculation() {
-        thermalEffortSource.resetEffortUpdated();
+        // thermalEffortSource.resetEffortUpdated();
         super.prepareCalculation(); // also calls heathandler prepare calc
         phasedHandler.preparePhasedCalculation();
         if (thermalOrigin != null) {

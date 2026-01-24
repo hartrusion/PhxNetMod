@@ -46,7 +46,7 @@ public class EffortSource extends FlowThrough {
      * set. This is needed on connected systems where the source gets its value
      * from another network component externally.
      */
-    private boolean effortUpdated = true;
+    // private boolean effortUpdated = true;
 
     public EffortSource(PhysicalDomain domain) {
         super(domain);
@@ -65,7 +65,7 @@ public class EffortSource extends FlowThrough {
                     "Non-finite effort value (NaN or inf) provided.");
         }
         effort = e;
-        effortUpdated = true;
+        // effortUpdated = true;
     }
 
     /**
@@ -77,9 +77,9 @@ public class EffortSource extends FlowThrough {
      * which gets its value from a different network that has to be solved
      * first.
      */
-    public void resetEffortUpdated() {
-        effortUpdated = false;
-    }
+//    public void resetEffortUpdated() {
+//        effortUpdated = false;
+//    }
 
     /**
      * Get the set effort for this effort source. Effort value of node 1 will be
@@ -93,9 +93,9 @@ public class EffortSource extends FlowThrough {
 
     @Override
     public void setEffort(double effort, GeneralNode source) {
-        if (!effortUpdated) { // value not yet known
-            return; // wait
-        }
+//        if (!effortUpdated) { // value not yet known
+//            return; // wait
+//        }
         if (nodes.indexOf(source) == 0) {
             if (!nodes.get(1).effortUpdated()) { // avoid loops etc
                 nodes.get(1).setEffort(effort + this.effort, this, true);
@@ -109,9 +109,9 @@ public class EffortSource extends FlowThrough {
 
     @Override
     public boolean doCalculation() {
-        if (!effortUpdated) { // value not yet known
-            return false; // wait
-        }
+//        if (!effortUpdated) { // value not yet known
+//            return false; // wait
+//        }
         // check if 1 of 2 efforts is updated, then update second node.
         // should not be necessary as the element always passes through as
         // soon as one effort is known. 

@@ -122,7 +122,7 @@ public class HeatThermalExchanger extends HeatPassive
 
     @Override
     public void prepareCalculation() {
-        thermalEffortSource.resetEffortUpdated();
+        // thermalEffortSource.resetEffortUpdated();
         super.prepareCalculation(); // also calls heathandler prepare calc
         if (thermalOrigin != null) {
             thermalOrigin.prepareCalculation();
