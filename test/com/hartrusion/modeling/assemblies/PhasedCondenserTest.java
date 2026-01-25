@@ -240,30 +240,26 @@ public class PhasedCondenserTest {
         }
     }
     
-    // @Test
-    public void testUnstableParameters() {
-        // Use different parameters than used at other tests.
-        // kTimesA 2e6 will trigger oscillation between condenser and secondary 
-        // side.
-        // kTiemsA 2e7 will crash the model. Step time must be either be set  
-        // smaller or the thing can't be simulated.
-        instance.initCharacteristic(1.0, 20, 200, 2e6, 0.5, 1.5, 1e5);
+    // @Test // no automated test here, just to mess around here.
+    public void testFailingAuxCondenser() {
+        // Those parameters are from the rbmk sims auxiliary condenser 
+        instance.initCharacteristic(4, 50, 4000, 8.7e6, 1.2, 3.0, 1e5);
         
-        double temperaturePrimary = 350; // 75 °C
+        double temperaturePrimary = 450; // 75 °C
         double temperatureSecondary = 293.15; // 20 °C
         double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity();
 
         pz1.setOriginHeatEnergy(heatEnergy);
-        pz2.setOriginHeatEnergy(heatEnergy);
+        pz2.setOriginHeatEnergy(heatEnergy); // optional
         hz2.setOriginTemperature(temperatureSecondary);
 
         // Set flow through both primary and secondary sides
         instance.initConditions(temperaturePrimary, temperatureSecondary, 0.2);
-        flowIn.setFlow(0.0);
-        flowOut.setFlow(0.0);
-        heatFluidFlow.setFlow(0);
+        flowIn.setFlow(50.0);
+        flowOut.setFlow(50.0);
+        heatFluidFlow.setFlow(600); // fully opened coolant loop
 
-        for (int idx = 0; idx < 20; idx++) {
+        for (int idx = 0; idx < 10; idx++) {
             solver.prepareCalculation();
             solver.doCalculation();
             System.out.println("Temps Reservoir: "

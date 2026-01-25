@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.hartrusion.modeling.heatfluid;
+package com.hartrusion.modeling.phasedfluid;
 
 import com.hartrusion.modeling.converters.NoMassThermalExchanger;
 import com.hartrusion.modeling.exceptions.NonexistingStateVariableException;
@@ -30,26 +30,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Handler for the no-mass heat exchanger. Knows the other side of the heat
- * exchanger or its handler and uses a very simplified formula to determine the
- * output temperature. Both handlers have the same formula but they will choose
- * a different mass flow value each time.
  *
  * @author Viktor Alexander Hartung
  */
-public class HeatNoMassExchangerHandler
-        implements HeatHandler, NoMassThermalExchanger {
+public class PhasedNoMassExchangerHandler
+        implements PhasedHandler, NoMassThermalExchanger {
 
     /**
      * Holds a list of all nodes connected to the element where this heat
      * handler is assigned.
      */
-    private final List<HeatNode> heatNodes;
+    private final List<PhasedNode> phasedNodes;
 
     /**
      * Reference to the element which is using this heat handler instance.
      */
-    private final HeatElement element;
+    private final PhasedElement element;
 
     /**
      * A heat exchanger is always made of two sides, this simply references the
@@ -57,10 +53,7 @@ public class HeatNoMassExchangerHandler
      */
     private NoMassThermalExchanger otherSide;
 
-    /**
-     * Specific heat capacity (water) in J/kg/K
-     */
-    private double specHeatCap = 4186;
+    private PhasedFluidProperties fluidProperties;
 
     private double ntu = 0.9;
 
@@ -71,27 +64,29 @@ public class HeatNoMassExchangerHandler
      */
     private boolean calculationFinished;
 
-    HeatNoMassExchangerHandler(HeatElement parent) {
-        heatNodes = new ArrayList<>();
+    PhasedNoMassExchangerHandler(PhasedFluidProperties fluidProperties,
+            PhasedElement parent) {
+        this.fluidProperties = fluidProperties;
+        phasedNodes = new ArrayList<>();
         element = parent;
     }
 
     @Override
-    public boolean registerHeatNode(HeatNode tp) {
-        if (!heatNodes.contains(tp)) {
-            heatNodes.add(tp);
+    public boolean registerPhasedNode(PhasedNode pn) {
+        if (!phasedNodes.contains(pn)) {
+            phasedNodes.add(pn);
             return true;
         }
         return false;
     }
 
     @Override
-    public void prepareHeatCalculation() {
+    public void preparePhasedCalculation() {
         calculationFinished = false;
     }
 
     @Override
-    public boolean doThermalCalculation() {
+    public boolean doPhasedCalculation() {
         if (calculationFinished) {
             return false; // nothing more to do
         }
@@ -108,9 +103,9 @@ public class HeatNoMassExchangerHandler
         if (isNoFlowCondition()) {
             // zero-flow condition: set no-temperature on remaining nodes if 
             // somehow this was not done before.
-            for (HeatNode tp : heatNodes) {
-                if (!tp.temperatureUpdated(aElement)) {
-                    tp.setNoTemperature(aElement);
+            for (PhasedNode pn : phasedNodes) {
+                if (!pn.heatEnergyUpdated(aElement)) {
+                    pn.setNoHeatEnergy(aElement);
                     didSomething = true;
                 }
             }
@@ -119,18 +114,18 @@ public class HeatNoMassExchangerHandler
         // If we reached here, we have one temperature updated and one is 
         // missing. The other part of the heat exchanger is in the same 
         // condition at least and a calculation is possible.
-        HeatNode inNode = null, outNode = null;
-        for (HeatNode hn : heatNodes) { // get nodes by flow direction
-            if (hn.getFlow(aElement) > 0.0) {
-                inNode = hn;
-            } else if (hn.getFlow(aElement) < 0.0) {
-                outNode = hn;
+        PhasedNode inNode = null, outNode = null;
+        for (PhasedNode pn : phasedNodes) { // get nodes by flow direction
+            if (pn.getFlow(aElement) > 0.0) {
+                inNode = pn;
+            } else if (pn.getFlow(aElement) < 0.0) {
+                outNode = pn;
             }
         }
         if (otherSide.isNoFlowCondition()) {
-            if (!outNode.temperatureUpdated(aElement)) {
-                outNode.setTemperature(
-                        inNode.getTemperature(aElement), aElement);
+            if (!outNode.heatEnergyUpdated(aElement)) {
+                outNode.setHeatEnergy(
+                        inNode.getHeatEnergy(aElement), aElement);
                 return true;
             }
             return false; // already done, but how was this even possible
@@ -139,7 +134,7 @@ public class HeatNoMassExchangerHandler
         // Thermal energy capacity flow, given in:
         // kg/s * J/kg/K = J/s/K = W/K
         // Describes how much Power (Watts) will be transfered per Kelvin.
-        double CThis = getInFlow() * specHeatCap;
+        double CThis = getInFlow() * fluidProperties.getSpecificHeatCapacity();
         double COther = otherSide.getInFlow() * otherSide.getSpecHeatCap();
 
         double Cmin = Math.min(CThis, COther);
@@ -164,8 +159,9 @@ public class HeatNoMassExchangerHandler
         // This can be invoked for both sides:
         double Q = epsilon * Cmin
                 * (getInTemperature() - otherSide.getInTemperature());
-        // Temperature for this side is calculated by T_in - Q/Cthis
-        outNode.setTemperature(getInTemperature() - Q / CThis, aElement);
+        // Use the available set function, it will handle the heat energy
+        // conversion.
+        this.setOutTemperature(getInTemperature() - Q / CThis);
 
         // instead of having to run this two times, simply use the 
         // known reference to the other side and use the results calculated 
@@ -174,36 +170,47 @@ public class HeatNoMassExchangerHandler
         return true;
     }
 
-    // public boolean isCalculationFinished() {
-    //     return calculationFinished;
-    // }
-
     @Override
     public void setOutTemperature(double outTemp) {
-        // write on out node
-        for (HeatNode hn : heatNodes) { // get node by flow direction
-            if (hn.getFlow((AbstractElement) element) < 0.0) {
-                hn.setTemperature(outTemp, (AbstractElement) element);
+        // The Temperature difference was calculated, however, it needs to
+        // be expressed as an energy value.
+        PhasedNode inNode = null, outNode = null;
+        for (PhasedNode pn : phasedNodes) { // get nodes by flow direction
+            if (pn.getFlow((AbstractElement) element) > 0.0) {
+                inNode = pn;
+            } else if (pn.getFlow((AbstractElement) element) < 0.0) {
+                outNode = pn;
             }
         }
+        // it is expected for this method to be called in a state where it is
+        // possible so no other checks are performed. An exception here is a 
+        // problem elsewhere.
+        double inTemperature = fluidProperties.getTemperature(
+                inNode.getHeatEnergy((AbstractElement) element),
+                 inNode.getEffort());
+        // calculate how much heat energy increase there is with the temperature
+        // difference from the heat exchanger.
+        double heatEnergyIncrease = (outTemp - inTemperature)
+                * fluidProperties.getSpecificHeatCapacity();
+
         calculationFinished = true;
     }
 
     @Override
     public boolean isNodeStateMet() {
         boolean allUpdated = true;
-        for (HeatNode tp : heatNodes) {
+        for (PhasedNode pn : phasedNodes) {
             allUpdated = allUpdated
-                    && tp.flowUpdated((AbstractElement) element);
+                    && pn.flowUpdated((AbstractElement) element);
         }
         if (!allUpdated) {
             return false;
         }
         // temperature of flows towards the element must be in 
         // updated state. a zero-flow is also handled and valid.
-        for (HeatNode tp : heatNodes) {
-            if (tp.getFlow((AbstractElement) element) >= 0.0) {
-                if (!tp.temperatureUpdated((AbstractElement) element)) {
+        for (PhasedNode pn : phasedNodes) {
+            if (pn.getFlow((AbstractElement) element) >= 0.0) {
+                if (!pn.heatEnergyUpdated((AbstractElement) element)) {
                     return false;
                 }
             }
@@ -213,12 +220,12 @@ public class HeatNoMassExchangerHandler
 
     @Override
     public boolean isNoFlowCondition() {
-        for (HeatNode tp : heatNodes) {
-            if (tp.getFlow((AbstractElement) element) == 0.0) {
+        for (PhasedNode pn : phasedNodes) {
+            if (pn.getFlow((AbstractElement) element) == 0.0) {
                 return true;
             }
-            if (tp.temperatureUpdated((AbstractElement) element)) {
-                if (tp.noTemperature((AbstractElement) element)) {
+            if (pn.heatEnergyUpdated((AbstractElement) element)) {
+                if (pn.noHeatEnergy((AbstractElement) element)) {
                     return true;
                 }
             }
@@ -228,9 +235,9 @@ public class HeatNoMassExchangerHandler
 
     @Override
     public double getInFlow() {
-        for (HeatNode hn : heatNodes) { // get nodes by flow direction
-            if (hn.getFlow((AbstractElement) element) > 0.0) {
-                return hn.getFlow((AbstractElement) element);
+        for (PhasedNode pn : phasedNodes) { // get nodes by flow direction
+            if (pn.getFlow((AbstractElement) element) > 0.0) {
+                return pn.getFlow((AbstractElement) element);
             }
         }
         return 0.0;
@@ -238,43 +245,42 @@ public class HeatNoMassExchangerHandler
 
     @Override
     public double getInTemperature() {
-        for (HeatNode hn : heatNodes) { // get nodes by flow direction
-            if (hn.getFlow((AbstractElement) element) > 0.0) {
-                return hn.getTemperature((AbstractElement) element);
+        for (PhasedNode pn : phasedNodes) { // get nodes by flow direction
+            if (pn.getFlow((AbstractElement) element) > 0.0) {
+                return fluidProperties.getTemperature(
+                        pn.getHeatEnergy((AbstractElement) element),
+                         pn.getEffort());
             }
         }
         return 0.0;
     }
 
     @Override
-    public boolean isHeatCalulationFinished() {
+    public boolean isPhasedCalulationFinished() {
         boolean allUpdated = true;
-        for (HeatNode tp : heatNodes) {
+        for (PhasedNode pn : phasedNodes) {
             allUpdated = allUpdated
-                    && tp.temperatureUpdated((AbstractElement) element);
+                    && pn.heatEnergyUpdated((AbstractElement) element);
         }
         return allUpdated;
     }
 
-    // Throw exeptions in case of temperature is set or asked, this is only
-    // possible if the handler actually has a temperature, which this one
-    // doesnt.
     @Override
-    public void setInitialTemperature(double t) {
+    public void setInitialHeatEnergy(double q) {
         throw new NonexistingStateVariableException(
-                "A massless heat exchanger does not have its own temperature");
+                "A massless heat exchanger does not have its own energy");
     }
 
     @Override
-    public double getTemperature() {
+    public double getHeatEnergy() {
         throw new NonexistingStateVariableException(
-                "A massless heat exchanger does not have its own temperature");
+                "A massless heat exchanger does not have its own energy");
     }
 
     @Override
-    public void setInnerThermalMass(double storedMass) {
+    public void setInnerHeatedMass(double heatedMass) {
         throw new NonexistingStateVariableException(
-                "A massless heat exchanger does not support heat volume.");
+                "A massless heat exchanger does not support a volume.");
     }
 
     @Override
@@ -284,13 +290,9 @@ public class HeatNoMassExchangerHandler
 
     @Override
     public double getSpecHeatCap() {
-        return specHeatCap;
+        return fluidProperties.getSpecificHeatCapacity();
     }
-
-    public void setSpecHeatCap(double specHeatCap) {
-        this.specHeatCap = specHeatCap;
-    }
-
+    
     public void setNtu(double ntu) {
         this.ntu = ntu;
     }

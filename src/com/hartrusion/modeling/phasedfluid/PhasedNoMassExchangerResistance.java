@@ -21,25 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.hartrusion.modeling.heatfluid;
+package com.hartrusion.modeling.phasedfluid;
 
 import com.hartrusion.modeling.converters.NoMassThermalExchanger;
 
 /**
- * One side of a heat exchanger that does not have any mass. Use for heat
- * transfer with a flow to mass to transfer ratio that would otherwise be
- * unstable. See the HeatExchangerNoMass assembly class for more details.
  *
  * @author Viktor Alexander Hartung
  */
-public class HeatNoMassExchangerResistance extends HeatAbstractFlowResistance {
+public class PhasedNoMassExchangerResistance extends PhasedAbstractFlowResistance {
+    
+    private PhasedFluidProperties fluidProperties;
+    
+    private final PhasedNoMassExchangerHandler phasedExchangeHandler;
 
-    private final HeatNoMassExchangerHandler heatExchangeHandler
-            = new HeatNoMassExchangerHandler(this);
-
-    public HeatNoMassExchangerResistance() {
+    public PhasedNoMassExchangerResistance(PhasedFluidProperties fluidProperties) {
+        this.fluidProperties = fluidProperties;
+        phasedExchangeHandler
+            = new PhasedNoMassExchangerHandler(fluidProperties, this);
         // set to interface of super class
-        heatHandler = heatExchangeHandler;
+        phasedHandler = phasedExchangeHandler;
     }
 
     /**
@@ -49,15 +50,19 @@ public class HeatNoMassExchangerResistance extends HeatAbstractFlowResistance {
      * exchanger only supports exactly two sides for heat exchange. This method
      * needs to be called to connect those heat exchangers, it has to be called
      * on both elements to make the other element known to it. This will set up
-     * the necessary link in the heatHandler that does the heat transfer.
+     * the necessary link in the phasedHandler that does the heat transfer.
      */
     public void setOtherSide(NoMassThermalExchanger otherSide) {
         // just cast and set - will fail horribly if this is not possible.
-        heatExchangeHandler.setOtherSideHandler(otherSide);
+        phasedExchangeHandler.setOtherSideHandler(otherSide);
     }
     
     public void setNtu(double kTimesA) {
-        heatExchangeHandler.setNtu(kTimesA);
+        phasedExchangeHandler.setNtu(kTimesA);
     }
 
+    @Override
+    public PhasedFluidProperties getPhasedFluidProperties() {
+        return fluidProperties;
+    }
 }

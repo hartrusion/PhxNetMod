@@ -24,27 +24,18 @@
 package com.hartrusion.modeling.assemblies;
 
 import com.hartrusion.modeling.converters.NoMassThermalExchanger;
-import com.hartrusion.modeling.heatfluid.HeatNoMassExchangerResistance;
-import com.hartrusion.modeling.heatfluid.HeatNode;
+import com.hartrusion.modeling.phasedfluid.PhasedFluidProperties;
+import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerResistance;
+import com.hartrusion.modeling.phasedfluid.PhasedNode;
 
 /**
- * A massless heat exchanger, used when the internal mass of fluids can be
- * negligible or must be neglected due to numerical issues. The mass based heat
- * exchanger is unstable as soon as the heat transfer per time step is high in a
- * way that its decrease will have an effect in the sign of the heat transfer in
- * the next cycle.
- * <p>
- * This assembly does not generate a separate thermal network, it's transferring
- * the heat energy directly though the heat handlers.
  *
  * @author Viktor Alexander Hartung
  */
-public class HeatExchangerNoMass {
+public class PhasedExchangerNoMass {
 
-    HeatNoMassExchangerResistance primarySide
-            = new HeatNoMassExchangerResistance();
-    HeatNoMassExchangerResistance secondarySide
-            = new HeatNoMassExchangerResistance();
+    PhasedNoMassExchangerResistance primarySide;
+    PhasedNoMassExchangerResistance secondarySide;
 
     private boolean nodesGenerated = false;
 
@@ -53,13 +44,18 @@ public class HeatExchangerNoMass {
     public static final int SECONDARY_IN = 3;
     public static final int SECONDARY_OUT = 4;
 
-    public HeatExchangerNoMass() {
+    public PhasedExchangerNoMass(PhasedFluidProperties fluidProperties) {
+        primarySide
+                = new PhasedNoMassExchangerResistance(fluidProperties);
+        secondarySide
+                = new PhasedNoMassExchangerResistance(fluidProperties);
+
         // link both sides. It must be possible for the heat handler instances 
         // to be casted to the interface of the no mass exchanger handler.
         primarySide.setOtherSide(
-                (NoMassThermalExchanger) secondarySide.getHeatHandler());
+                (NoMassThermalExchanger) secondarySide.getPhasedHandler());
         secondarySide.setOtherSide(
-                (NoMassThermalExchanger) primarySide.getHeatHandler());
+                (NoMassThermalExchanger) primarySide.getPhasedHandler());
 
         // Make the connection known to the solver:
         primarySide.setCoupledElement(secondarySide);
@@ -69,40 +65,40 @@ public class HeatExchangerNoMass {
     /**
      * Generates a set of heat nodes that are connected to the heat exchangers
      * primary and secondary side. Those nodes can then be named with initName
-     * and be accessed with getHeatNode.
+     * and be accessed with getPhasedNode.
      */
     public void initGenerateNodes() {
         nodesGenerated = true;
-        HeatNode node;
-        node = new HeatNode();
+        PhasedNode node;
+        node = new PhasedNode();
         primarySide.connectTo(node);
-        node = new HeatNode();
+        node = new PhasedNode();
         primarySide.connectTo(node);
-        node = new HeatNode();
+        node = new PhasedNode();
         secondarySide.connectTo(node);
-        node = new HeatNode();
+        node = new PhasedNode();
         secondarySide.connectTo(node);
     }
 
     /**
      * Names elements and nodes of this assembly with the given name prefix. The
      * heat nodes connected to the primary and secondary sides will only be
-     * named here if they were created using initGenerateHeatNodes().
+     * named here if they were created using initGeneratePhasedNodes().
      *
      * @param name Desired prefix for all nodes and elements
      */
     public void initName(String name) {
-        primarySide.setName(name + "HeatExchangerPrimarySide");
-        secondarySide.setName(name + "HeatExchangerSecondarySide");
+        primarySide.setName(name + "PhasedExchangerPrimarySide");
+        secondarySide.setName(name + "PhasedExchangerSecondarySide");
         if (nodesGenerated) {
-            getHeatNode(PRIMARY_IN).setName(
-                    name + "HeatExchangerPrimaryIn");
-            getHeatNode(PRIMARY_OUT).setName(
-                    name + "HeatExchangerPrimaryOut");
-            getHeatNode(SECONDARY_IN).setName(
-                    name + "HeatExchangerSecondaryIn");
-            getHeatNode(SECONDARY_OUT).setName(
-                    name + "HeatExchangerSecondaryOut");
+            getPhasedNode(PRIMARY_IN).setName(
+                    name + "PhasedExchangerPrimaryIn");
+            getPhasedNode(PRIMARY_OUT).setName(
+                    name + "PhasedExchangerPrimaryOut");
+            getPhasedNode(SECONDARY_IN).setName(
+                    name + "PhasedExchangerSecondaryIn");
+            getPhasedNode(SECONDARY_OUT).setName(
+                    name + "PhasedExchangerSecondaryOut");
         }
     }
 
@@ -126,25 +122,25 @@ public class HeatExchangerNoMass {
      * (3), SECONDARY_OUT (4)
      * @return
      */
-    public HeatNode getHeatNode(int identifier) {
+    public PhasedNode getPhasedNode(int identifier) {
         switch (identifier) {
             case PRIMARY_IN:
-                return (HeatNode) primarySide.getNode(0);
+                return (PhasedNode) primarySide.getNode(0);
             case PRIMARY_OUT:
-                return (HeatNode) primarySide.getNode(1);
+                return (PhasedNode) primarySide.getNode(1);
             case SECONDARY_IN:
-                return (HeatNode) secondarySide.getNode(0);
+                return (PhasedNode) secondarySide.getNode(0);
             case SECONDARY_OUT:
-                return (HeatNode) secondarySide.getNode(1);
+                return (PhasedNode) secondarySide.getNode(1);
         }
         return null;
     }
 
-    public HeatNoMassExchangerResistance getPrimarySide() {
+    public PhasedNoMassExchangerResistance getPrimarySide() {
         return primarySide;
     }
 
-    public HeatNoMassExchangerResistance getSecondarySide() {
+    public PhasedNoMassExchangerResistance getSecondarySide() {
         return secondarySide;
     }
 }
