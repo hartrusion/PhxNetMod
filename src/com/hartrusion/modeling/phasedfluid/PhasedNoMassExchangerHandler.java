@@ -185,13 +185,17 @@ public class PhasedNoMassExchangerHandler
         // it is expected for this method to be called in a state where it is
         // possible so no other checks are performed. An exception here is a 
         // problem elsewhere.
+        double inHeatEnergy = inNode.getHeatEnergy((AbstractElement) element);
         double inTemperature = fluidProperties.getTemperature(
-                inNode.getHeatEnergy((AbstractElement) element),
-                 inNode.getEffort());
+                inHeatEnergy, inNode.getEffort());
         // calculate how much heat energy increase there is with the temperature
         // difference from the heat exchanger.
         double heatEnergyIncrease = (outTemp - inTemperature)
                 * fluidProperties.getSpecificHeatCapacity();
+
+        // Set the increase (or decrease) to the out flow node.
+        outNode.setHeatEnergy(inHeatEnergy + heatEnergyIncrease, 
+                (AbstractElement) element);
 
         calculationFinished = true;
     }
@@ -249,7 +253,7 @@ public class PhasedNoMassExchangerHandler
             if (pn.getFlow((AbstractElement) element) > 0.0) {
                 return fluidProperties.getTemperature(
                         pn.getHeatEnergy((AbstractElement) element),
-                         pn.getEffort());
+                        pn.getEffort());
             }
         }
         return 0.0;
@@ -292,7 +296,7 @@ public class PhasedNoMassExchangerHandler
     public double getSpecHeatCap() {
         return fluidProperties.getSpecificHeatCapacity();
     }
-    
+
     public void setNtu(double ntu) {
         this.ntu = ntu;
     }

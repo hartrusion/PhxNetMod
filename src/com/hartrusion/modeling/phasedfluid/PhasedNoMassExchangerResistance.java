@@ -23,6 +23,7 @@
  */
 package com.hartrusion.modeling.phasedfluid;
 
+import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.converters.NoMassThermalExchanger;
 
 /**
@@ -41,6 +42,11 @@ public class PhasedNoMassExchangerResistance extends PhasedAbstractFlowResistanc
             = new PhasedNoMassExchangerHandler(fluidProperties, this);
         // set to interface of super class
         phasedHandler = phasedExchangeHandler;
+        
+        // Do not use a resistance value here, otherwise a pressure drop will
+        // occur an that will lead to evaporation in some cases, usually this
+        // is not wanted.
+        setBridgedConnection();
     }
 
     /**

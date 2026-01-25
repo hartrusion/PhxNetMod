@@ -42,8 +42,8 @@ import org.testng.annotations.Test;
  * @author Viktor Alexander Hartung
  */
 public class PhasedExchangerNoMassTest {
-    
-        /*
+
+    /*
     *       ------                ------
     *      _|_   |               _|_   |
     *   priSink  |            secSink  |
@@ -140,7 +140,7 @@ public class PhasedExchangerNoMassTest {
         secFlow = null;
         solver = null;
     }
-    
+
     /**
      * No flow: Nothing happens.
      */
@@ -159,7 +159,7 @@ public class PhasedExchangerNoMassTest {
         assertEquals(instance.getPrimarySide().getFlow(), 0.0, 1e-12);
         assertEquals(instance.getSecondarySide().getFlow(), 0.0, 1e-12);
     }
-    
+
     /**
      * Two streams with same temperature and mass flow
      */
@@ -187,5 +187,76 @@ public class PhasedExchangerNoMassTest {
         assertEquals(instance.getPhasedNode(PhasedExchangerNoMass.SECONDARY_OUT)
                 .getHeatEnergy(), heatEnergy, 1e-12);
         assertEquals(secSink.isCalculationFinished(), true);
+    }
+
+    /**
+     * Two streams with same temperature but different mass flow, there must be
+     * no difference in temperatures.
+     * <p>
+     * This requires the element to have no pressure drop, otherwise a
+     * condensation or evaporation might occur, resulting in different
+     * temperatures.
+     */
+    @Test
+    public void differentFlowsAndEqualTemperatures() {
+        double heatEnergy = 300 * water.getSpecificHeatCapacity();
+        priFlow.setFlow(20.0);
+        priSrc.setOriginHeatEnergy(heatEnergy);
+        secFlow.setFlow(50.0);
+        secSrc.setOriginHeatEnergy(heatEnergy);
+
+        solver.prepareCalculation();
+        solver.doCalculation();
+
+        assertEquals(priSink.isCalculationFinished(), true);
+        assertEquals(secSink.isCalculationFinished(), true);
+        assertEquals(instance.getPrimarySide().isCalculationFinished(), true);
+        assertEquals(instance.getSecondarySide().isCalculationFinished(), true);
+
+        // Flow rates and temperature must be same as before
+        assertEquals(instance.getPrimarySide().getFlow(), 20.0, 1e-12);
+        assertEquals(instance.getSecondarySide().getFlow(), 50.0, 1e-12);
+        assertEquals(instance.getPhasedNode(PhasedExchangerNoMass.PRIMARY_IN)
+                .getHeatEnergy(), heatEnergy, 1e-12);
+        assertEquals(instance.getPhasedNode(PhasedExchangerNoMass.SECONDARY_OUT)
+                .getHeatEnergy(), heatEnergy, 1e-12);
+    }
+    
+        /**
+     * Sets a fixed flow rate of 20 kg/s and goes from 4 to 496 kg/s on the
+     * other side with some temperature difference.
+     */
+    @Test
+    public void equalFlowsAndDifferentTemperatures() {
+        double heatEnergyLow = 300 * water.getSpecificHeatCapacity();
+        double heatEnergyHigh = 400 * water.getSpecificHeatCapacity();
+        for (int idx = 4; idx < 500; idx = idx + 4) {
+            priFlow.setFlow((double) idx);
+            priSrc.setOriginHeatEnergy(heatEnergyHigh);
+            secFlow.setFlow(20.0);
+            secSrc.setOriginHeatEnergy(heatEnergyLow);
+
+            solver.prepareCalculation();
+            solver.doCalculation();
+
+            assertEquals(priSink.isCalculationFinished(), true);
+            assertEquals(secSink.isCalculationFinished(), true);
+            assertEquals(instance.getPrimarySide().isCalculationFinished(), 
+                    true);
+            assertEquals(instance.getSecondarySide().isCalculationFinished(), 
+                    true);
+
+          
+            // check for valid energy ranges, the energy can never be higher
+            // on the out than it is on the in nodes.
+            assertEquals(instance.getPhasedNode(PhasedExchangerNoMass.PRIMARY_OUT)
+                            .getHeatEnergy() <= heatEnergyHigh, true);
+            assertEquals(instance.getPhasedNode(PhasedExchangerNoMass.PRIMARY_OUT)
+                            .getHeatEnergy() >= heatEnergyLow, true);
+            assertEquals(instance.getPhasedNode(PhasedExchangerNoMass.PRIMARY_OUT)
+                            .getHeatEnergy() <= heatEnergyHigh, true);
+            assertEquals(instance.getPhasedNode(PhasedExchangerNoMass.PRIMARY_OUT)
+                            .getHeatEnergy() >= heatEnergyLow, true);
+        }
     }
 }
