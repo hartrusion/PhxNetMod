@@ -23,9 +23,9 @@
  */
 package com.hartrusion.modeling.assemblies;
 
-import com.hartrusion.modeling.converters.NoMassThermalExchanger;
+import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
 import com.hartrusion.modeling.phasedfluid.PhasedFluidProperties;
-import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerResistance;
+import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerElement;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 
 /**
@@ -34,8 +34,8 @@ import com.hartrusion.modeling.phasedfluid.PhasedNode;
  */
 public class PhasedExchangerNoMass {
 
-    PhasedNoMassExchangerResistance primarySide;
-    PhasedNoMassExchangerResistance secondarySide;
+    PhasedNoMassExchangerElement primarySide;
+    PhasedNoMassExchangerElement secondarySide;
 
     private boolean nodesGenerated = false;
 
@@ -46,16 +46,16 @@ public class PhasedExchangerNoMass {
 
     public PhasedExchangerNoMass(PhasedFluidProperties fluidProperties) {
         primarySide
-                = new PhasedNoMassExchangerResistance(fluidProperties);
+                = new PhasedNoMassExchangerElement(fluidProperties);
         secondarySide
-                = new PhasedNoMassExchangerResistance(fluidProperties);
+                = new PhasedNoMassExchangerElement(fluidProperties);
 
         // link both sides. It must be possible for the heat handler instances 
         // to be casted to the interface of the no mass exchanger handler.
         primarySide.setOtherSide(
-                (NoMassThermalExchanger) secondarySide.getPhasedHandler());
+                (PhasedEnergyExchangerHandler) secondarySide.getPhasedHandler());
         secondarySide.setOtherSide(
-                (NoMassThermalExchanger) primarySide.getPhasedHandler());
+                (PhasedEnergyExchangerHandler) primarySide.getPhasedHandler());
 
         // Make the connection known to the solver:
         primarySide.setCoupledElement(secondarySide);
@@ -103,19 +103,6 @@ public class PhasedExchangerNoMass {
     }
 
     /**
-     * Sets the characteristic of the heat exchanger using the dimensionless
-     * property NTU which is the number of transfer units. It describes how much
-     * heat throughput there is per heat mass flow regarding to the lower value
-     * of both flow values.
-     *
-     * @param ntu value from 0.2 to 5. With 5 being ultra effective.
-     */
-    public void initCharacteristic(double ntu) {
-        primarySide.setNtu(ntu);
-        secondarySide.setNtu(ntu);
-    }
-
-    /**
      * Access the heat nodes which are connected with this heat exchanger.
      *
      * @param identifier can be PRIMARY_IN (1), PRIMARY_OUT (2), SECONDARY_IN
@@ -136,11 +123,11 @@ public class PhasedExchangerNoMass {
         return null;
     }
 
-    public PhasedNoMassExchangerResistance getPrimarySide() {
+    public PhasedNoMassExchangerElement getPrimarySide() {
         return primarySide;
     }
 
-    public PhasedNoMassExchangerResistance getSecondarySide() {
+    public PhasedNoMassExchangerElement getSecondarySide() {
         return secondarySide;
     }
 }

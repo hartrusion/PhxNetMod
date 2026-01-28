@@ -23,21 +23,19 @@
  */
 package com.hartrusion.modeling.heatfluid;
 
+import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
+import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.NonexistingStateVariableException;
 import com.hartrusion.modeling.general.AbstractElement;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Handler for the no-mass heat exchanger. Knows the other side of the heat
- * exchanger or its handler and uses a very simplified formula to determine the
- * output temperature. Both handlers have the same formula but they will choose
- * a different mass flow value each time.
  *
  * @author Viktor Alexander Hartung
  */
-public class HeatNoMassExchangerHandler
-        implements HeatHandler {
+public class HeatNoMassEnergyExchangerHandler implements HeatHandler,
+        PhasedEnergyExchangerHandler {
 
     /**
      * Holds a list of all nodes connected to the element where this heat
@@ -54,7 +52,7 @@ public class HeatNoMassExchangerHandler
      * A heat exchanger is always made of two sides, this simply references the
      * interface of the other heat handler from the other side.
      */
-    private HeatNoMassExchangerHandler otherSide;
+    private PhasedEnergyExchangerHandler otherSide;
 
     /**
      * Specific heat capacity (water) in J/kg/K
@@ -70,7 +68,7 @@ public class HeatNoMassExchangerHandler
      */
     private boolean calculationFinished;
 
-    HeatNoMassExchangerHandler(HeatElement parent) {
+    HeatNoMassEnergyExchangerHandler(HeatElement parent) {
         heatNodes = new ArrayList<>();
         element = parent;
     }
@@ -134,59 +132,65 @@ public class HeatNoMassExchangerHandler
             }
             return false; // already done, but how was this even possible
         }
-        // This is the normal behavior.
-        // Thermal energy capacity flow, given in:
-        // kg/s * J/kg/K = J/s/K = W/K
-        // Describes how much Power (Watts) will be transfered per Kelvin.
-        double CThis = getInFlow() * specHeatCap;
-        double COther = otherSide.getInFlow() * otherSide.getSpecHeatCap();
+        // Here: All prerequisites are met, we can now calculate the thermal
+        // energy transfer on both sides. First, get the maximum thermal power
+        // that could be transfered when having the other sides inlet 
+        // temperature as the own outlet temperature.
+        double maxDeltaThis = getMaxEnergyDelta(otherSide.getInTemperature());
+        double maxDeltaOhter = otherSide.getMaxEnergyDelta(getInTemperature());
 
-        double Cmin = Math.min(CThis, COther);
-        double Cmax = Math.max(CThis, COther);
-
-        // relation bewteen those capacity flows
-        double relC = Cmin / Cmax;
-
-        // Effectiveness for cross or coutner flow heat exchanger
-        double epsilon;
-        if (Math.abs(relC - 1.0) < 1e-40) {
-            // limit, happens on exaclty equal flows
-            epsilon = ntu / (1 + ntu);
+        // Determine direction of thermal transfer:
+        boolean fromThis;
+        if (maxDeltaThis > 0.0 && maxDeltaOhter < 0.0) {
+            fromThis = false;
+        } else if (maxDeltaThis < 0.0 && maxDeltaOhter > 0.0) {
+            fromThis = true;
         } else {
-            epsilon = (1 - Math.exp(-ntu * (1 - relC)))
-                    / (1 - relC * Math.exp(-ntu * (1 - relC)));
+            throw new CalculationException("Undefined energy flow direction");
         }
-        // The maximum possible energy flow would be calculated from the 
-        // inlet temperature now.
-        // Q_max = Cmin * (T_in1 - T_in2), given in Watts. Apply epsilon to 
-        // have the thermal flow Q = epsilion * Q_max.
-        // This can be invoked for both sides:
-        double Q = epsilon * Cmin
-                * (getInTemperature() - otherSide.getInTemperature());
-        // Temperature for this side is calculated by T_in - Q/Cthis
-        outNode.setTemperature(getInTemperature() - Q / CThis, aElement);
-
-        // instead of having to run this two times, simply use the 
-        // known reference to the other side and use the results calculated 
-        // here.
-        otherSide.setOutTemperature(otherSide.getInTemperature() + Q / COther);
+        
+        double transfEnergy = 0.99 * Math.min(Math.abs(maxDeltaThis),
+                Math.abs(maxDeltaOhter));
+        if (fromThis) {
+            setPowerTransfer(-transfEnergy);
+            otherSide.setPowerTransfer(transfEnergy);
+        } else {
+            setPowerTransfer(transfEnergy);
+            otherSide.setPowerTransfer(-transfEnergy);
+        }
+        
         return true;
     }
 
-    // public boolean isCalculationFinished() {
-    //     return calculationFinished;
-    // }
+    @Override
+    public double getMaxEnergyDelta(double otherTemperature) {
+        // positive: heat up this element (other temperature is higher)
+        return (otherTemperature - getInTemperature())
+                * specHeatCap * getInFlow();
+    }
 
-    public void setOutTemperature(double outTemp) {
-        // write on out node
+    @Override
+    public void setPowerTransfer(double power) {
+        double inTemp = 0.0, inFlow = 0.0;
+        for (HeatNode hn : heatNodes) { // get node by flow direction
+            if (hn.getFlow((AbstractElement) element) > 0.0) {
+                inFlow = hn.getFlow((AbstractElement) element);
+                inTemp = hn.getTemperature((AbstractElement) element);
+                break;
+            }
+        }
+        double deltaTemp = power / inFlow / specHeatCap;
         for (HeatNode hn : heatNodes) { // get node by flow direction
             if (hn.getFlow((AbstractElement) element) < 0.0) {
-                hn.setTemperature(outTemp, (AbstractElement) element);
+                hn.setTemperature(inTemp + deltaTemp,
+                        (AbstractElement) element);
+                break;
             }
         }
         calculationFinished = true;
     }
 
+    @Override
     public boolean isNodeStateMet() {
         boolean allUpdated = true;
         for (HeatNode tp : heatNodes) {
@@ -208,6 +212,7 @@ public class HeatNoMassExchangerHandler
         return true;
     }
 
+    @Override
     public boolean isNoFlowCondition() {
         for (HeatNode tp : heatNodes) {
             if (tp.getFlow((AbstractElement) element) == 0.0) {
@@ -271,19 +276,9 @@ public class HeatNoMassExchangerHandler
                 "A massless heat exchanger does not support heat volume.");
     }
 
-    public void setOtherSideHandler(HeatNoMassExchangerHandler otherSide) {
+    @Override
+    public void setOtherSide(PhasedEnergyExchangerHandler otherSide) {
         this.otherSide = otherSide;
     }
 
-    public double getSpecHeatCap() {
-        return specHeatCap;
-    }
-
-    public void setSpecHeatCap(double specHeatCap) {
-        this.specHeatCap = specHeatCap;
-    }
-
-    public void setNtu(double ntu) {
-        this.ntu = ntu;
-    }
 }

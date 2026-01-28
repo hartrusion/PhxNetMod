@@ -23,7 +23,7 @@
  */
 package com.hartrusion.modeling.assemblies;
 
-import com.hartrusion.modeling.converters.NoMassThermalExchanger;
+import com.hartrusion.modeling.heatfluid.HeatNoMassExchangerHandler;
 import com.hartrusion.modeling.heatfluid.HeatNoMassExchangerResistance;
 import com.hartrusion.modeling.heatfluid.HeatNode;
 
@@ -57,9 +57,9 @@ public class HeatExchangerNoMass {
         // link both sides. It must be possible for the heat handler instances 
         // to be casted to the interface of the no mass exchanger handler.
         primarySide.setOtherSide(
-                (NoMassThermalExchanger) secondarySide.getHeatHandler());
+                (HeatNoMassExchangerHandler) secondarySide.getHeatHandler());
         secondarySide.setOtherSide(
-                (NoMassThermalExchanger) primarySide.getHeatHandler());
+                (HeatNoMassExchangerHandler) primarySide.getHeatHandler());
 
         // Make the connection known to the solver:
         primarySide.setCoupledElement(secondarySide);

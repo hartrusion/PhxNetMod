@@ -24,7 +24,7 @@
 package com.hartrusion.modeling.assemblies;
 
 import com.hartrusion.modeling.phasedfluid.PhasedFlowSource;
-import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerResistance;
+import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerElement;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
 import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
@@ -108,7 +108,7 @@ public class PhasedExchangerNoMassTest {
         secFlow.setName("secFlow");
 
         // Set NTU value
-        instance.initCharacteristic(0.8);
+        // instance.initCharacteristic(0.8);
 
         // Connect elements:
         priSrc.connectToVia(priFlow, priSrcNode);

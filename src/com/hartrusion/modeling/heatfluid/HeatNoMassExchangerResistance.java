@@ -23,8 +23,6 @@
  */
 package com.hartrusion.modeling.heatfluid;
 
-import com.hartrusion.modeling.converters.NoMassThermalExchanger;
-
 /**
  * One side of a heat exchanger that does not have any mass. Use for heat
  * transfer with a flow to mass to transfer ratio that would otherwise be
@@ -51,7 +49,7 @@ public class HeatNoMassExchangerResistance extends HeatAbstractFlowResistance {
      * on both elements to make the other element known to it. This will set up
      * the necessary link in the heatHandler that does the heat transfer.
      */
-    public void setOtherSide(NoMassThermalExchanger otherSide) {
+    public void setOtherSide(HeatNoMassExchangerHandler otherSide) {
         // just cast and set - will fail horribly if this is not possible.
         heatExchangeHandler.setOtherSideHandler(otherSide);
     }

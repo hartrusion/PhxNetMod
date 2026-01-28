@@ -87,7 +87,7 @@ public interface PhasedFluidProperties {
             double effortValue);
     
     /**
-     * Density as funcion of pressure for liquid part.
+     * Density as function of pressure for liquid part.
      *
      * @param pressure
      * @return
@@ -96,7 +96,7 @@ public interface PhasedFluidProperties {
     public double getDensityLiquid(double pressure);
 
     /**
-     * Density as funcion of pressure for vapour part.
+     * Density as function of pressure for vapor part.
      *
      * @param pressure
      * @return

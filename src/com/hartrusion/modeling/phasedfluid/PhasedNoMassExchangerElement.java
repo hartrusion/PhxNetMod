@@ -23,20 +23,19 @@
  */
 package com.hartrusion.modeling.phasedfluid;
 
-import com.hartrusion.modeling.ElementType;
-import com.hartrusion.modeling.converters.NoMassThermalExchanger;
+import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
 
 /**
  *
  * @author Viktor Alexander Hartung
  */
-public class PhasedNoMassExchangerResistance extends PhasedAbstractFlowResistance {
+public class PhasedNoMassExchangerElement extends PhasedAbstractFlowResistance {
     
     private PhasedFluidProperties fluidProperties;
     
     private final PhasedNoMassExchangerHandler phasedExchangeHandler;
 
-    public PhasedNoMassExchangerResistance(PhasedFluidProperties fluidProperties) {
+    public PhasedNoMassExchangerElement(PhasedFluidProperties fluidProperties) {
         this.fluidProperties = fluidProperties;
         phasedExchangeHandler
             = new PhasedNoMassExchangerHandler(fluidProperties, this);
@@ -58,13 +57,9 @@ public class PhasedNoMassExchangerResistance extends PhasedAbstractFlowResistanc
      * on both elements to make the other element known to it. This will set up
      * the necessary link in the phasedHandler that does the heat transfer.
      */
-    public void setOtherSide(NoMassThermalExchanger otherSide) {
+    public void setOtherSide(PhasedEnergyExchangerHandler otherSide) {
         // just cast and set - will fail horribly if this is not possible.
-        phasedExchangeHandler.setOtherSideHandler(otherSide);
-    }
-    
-    public void setNtu(double kTimesA) {
-        phasedExchangeHandler.setNtu(kTimesA);
+        phasedExchangeHandler.setOtherSide(otherSide);
     }
 
     @Override

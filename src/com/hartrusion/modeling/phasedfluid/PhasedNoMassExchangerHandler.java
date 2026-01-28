@@ -23,7 +23,8 @@
  */
 package com.hartrusion.modeling.phasedfluid;
 
-import com.hartrusion.modeling.converters.NoMassThermalExchanger;
+import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
+import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.NonexistingStateVariableException;
 import com.hartrusion.modeling.general.AbstractElement;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ import java.util.List;
  * @author Viktor Alexander Hartung
  */
 public class PhasedNoMassExchangerHandler
-        implements PhasedHandler, NoMassThermalExchanger {
+        implements PhasedHandler, PhasedEnergyExchangerHandler {
 
     /**
      * Holds a list of all nodes connected to the element where this heat
@@ -51,11 +52,9 @@ public class PhasedNoMassExchangerHandler
      * A heat exchanger is always made of two sides, this simply references the
      * interface of the other heat handler from the other side.
      */
-    private NoMassThermalExchanger otherSide;
+    private PhasedEnergyExchangerHandler otherSide;
 
     private PhasedFluidProperties fluidProperties;
-
-    private double ntu = 0.9;
 
     /**
      * Marks the calculation state as finished, this is faster than checking a
@@ -130,73 +129,84 @@ public class PhasedNoMassExchangerHandler
             }
             return false; // already done, but how was this even possible
         }
-        // This is the normal behavior.
-        // Thermal energy capacity flow, given in:
-        // kg/s * J/kg/K = J/s/K = W/K
-        // Describes how much Power (Watts) will be transfered per Kelvin.
-        double CThis = getInFlow() * fluidProperties.getSpecificHeatCapacity();
-        double COther = otherSide.getInFlow() * otherSide.getSpecHeatCap();
-
-        double Cmin = Math.min(CThis, COther);
-        double Cmax = Math.max(CThis, COther);
-
-        // relation bewteen those capacity flows
-        double relC = Cmin / Cmax;
-
-        // Effectiveness for cross or coutner flow heat exchanger
-        double epsilon;
-        if (Math.abs(relC - 1.0) < 1e-40) {
-            // limit, happens on exaclty equal flows
-            epsilon = ntu / (1 + ntu);
+        // Here: All prerequisites are met, we can now calculate the thermal
+        // energy transfer on both sides. First, get the maximum thermal power
+        // that could be transfered when having the other sides inlet 
+        // temperature as the own outlet temperature.
+        double maxDeltaThis = getMaxEnergyDelta(otherSide.getInTemperature());
+        double maxDeltaOhter = otherSide.getMaxEnergyDelta(getInTemperature());
+        
+        // Determine direction of thermal transfer:
+        boolean fromThis;
+        if (maxDeltaThis > 0.0 && maxDeltaOhter < 0.0) {
+            fromThis = false;
+        } else if (maxDeltaThis < 0.0 && maxDeltaOhter > 0.0) {
+            fromThis = true;
         } else {
-            epsilon = (1 - Math.exp(-ntu * (1 - relC)))
-                    / (1 - relC * Math.exp(-ntu * (1 - relC)));
+            throw new CalculationException("Undefined energy flow direction");
         }
-        // The maximum possible energy flow would be calculated from the 
-        // inlet temperature now.
-        // Q_max = Cmin * (T_in1 - T_in2), given in Watts. Apply epsilon to 
-        // have the thermal flow Q = epsilion * Q_max.
-        // This can be invoked for both sides:
-        double Q = epsilon * Cmin
-                * (getInTemperature() - otherSide.getInTemperature());
-        // Use the available set function, it will handle the heat energy
-        // conversion.
-        this.setOutTemperature(getInTemperature() - Q / CThis);
+        
+        double transfEnergy = 0.99 * Math.min(Math.abs(maxDeltaThis),
+                Math.abs(maxDeltaOhter));
+        if (fromThis) {
+            setPowerTransfer(-transfEnergy);
+            otherSide.setPowerTransfer(transfEnergy);
+        } else {
+            setPowerTransfer(transfEnergy);
+            otherSide.setPowerTransfer(-transfEnergy);
+        }
 
-        // instead of having to run this two times, simply use the 
-        // known reference to the other side and use the results calculated 
-        // here.
-        otherSide.setOutTemperature(otherSide.getInTemperature() + Q / COther);
         return true;
     }
 
     @Override
-    public void setOutTemperature(double outTemp) {
-        // The Temperature difference was calculated, however, it needs to
-        // be expressed as an energy value.
-        PhasedNode inNode = null, outNode = null;
+    public double getMaxEnergyDelta(double otherTemperature) {
+        double inEnergy = 0.0;
         for (PhasedNode pn : phasedNodes) { // get nodes by flow direction
             if (pn.getFlow((AbstractElement) element) > 0.0) {
-                inNode = pn;
-            } else if (pn.getFlow((AbstractElement) element) < 0.0) {
-                outNode = pn;
+                inEnergy = pn.getHeatEnergy((AbstractElement) element);
+                break;
             }
         }
-        // it is expected for this method to be called in a state where it is
-        // possible so no other checks are performed. An exception here is a 
-        // problem elsewhere.
-        double inHeatEnergy = inNode.getHeatEnergy((AbstractElement) element);
-        double inTemperature = fluidProperties.getTemperature(
-                inHeatEnergy, inNode.getEffort());
-        // calculate how much heat energy increase there is with the temperature
-        // difference from the heat exchanger.
-        double heatEnergyIncrease = (outTemp - inTemperature)
-                * fluidProperties.getSpecificHeatCapacity();
-
-        // Set the increase (or decrease) to the out flow node.
-        outNode.setHeatEnergy(inHeatEnergy + heatEnergyIncrease, 
-                (AbstractElement) element);
-
+        double ownInTemperature = getInTemperature();
+        double assumedOutEnergy;
+        // Heating up always assumes to go to full vapor state and cooling down
+        // also always assumes to go down to full liquid state. In such cases
+        // it is likely that the other side will limit the phase changes
+        if (otherTemperature == ownInTemperature) {
+            return 0.0;
+        } else if (ownInTemperature > otherTemperature) {
+            // Cool down:
+            assumedOutEnergy = otherTemperature 
+                    * fluidProperties.getSpecificHeatCapacity();
+        } else {
+            // heat up (and eventually evaporate):
+            assumedOutEnergy = otherTemperature 
+                    * fluidProperties.getSpecificHeatCapacity() 
+                    + fluidProperties.getVaporizationHeatEnergy();
+        }
+        return (assumedOutEnergy - inEnergy) * getInFlow();
+        // positive: heats up this element
+    }
+    
+    @Override
+    public void setPowerTransfer(double power) {
+        double inEnergy = 0.0, inFlow = 0.0;
+        for (PhasedNode pn : phasedNodes) { // get node by flow direction
+            if (pn.getFlow((AbstractElement) element) > 0.0) {
+                inFlow = pn.getFlow((AbstractElement) element);
+                inEnergy = pn.getHeatEnergy((AbstractElement) element);
+                break;
+            }
+        }
+        double deltaEnergy = power / inFlow;
+        for (PhasedNode pn : phasedNodes) { // get node by flow direction
+            if (pn.getFlow((AbstractElement) element) < 0.0) {
+                pn.setHeatEnergy(inEnergy + deltaEnergy,
+                        (AbstractElement) element);
+                break;
+            }
+        }
         calculationFinished = true;
     }
 
@@ -237,7 +247,6 @@ public class PhasedNoMassExchangerHandler
         return false;
     }
 
-    @Override
     public double getInFlow() {
         for (PhasedNode pn : phasedNodes) { // get nodes by flow direction
             if (pn.getFlow((AbstractElement) element) > 0.0) {
@@ -288,16 +297,7 @@ public class PhasedNoMassExchangerHandler
     }
 
     @Override
-    public void setOtherSideHandler(NoMassThermalExchanger otherSide) {
+    public void setOtherSide(PhasedEnergyExchangerHandler otherSide) {
         this.otherSide = otherSide;
-    }
-
-    @Override
-    public double getSpecHeatCap() {
-        return fluidProperties.getSpecificHeatCapacity();
-    }
-
-    public void setNtu(double ntu) {
-        this.ntu = ntu;
     }
 }

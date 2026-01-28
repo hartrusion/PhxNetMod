@@ -24,18 +24,19 @@
 package com.hartrusion.modeling.assemblies;
 
 import com.hartrusion.modeling.PhysicalDomain;
-import com.hartrusion.modeling.converters.NoMassThermalExchanger;
+import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
 import com.hartrusion.modeling.general.ClosedOrigin;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
+import com.hartrusion.modeling.heatfluid.HeatNoMassEnergyExchangerResistance;
 import com.hartrusion.modeling.heatfluid.HeatNoMassExchangerResistance;
 import com.hartrusion.modeling.heatfluid.HeatNode;
 import com.hartrusion.modeling.heatfluid.HeatThermalExchanger;
 import com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoir;
 import com.hartrusion.modeling.phasedfluid.PhasedElement;
 import com.hartrusion.modeling.phasedfluid.PhasedFluidProperties;
-import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerResistance;
+import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerElement;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedThermalExchanger;
 import com.hartrusion.modeling.phasedfluid.PhasedThermalVolumeHandler;
@@ -72,9 +73,9 @@ public class PhasedCondenserNoMass {
 
     private final HeatThermalExchanger secondarySideReservoir
             = new HeatThermalExchanger();
-    private final HeatNoMassExchangerResistance secondarySideCondenser
-            = new HeatNoMassExchangerResistance();
-    private final PhasedNoMassExchangerResistance primarySideCondenser;
+    private final HeatNoMassEnergyExchangerResistance secondarySideCondenser
+            = new HeatNoMassEnergyExchangerResistance();
+    private final PhasedNoMassExchangerElement primarySideCondenser;
     private final PhasedClosedSteamedReservoir primarySideReservoir;
 
     private final PhasedNode primaryInnerNode = new PhasedNode();
@@ -109,7 +110,7 @@ public class PhasedCondenserNoMass {
     public PhasedCondenserNoMass(PhasedFluidProperties fluidProperties) {
         // Generate elements that require the PhasedFluidProperties
         primarySideCondenser
-                = new PhasedNoMassExchangerResistance(fluidProperties);
+                = new PhasedNoMassExchangerElement(fluidProperties);
         primarySideReservoir
                 = new PhasedClosedSteamedReservoir(fluidProperties);
         // Generate a different handler fot the reservoir and attach it to
@@ -142,9 +143,9 @@ public class PhasedCondenserNoMass {
         
         // link both no-mass sides (a cast must be possible here)
         primarySideCondenser.setOtherSide(
-                (NoMassThermalExchanger) secondarySideCondenser.getHeatHandler());
+                (PhasedEnergyExchangerHandler) secondarySideCondenser.getHeatHandler());
         secondarySideCondenser.setOtherSide(
-                (NoMassThermalExchanger) primarySideCondenser.getPhasedHandler());
+                (PhasedEnergyExchangerHandler) primarySideCondenser.getPhasedHandler());
         
         primarySideCondenser.setCoupledElement(secondarySideCondenser);
         secondarySideCondenser.setCoupledElement(primarySideCondenser);
@@ -167,8 +168,8 @@ public class PhasedCondenserNoMass {
         primarySideReservoir.setAmbientPressure(ambientPressure);
         secondarySideReservoir.getHeatHandler().setInnerThermalMass(secondaryMass);
         thermalFlowReservoirResistance.setConductanceParameter(kTimesA);
-        primarySideCondenser.setNtu(ntu);
-        secondarySideCondenser.setNtu(ntu);
+
+        
     }
     
     /**
@@ -319,7 +320,7 @@ public class PhasedCondenserNoMass {
         return null;
     }
 
-    public PhasedNoMassExchangerResistance getPrimarySideCondenser() {
+    public PhasedNoMassExchangerElement getPrimarySideCondenser() {
         return primarySideCondenser;
     }
 
@@ -331,7 +332,7 @@ public class PhasedCondenserNoMass {
         return secondarySideReservoir;
     }
     
-    public HeatNoMassExchangerResistance getSecondarysideCondenser() {
+    public HeatNoMassEnergyExchangerResistance getSecondarysideCondenser() {
         return secondarySideCondenser;
     }
 

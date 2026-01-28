@@ -43,6 +43,7 @@ import org.testng.annotations.Test;
  * @author Viktor Alexander Hartung
  */
 public class PhasedCondenserNoMassTest {
+
     private PhasedCondenserNoMass instance;
 
     private PhasedPropertiesWater water = new PhasedPropertiesWater();
@@ -171,12 +172,12 @@ public class PhasedCondenserNoMassTest {
                 temperature, 1e-8);
 
     }
-    
-    // @Test // no automated test here, just to mess around here.
+
+   // @Test // no automated test here, just to mess around here.
     public void testFailingAuxCondenser() {
         // Those parameters are from the rbmk sims auxiliary condenser 
         instance.initCharacteristic(4.0, 500, 5e5, 1e5, 4.0);
-        
+
         double temperaturePrimary = 273.15 + 140; // 413.5 - 140 °C
         double temperatureSecondary = 293.15; // 20 °C
         double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity() + water.getVaporizationHeatEnergy();
@@ -185,23 +186,27 @@ public class PhasedCondenserNoMassTest {
         pz2.setOriginHeatEnergy(heatEnergy); // optional, this is the out-origin
         hz2.setOriginTemperature(temperatureSecondary);
 
-        // Set flow through both primary and secondary sides5
+        // Set flow through both primary and secondary sides
         instance.initConditions(temperatureSecondary, temperatureSecondary, 0.2);
         flowIn.setFlow(30.0);
-        flowOut.setFlow(30.0);
+        flowOut.setFlow(-30.0);
         heatFluidFlow.setFlow(600); // fully opened coolant loop: 600 kg/s
 
-        for (int idx = 0; idx < 10; idx++) {
+        for (int idx = 0; idx < 100; idx++) {
             solver.prepareCalculation();
             solver.doCalculation();
-            System.out.println("Pri Reservoir: "
+            System.out.println("Pri: Res. Level:"
+                    + String.format("%.2f", instance.getPrimarySideReservoir().getFillHeight() * 100) // cm
+                    + ", Res Temp: "
                     + String.format("%.2f", instance.getPrimarySideReservoir().getTemperature() - 273.15)
-                    + ", Pri Mid-Node: "
+                    + ", Mid-Node: "
                     + String.format("%.2f", instance.getPhasedNode(PhasedCondenserNoMass.PRIMARY_INNER).getHeatEnergy() / water.getSpecificHeatCapacity() - 273.15)
-                    + ", 2nd Reservoir: "
+                    + ", 2nd: Res-Loop "
                     + String.format("%.2f", instance.getSecondarySideReservoir().getHeatHandler().getTemperature() - 273.15)
-                    + ", 2nd Mid-Node: "
-                    + String.format("%.2f", instance.getHeatNode(PhasedCondenserNoMass.SECONDARY_INNER).getTemperature() - 273.15));
+                    + ", Mid-Node: "
+                    + String.format("%.2f", instance.getHeatNode(PhasedCondenserNoMass.SECONDARY_INNER).getTemperature() - 273.15)
+                    + ", Top Out: "
+                    + String.format("%.2f", instance.getHeatNode(PhasedCondenserNoMass.SECONDARY_OUT).getTemperature() - 273.15));
         }
     }
 }
