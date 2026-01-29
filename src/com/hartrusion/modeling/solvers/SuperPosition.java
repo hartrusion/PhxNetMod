@@ -255,6 +255,11 @@ public class SuperPosition extends LinearNetwork {
                 if (!layer[idx].isCalculationFinished()) {
                     LOGGER.log(Level.WARNING, "Superposition layer index " + idx
                             + " failed to provide full solution.");
+                    // assume this layer to be not calculated due to a source
+                    // value of 0, this will skip this layer on the for loop to
+                    // sum it up. This is cheaper than having to call the more
+                    // expensive isCalculationFinished method all the time.
+                    zeroValue[idx] = true;
                 }
             }
         }
@@ -272,10 +277,11 @@ public class SuperPosition extends LinearNetwork {
             // sum up flow on each layer
             flow = 0;
             for (jdx = 0; jdx < numberOfSources; jdx++) {
-                if (!zeroValue[jdx]) { // those have zero flow.
-                    r = (LinearDissipator) layer[jdx].getElement(idx);
-                    flow = flow + r.getFlow();
+                if (zeroValue[jdx]) {
+                    continue; // the result of getFlow would be 0.0
                 }
+                r = (LinearDissipator) layer[jdx].getElement(idx);
+                flow = flow + r.getFlow();
             }
             // Assign the flow to the elment of the superposition network.
             // It may not be a resistor as the network provided may use
@@ -519,15 +525,15 @@ public class SuperPosition extends LinearNetwork {
 
         return numberOfSources;
     }
-    
+
     public boolean containsElement(AbstractElement element) {
         return elements.contains(element);
     }
 
     /**
      * All layers can be calculated parallel in multiple threads if a thread
-     * pool is provided. If not set, all layers will be calulated using a single
-     * call for loop.
+     * pool is provided. If not set, all layers will be calculated using a
+     * single call for loop.
      *
      * @param pool SingleThreadExecutor pool.
      */

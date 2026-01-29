@@ -37,6 +37,7 @@ import com.hartrusion.modeling.general.FlowSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.ClosedOrigin;
+import static com.hartrusion.util.ArraysExt.*;
 
 /**
  * Provides methods to simplify the linear network by one step. Holds references
@@ -110,6 +111,12 @@ public class RecursiveSimplifier extends ChildNetwork {
     private StarDeltaTransform starDelta;
     private StarSquareTransform starSquare;
 
+    /**
+     * For not spamming the validation error message, this will save that the
+     * error happened and sends the message only once.
+     */
+    private boolean[] validationErrorOccured;
+
     public RecursiveSimplifier() {
         substElements = new ArrayList<>();
 
@@ -117,6 +124,7 @@ public class RecursiveSimplifier extends ChildNetwork {
         nodeObsolete = new boolean[INIT_ARRAY_SIZE];
         hasFloatingLoop = new boolean[INIT_ARRAY_SIZE];
         deadEnd = new boolean[INIT_ARRAY_SIZE];
+        validationErrorOccured = new boolean[INIT_ARRAY_SIZE];
 
         substitutesFound = false;
         obsoleteNodesListUpdated = false;
@@ -744,30 +752,13 @@ public class RecursiveSimplifier extends ChildNetwork {
     private void checkArraySizes() {
         // Todo: replace with arrayutils functions
         boolean[] tempboolarray;
-        if (nodeObsolete.length < nodes.size()) {
-            tempboolarray = new boolean[nodes.size()];
-            System.arraycopy(nodeObsolete, 0, tempboolarray, 0,
-                    nodeObsolete.length);
-            nodeObsolete = tempboolarray;
-        }
-        if (hasFloatingLoop.length < nodes.size()) {
-            tempboolarray = new boolean[nodes.size()];
-            System.arraycopy(hasFloatingLoop, 0, tempboolarray, 0,
-                    hasFloatingLoop.length);
-            hasFloatingLoop = tempboolarray;
-        }
-        if (isSubstituted.length < elements.size()) {
-            tempboolarray = new boolean[elements.size()];
-            System.arraycopy(isSubstituted, 0, tempboolarray, 0,
-                    isSubstituted.length);
-            isSubstituted = tempboolarray;
-        }
-        if (deadEnd.length < elements.size()) {
-            tempboolarray = new boolean[elements.size()];
-            System.arraycopy(deadEnd, 0, tempboolarray, 0,
-                    deadEnd.length);
-            deadEnd = tempboolarray;
-        }
+
+        nodeObsolete = newArrayLength(nodeObsolete, nodes.size());
+        hasFloatingLoop = newArrayLength(hasFloatingLoop, nodes.size());
+        isSubstituted = newArrayLength(isSubstituted, elements.size());
+        deadEnd = newArrayLength(deadEnd, elements.size());
+        validationErrorOccured = newArrayLength(
+                validationErrorOccured, nodes.size());
 
         checkChildNodesArraySize(nodes.size());
         checkNodesArraySize(nodes.size());
@@ -998,8 +989,13 @@ public class RecursiveSimplifier extends ChildNetwork {
                         > 1e-3) { // from 1e-8 to 1e-3
                     //throw new CalculationException("Validation of already set"
                     //        + " effort value failed.");
-                    LOGGER.log(Level.WARNING, "Validation of already set effort"
-                            + " value failed.");
+                    if (!validationErrorOccured[idx]) {
+                        LOGGER.log(Level.WARNING, "Validation of already "
+                                + "set effort value failed.");
+                    }
+                    validationErrorOccured[idx] = true;
+                } else {
+                    validationErrorOccured[idx] = false;
                 }
             }
         }
