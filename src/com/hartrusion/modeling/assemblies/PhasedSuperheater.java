@@ -37,47 +37,26 @@ import com.hartrusion.modeling.phasedfluid.PhasedElement;
 import com.hartrusion.modeling.phasedfluid.PhasedFluidProperties;
 import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerElement;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
+import com.hartrusion.modeling.phasedfluid.PhasedThermalExchanger;
 import com.hartrusion.modeling.phasedfluid.PhasedThermalVolumeHandler;
 
 /**
- * Represents a condenser unit for phased fluid without mass in the condensing
- * elements. It forces the effort on the primary side with its reservoir which
- * contains saturated steam.
- * <pre>
- *          primary_in
- *               o          o   secondary_out
- *               |          |
- *    primary   ---        ---
- *    condenser | |        | |
- *              | |        | |  secondarySideCondenser
- *              | |        | |
- *              ---        ---
- *         prim. |          |
- *         inner o          o----------------------
- *         node  |                                |
- *             -----    o------XXXXX------o     -----
- *             |   |    |     kTimesA     |     |   |
- *     primary |   | = (|)               (|) =  |   |
- *   reservoir |   |    |                 |     |   |  heatFluid
- *             -----    |                 |     -----  exchanger
- *               |      ----o--------------       |
- *  primary_Out  o          |                     o secondary_in
- *                         _|_ thermalOrigin
- * </pre>
+ * Basically a PhasedExchangerNoMass but completely using phased fluid. This is
+ * designed to be used as a superheater, the condensation of the fluid will do a
+ * superheating of the phased fluid in the secondary part as there is a lower
+ * pressure.
  *
  * @author Viktor Alexander Hartung
  */
-public class PhasedCondenserNoMass {
+public class PhasedSuperheater {
 
-    private final HeatThermalExchanger secondarySideReservoir
-            = new HeatThermalExchanger();
-    private final HeatNoMassEnergyExchangerResistance secondarySideCondenser
-            = new HeatNoMassEnergyExchangerResistance();
+    private final PhasedThermalExchanger secondarySideReservoir;
+    private final PhasedNoMassExchangerElement secondarySideCondenser;
     private final PhasedNoMassExchangerElement primarySideCondenser;
     private final PhasedClosedSteamedReservoir primarySideReservoir;
 
     private final PhasedNode primaryInnerNode = new PhasedNode();
-    private final HeatNode secondaryInnerNode = new HeatNode();
+    private final PhasedNode secondaryInnerNode = new PhasedNode();
 
     private final GeneralNode primaryReservoirThermalNode
             = new GeneralNode(PhysicalDomain.THERMAL);
@@ -105,8 +84,12 @@ public class PhasedCondenserNoMass {
     public static final int PRIMARY_INNER = 5;
     public static final int SECONDARY_INNER = 6;
 
-    public PhasedCondenserNoMass(PhasedFluidProperties fluidProperties) {
+    public PhasedSuperheater(PhasedFluidProperties fluidProperties) {
         // Generate elements that require the PhasedFluidProperties
+        secondarySideReservoir
+                = new PhasedThermalExchanger(fluidProperties);
+        secondarySideCondenser
+                = new PhasedNoMassExchangerElement(fluidProperties);
         primarySideCondenser
                 = new PhasedNoMassExchangerElement(fluidProperties);
         primarySideReservoir
@@ -132,23 +115,23 @@ public class PhasedCondenserNoMass {
                 primaryReservoirTemperature);
         secondarySideReservoir.setInnerThermalEffortSource(
                 secondaryTemperature);
-        
+
         // connect both primary side and secondary sides elements
         primarySideCondenser.connectToVia(
                 primarySideReservoir, primaryInnerNode);
         secondarySideCondenser.connectToVia(
                 secondarySideReservoir, secondaryInnerNode);
-        
+
         // link both no-mass sides (a cast must be possible here)
         primarySideCondenser.setOtherSide(
-                (PhasedEnergyExchangerHandler) secondarySideCondenser.getHeatHandler());
+                (PhasedEnergyExchangerHandler) secondarySideCondenser.getPhasedHandler());
         secondarySideCondenser.setOtherSide(
                 (PhasedEnergyExchangerHandler) primarySideCondenser.getPhasedHandler());
-        
+
         primarySideCondenser.setCoupledElement(secondarySideCondenser);
         secondarySideCondenser.setCoupledElement(primarySideCondenser);
     }
-    
+
     /**
      *
      * @param primaryBaseArea Base area of the phased side (m²)
@@ -160,14 +143,13 @@ public class PhasedCondenserNoMass {
      */
     public void initCharacteristic(double primaryBaseArea,
             double secondaryMass, double kTimesA,
-            double ambientPressure,
-            double ntu) {
+            double ambientPressure) {
         primarySideReservoir.setBaseArea(primaryBaseArea);
         primarySideReservoir.setAmbientPressure(ambientPressure);
-        secondarySideReservoir.getHeatHandler().setInnerThermalMass(secondaryMass);
+        secondarySideReservoir.getPhasedHandler().setInnerHeatedMass(secondaryMass);
         thermalFlowReservoirResistance.setConductanceParameter(kTimesA);
     }
-    
+
     /**
      * Generates a set of nodes that are connected to the heat exchangers
      * primary and secondary side. Those nodes can then be named with initName
@@ -191,12 +173,12 @@ public class PhasedCondenserNoMass {
         primarySideCondenser.connectTo(node);
         node = new PhasedNode();
         primarySideReservoir.connectTo(node);
-        node = new HeatNode();
+        node = new PhasedNode();
         secondarySideCondenser.connectTo(node);
-        node = new HeatNode();
+        node = new PhasedNode();
         secondarySideReservoir.connectTo(node);
     }
-    
+
     /**
      * Names elements and nodes of this assembly with the given name prefix. The
      * heat nodes connected to the primary and secondary sides will only be
@@ -218,9 +200,9 @@ public class PhasedCondenserNoMass {
                     name + "PrimaryIn");
             getPhasedNode(PRIMARY_OUT).setName(
                     name + "PrimaryOut");
-            getHeatNode(SECONDARY_IN).setName(
+            getPhasedNode(SECONDARY_IN).setName(
                     name + "SecondaryIn");
-            getHeatNode(SECONDARY_OUT).setName(
+            getPhasedNode(SECONDARY_OUT).setName(
                     name + "SecondaryOut");
         }
         primaryInnerNode.setName(
@@ -252,11 +234,14 @@ public class PhasedCondenserNoMass {
      * The pressure will be set to saturation pressure of the given temperature.
      *
      * @param primaryTemp in Kelvin
-     * @param secondaryTemp in Kelvin
+     * @param secondaryHeatEnergy Energy in the mass of the secondary reservoir.
      * @param fillHeight fill level of the primary reservoir (meters)
+     * @param secondaryPressure pressure of the secondary loop (needed to get 
+     * the temperature out of the secondaryHeatEnergy value).
+     * 
      */
-    public void initConditions(double primaryTemp, double secondaryTemp,
-            double fillHeight) {
+    public void initConditions(double primaryTemp, double secondaryHeatEnergy,
+            double fillHeight, double secondaryPressure) {
         // get properties from the element that knows it.
         PhasedFluidProperties fp
                 = primarySideReservoir.getPhasedFluidProperties();
@@ -273,29 +258,13 @@ public class PhasedCondenserNoMass {
         primaryReservoirHandler.setInitialHeatEnergy(
                 primaryTemp * fp.getSpecificHeatCapacity());
         primarySideReservoir.setInitialEffort(pressure);
-        secondarySideReservoir.getHeatHandler()
-                .setInitialTemperature(secondaryTemp);
+        secondarySideReservoir.getPhasedHandler().setInitialHeatEnergy(
+                secondaryHeatEnergy);
+        ((PhasedThermalVolumeHandler) secondarySideReservoir.getPhasedHandler())
+                .setPreviousPressure(secondaryPressure);
         primarySideReservoir.setInitialState(
                 primarySideReservoir.getMassForHeight(fillHeight, primaryTemp),
                 primaryTemp);
-    }
-    
-    /**
-     * Access the heat nodes which are connected with this phased condenser.
-     *
-     * @param identifier can be SECONDARY_IN (3), SECONDARY_OUT (4)
-     * @return
-     */
-    public HeatNode getHeatNode(int identifier) {
-        switch (identifier) {
-            case SECONDARY_IN:
-                return (HeatNode) secondarySideReservoir.getNode(1);
-            case SECONDARY_OUT:
-                return (HeatNode) secondarySideCondenser.getNode(1);
-            case SECONDARY_INNER:
-                return secondaryInnerNode;
-        }
-        return null;
     }
 
     /**
@@ -312,10 +281,16 @@ public class PhasedCondenserNoMass {
                 return (PhasedNode) primarySideReservoir.getNode(1);
             case PRIMARY_INNER:
                 return primaryInnerNode;
+            case SECONDARY_IN:
+                return (PhasedNode) secondarySideCondenser.getNode(1);
+            case SECONDARY_OUT:
+                return (PhasedNode) secondarySideReservoir.getNode(1);
+            case SECONDARY_INNER:
+                return secondaryInnerNode;
         }
         return null;
     }
-
+    
     public PhasedNoMassExchangerElement getPrimarySideCondenser() {
         return primarySideCondenser;
     }
@@ -324,15 +299,15 @@ public class PhasedCondenserNoMass {
         return primarySideReservoir;
     }
 
-    public HeatThermalExchanger getSecondarySideReservoir() {
+    public PhasedThermalExchanger getSecondarySideReservoir() {
         return secondarySideReservoir;
     }
     
-    public HeatNoMassEnergyExchangerResistance getSecondarysideCondenser() {
+    public PhasedNoMassExchangerElement getSecondarysideCondenser() {
         return secondarySideCondenser;
     }
-
-    /**
+    
+   /**
      * Gets the mass flow into the primary condenser. Positive means it goes
      * into the condenser (expected behavior).
      *
