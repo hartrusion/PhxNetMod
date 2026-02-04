@@ -25,7 +25,6 @@ package com.hartrusion.modeling.solvers;
 
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
-import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
 import com.hartrusion.modeling.general.AbstractElement;
@@ -537,9 +536,9 @@ public class StarSquareTransform {
      * @return Node which will replace given node n. Returns null if given node
      * n is not part of the delta.
      */
-    public GeneralNode getDeltaReplacementNode(GeneralNode n) {
+    public GeneralNode getSquareReplacementNode(GeneralNode n) {
         if (!squareElementsCreated) {
-            throw new ModelErrorException("Star delta has to be set up before "
+            throw new ModelErrorException("Star square has to be set up before "
                     + "using this function.");
         }
         if (!containsObject(parentStarNodes, n)) {

@@ -110,6 +110,7 @@ public class RecursiveSimplifier extends ChildNetwork {
 
     private StarDeltaTransform starDelta;
     private StarSquareTransform starSquare;
+    private StarPolygonTransform starPolygon;
 
     /**
      * For not spamming the validation error message, this will save that the
@@ -701,7 +702,6 @@ public class RecursiveSimplifier extends ChildNetwork {
         }
         LOGGER.log(Level.INFO,
                 "Complex network: StarSquare transform necessary.");
-
     }
 
     private void connectNewElementsAndSquareReplacement() {
@@ -712,6 +712,62 @@ public class RecursiveSimplifier extends ChildNetwork {
         registerChildElements();
         for (int idx = 0; idx < 6; idx++) {
             childElements.add(starSquare.getSquareElement(idx));
+        }
+        newElementsConnected = true;
+    }
+
+    private boolean searchStarPolygon() {
+        checkArraySizes();
+        for (GeneralNode n : nodes) {
+            if (StarPolygonTransform.checkForStarNode(n)) {
+                starNode = n;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void setupStarReplacementPolygon() {
+        starPolygon = new StarPolygonTransform();
+        // This will create the star square arrangement (4 nodes and 6
+        // resistors, which are more than before btw):
+        starPolygon.setupStar(starNode);
+        // Star node will be enclosed by the square arrangement
+        nodeObsolete[nodes.indexOf(starNode)] = true;
+        // also nodes that are now represented in star square will not be needed
+        // to be created again, their representatives are now already existing.
+        for (GeneralNode p : nodes) {
+            if (starPolygon.starContainsNode(p)) {
+                nodeObsolete[nodes.indexOf(p)] = true;
+            }
+        }
+        obsoleteNodesListUpdated = true;
+        // same goes for elements, mark elements which are now represented in
+        // the star square arrangement
+        for (AbstractElement e : elements) {
+            if (starPolygon.starContainsElement(e)) {
+                isSubstituted[elements.indexOf(e)] = true;
+            }
+        }
+        // add the generated outer nodes to child elements list, those
+        // will be the first three nodes and elements in both lists.
+        for (int idx = 0; idx < starPolygon.getNumberOfBranches(); idx++) {
+            childNodes.add(starPolygon.getPolygonNode(idx));
+            childNodeOfNode[nodes.indexOf(starPolygon.getStarNode(idx))] = idx;
+            nodeOfChildNode[idx] = nodes.indexOf(starPolygon.getStarNode(idx));
+        }
+        LOGGER.log(Level.INFO,
+                "Very complex network: StarPolygon transform performed.");
+    }
+
+    private void connectNewElementsAndPolygonReplacement() {
+        if (!childElementsCreated) {
+            throw new ModelErrorException(
+                    "New elements need to be created first.");
+        }
+        registerChildElements();
+        for (int idx = 0; idx < starPolygon.getNumberOfPoylElements(); idx++) {
+            childElements.add(starPolygon.getPolygonElement(idx));
         }
         newElementsConnected = true;
     }
@@ -841,6 +897,14 @@ public class RecursiveSimplifier extends ChildNetwork {
             return generateChild(parentLayers);
         }
 
+        if (searchStarPolygon()) {
+            setupStarReplacementPolygon();
+            createChildElements();
+            connectNewElementsAndPolygonReplacement();
+
+            return generateChild(parentLayers);
+        }
+
         // We might end with a floating loop in the last recursion. In this 
         // case, elements which are part of the loop are isSubstituted[idx] =
         // true but no substitutuion was performed (otherwise we would not get
@@ -916,6 +980,10 @@ public class RecursiveSimplifier extends ChildNetwork {
             starSquare.calculateSquareResistorValues();
         }
 
+        if (starPolygon != null) {
+            starPolygon.calculatePolygonResistorValues();
+        }
+
         // Those floating loops are not part of a child so they need to be
         // explicitly called to reset a variable
         for (SimplifiedResistor sr : substElements) {
@@ -970,6 +1038,9 @@ public class RecursiveSimplifier extends ChildNetwork {
         }
         if (starSquare != null) {
             starSquare.calculateStarValuesFromSquare();
+        }
+        if (starPolygon != null) {
+            starPolygon.calculateStarValuesFromPolygon();
         }
 
         // All nodes must have their corresponding effort values from child
