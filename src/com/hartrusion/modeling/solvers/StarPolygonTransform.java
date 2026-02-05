@@ -27,6 +27,7 @@ import com.hartrusion.modeling.ElementType;
 import static com.hartrusion.modeling.ElementType.BRIDGED;
 import static com.hartrusion.modeling.ElementType.OPEN;
 import com.hartrusion.modeling.PhysicalDomain;
+import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
 import com.hartrusion.modeling.general.AbstractElement;
@@ -35,6 +36,7 @@ import com.hartrusion.modeling.general.LinearDissipator;
 import static com.hartrusion.util.ArraysExt.addObject;
 import static com.hartrusion.util.ArraysExt.containsObject;
 import static com.hartrusion.util.ArraysExt.indexOfObject;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -83,7 +85,6 @@ public class StarPolygonTransform {
 
     private int branches; // Number of resistors attached to the star.
 
-
     private GeneralNode starNode;
     private GeneralNode[] parentStarNodes;
     private LinearDissipator[] parentStarElements;
@@ -122,7 +123,7 @@ public class StarPolygonTransform {
         int idx;
         ElementType type;
         GeneralNode otherNode;
-        if (n.getNumberOfElements() <= 4) {
+        if (n.getNumberOfElements() <= 3) { // 4: exlcude star-square
             return false;
         }
         for (idx = 0; idx < n.getNumberOfElements(); idx++) {
@@ -405,6 +406,69 @@ public class StarPolygonTransform {
             starNode.setEffort(avgStarEffort, parentStarElements[0], true);
             return;
         }
+        // at least one bridge: There can not be islands of bridges, they all
+        // go to the star node and so there must be one common potential for
+        // the bridged 
+        GeneralNode outerNode;
+        if (bridgedElements > 1) {
+            // If there is more than one bridge, validate the efforts that have
+            // been set, they must all be the same. first, get the effort of the
+            // element we detected earlier, then compare the effort with all 
+            // other values.
+            try {
+                outerNode = parentStarElements[bridgedConnectionIdx]
+                        .getOnlyOtherNode(starNode);
+            } catch (NoFlowThroughException ex) {
+                throw new ModelErrorException("Unexpected non-flowthrough");
+            }
+            double effortToCompare = outerNode.getEffort();
+            for (LinearDissipator r : parentStarElements) {
+                try {
+                    outerNode = parentStarElements[bridgedConnectionIdx]
+                            .getOnlyOtherNode(starNode);
+                } catch (NoFlowThroughException ex) {
+                    throw new ModelErrorException("Unexpected non-flowthrough");
+                }
+                if (Math.abs(outerNode.getEffort() - effortToCompare) > 1e-6) {
+                    throw new CalculationException("Bridged nodes with "
+                            + "unacceptable effort difference detected.");
+                }
+            }
+        }
+        if (bridgedElements >= 1) {
+            // Copy the effort from one of the bridged nodes. We already 
+            // validated that they have same values in case it is more than
+            // one bridge. It is also possible that this is already calculated
+            // by the element itself as they can propagate the values.
+            if (!starNode.effortUpdated()) {
+                starNode.setEffort(
+                        parentStarNodes[bridgedConnectionIdx].getEffort(),
+                        parentStarElements[bridgedConnectionIdx], false);
+            }
+            return;
+        }
+        // We now need to calculate the effort value of the star node, this 
+        // will afterwards allow the parent network to solve everything.
+        // use generic formula like in starDeltaTransform. See comment there
+        // how this works.
+        double den = 0;
+        double num = 0;
+        double cond;
+        for (int idx = 0; idx < branches; idx++) {
+            cond = parentStarElements[idx].getConductance();
+            num += childPolygonNodes[idx].getEffort() * cond;
+            den += cond;
+        }
+        if (!starNode.effortUpdated()) {
+            starNode.setEffort(num / den, null, true);
+        } else {
+            if (Math.abs(num / den - starNode.getEffort()) > 1e-3) {
+                // throw new CalculationException("Validation of already set"
+                //         + " effort value failed.");
+                LOGGER.log(Level.WARNING, "Validation of already set" +
+                 "effort value in star-polygon failed.");
+            }
+        }
     }
 
     /**
@@ -468,7 +532,7 @@ public class StarPolygonTransform {
     public GeneralNode getStarNode(int idx) {
         return parentStarNodes[idx];
     }
-    
+
     public int getNumberOfBranches() {
         return branches;
     }

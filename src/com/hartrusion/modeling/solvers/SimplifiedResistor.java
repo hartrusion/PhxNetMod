@@ -52,6 +52,7 @@ import java.util.logging.Logger;
  * @author Viktor Alexander Hartung
  */
 public class SimplifiedResistor extends LinearDissipator {
+
     private static final Logger LOGGER = Logger.getLogger(
             SimplifiedResistor.class.getName());
 
@@ -222,8 +223,8 @@ public class SimplifiedResistor extends LinearDissipator {
             }
             if (bridgedParallel) {
                 if (numberOfShortcuts >= 2) {
-                    throw new ModelErrorException("Two parallel shortcuts can "
-                            + "not be provided with causal solution.");
+                    // throw new ModelErrorException("Two parallel shortcuts can "
+                    //        + "not be provided with causal solution.");
                 }
                 setBridgedConnection();
             } else if (allElementsOpen) {
@@ -263,7 +264,9 @@ public class SimplifiedResistor extends LinearDissipator {
     }
 
     /**
-     * Uses the
+     * Uses the calculated flow or effort from the resulting simplified resistor
+     * and applies the result to the parent resistors which were used to create
+     * this simplified one.
      *
      * @return
      */
@@ -291,10 +294,8 @@ public class SimplifiedResistor extends LinearDissipator {
         } else {
             if (Math.abs(parentNodes[0].getEffort() - nodes.get(0).getEffort())
                     > 1e-8) {
-                // throw new CalculationException("Validation of already set"
-                //         + " effort value failed.");
                 LOGGER.log(Level.WARNING, "Validation of already set effort"
-                            + " value failed.");
+                        + " value failed.");
             }
         }
         if (!parentNodes[1].effortUpdated()) {
@@ -302,20 +303,28 @@ public class SimplifiedResistor extends LinearDissipator {
         } else {
             if (Math.abs(parentNodes[1].getEffort() - nodes.get(1).getEffort())
                     > 1e-8) {
-                // throw new CalculationException("Validation of already set"
-                //        + " effort value failed.");
                 LOGGER.log(Level.WARNING, "Validation of already set effort"
-                            + " value failed.");
+                        + " value failed.");
             }
         }
         if (parallel) {
-            // that information is sufficient to calculate the flow through
-            // the resistors by using ohms law
-            for (LinearDissipator res : parentResistors) {
-                res.doCalculation();
+            if (numberOfShortcuts >= 1) {
+                // Distribute flow evenly across all bridged elements, 
+                // all other elements have no flow.
+                for (LinearDissipator res : parentResistors) {
+                    if (res.getElementType() == ElementType.BRIDGED) {
+                        res.setFlow(getFlow() / numberOfShortcuts, parallel);
+                    } else {
+                        res.setFlow(0.0, false);
+                    }
+                }
+            } else {
+                // that information is sufficient to calculate the flow through
+                // the resistors by using ohms law
+                for (LinearDissipator res : parentResistors) {
+                    res.doCalculation();
+                }
             }
-            // Todo: If there are parallel shortcuts only, the flow needs to be
-            // distributed evenly, while the effort is zero!
         } else { // series
             if (atLeastOneOpenElement) {
                 // Any open element will set the flow to 0 for all elements.

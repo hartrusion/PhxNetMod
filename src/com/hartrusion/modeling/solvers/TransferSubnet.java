@@ -35,6 +35,7 @@ import com.hartrusion.modeling.general.Dummy;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
+import com.hartrusion.modeling.exceptions.NoFlowThroughException;
 import com.hartrusion.modeling.general.FlowSource;
 import com.hartrusion.modeling.general.FlowThrough;
 import com.hartrusion.modeling.general.GeneralNode;
@@ -823,6 +824,28 @@ public class TransferSubnet extends LinearNetwork {
                     || le.getElementType() == ElementType.CAPACTIANCE
                     || le.getElementType() == ElementType.FLOWSOURCE) {
                 le.doCalculation();
+            }
+        }
+        // Dead-End-Nodes, which should not be there in a full network, will
+        // manually receive a flow of 0.0, this will also be transferred to the
+        // linked elements that way. Also copy the effort value.
+        for (GeneralNode n : nodes) {
+            if (n.getNumberOfElements() == 1) {
+                n.setFlow(0.0, n.getElement(0), false);
+            }
+            if (!n.effortUpdated()) {
+                if (n.getNumberOfElements() == 0) {
+                    n.setEffort(0.0); // at least priovide some sort of solution
+                    continue; // what is this even, only corrupt things here
+                }
+                try {
+                    targetNode = n.getElement(0).getOnlyOtherNode(n);
+                } catch (NoFlowThroughException ex) {
+                    targetNode = null;
+                }
+                if (targetNode != null) {
+                    n.setEffort(targetNode.getEffort());
+                }
             }
         }
         for (idx = 0; idx < linkedElements.size(); idx++) {

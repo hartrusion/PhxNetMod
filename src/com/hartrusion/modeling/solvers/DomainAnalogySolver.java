@@ -249,7 +249,7 @@ public class DomainAnalogySolver {
             if (e instanceof FlowThrough) {
                 if (e.getNumberOfNodes() != 2) {
                     throw new ModelErrorException("A flow-through element "
-                        + "with not exactly two nodes is illegal.");
+                            + "with not exactly two nodes is illegal.");
                 }
             }
         }
@@ -613,7 +613,6 @@ public class DomainAnalogySolver {
     }
 
     public boolean doCalculation() {
-        // boolean retVal = false;
         for (TransferSubnet ts : subnets) {
             ts.doCalculation();
         }
@@ -628,6 +627,34 @@ public class DomainAnalogySolver {
         }
         for (SimpleIterator si : nonLinearNets) {
             si.doCalculation();
+        }
+        // Dead-End-Nodes may not have a solution as there is nothing so far
+        // that would provide a solution at all, they might not even be 
+        // found and assigned to one of the solvers. Provide solutions for such
+        // dead end nodes here and set flow to the attached element to 0.0 
+        // manually. This can happen if a reservoir assembly is attached but
+        // nothing is connected to the primary inlet.
+        GeneralNode otherNode;
+        for (GeneralNode n : modelNodes) {
+            if (n.getNumberOfElements() == 1) {
+                n.setFlow(0.0, n.getElement(0), false);
+            }
+            if (!n.effortUpdated()) {
+                if (n.getNumberOfElements() == 0) {
+                    n.setEffort(0.0); // at least priovide some sort of solution
+                    continue; // what is this even, only corrupt things here
+                }
+                try {
+                    otherNode = n.getElement(0).getOnlyOtherNode(n);
+                } catch (NoFlowThroughException ex) {
+                    otherNode = null;
+                }
+                if (otherNode != null) { // copy value from this node here.
+                    if (otherNode.effortUpdated()) { // but only if possible.
+                        n.setEffort(otherNode.getEffort());
+                    }
+                }
+            }
         }
         lastIterator.doCalculation();
 
