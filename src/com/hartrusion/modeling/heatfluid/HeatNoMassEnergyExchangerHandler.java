@@ -146,7 +146,12 @@ public class HeatNoMassEnergyExchangerHandler implements HeatHandler,
         } else if (maxDeltaThis < 0.0 && maxDeltaOhter > 0.0) {
             fromThis = true;
         } else {
-            throw new CalculationException("Undefined energy flow direction");
+            // throw new CalculationException("Undefined energy flow direction");
+            // This can be triggered if there is equal temperatures and no 
+            // power transfer due to this.
+            setNoPowerTransfer();
+            otherSide.setNoPowerTransfer();
+            return true;
         }
         
         double transfEnergy = 0.99 * Math.min(Math.abs(maxDeltaThis),
@@ -184,6 +189,24 @@ public class HeatNoMassEnergyExchangerHandler implements HeatHandler,
             if (hn.getFlow((AbstractElement) element) < 0.0) {
                 hn.setTemperature(inTemp + deltaTemp,
                         (AbstractElement) element);
+                break;
+            }
+        }
+        calculationFinished = true;
+    }
+    
+    @Override
+    public void setNoPowerTransfer() {
+        double inTemp = 0.0;
+        for (HeatNode hn : heatNodes) { // get node by flow direction
+            if (hn.getFlow((AbstractElement) element) > 0.0) {
+                inTemp = hn.getTemperature((AbstractElement) element);
+                break;
+            }
+        }
+        for (HeatNode hn : heatNodes) { // get node by flow direction
+            if (hn.getFlow((AbstractElement) element) < 0.0) {
+                hn.setTemperature(inTemp, (AbstractElement) element);
                 break;
             }
         }

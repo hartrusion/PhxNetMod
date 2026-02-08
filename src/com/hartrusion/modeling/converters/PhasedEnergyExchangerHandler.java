@@ -54,6 +54,11 @@ public interface PhasedEnergyExchangerHandler {
     public void setPowerTransfer(double power);
 
     /**
+     * Sets that this element will not receive any power.
+     */
+    public void setNoPowerTransfer();
+
+    /**
      * Sets a reference to a handler that also implements this interface to
      * connect both handlers.
      *

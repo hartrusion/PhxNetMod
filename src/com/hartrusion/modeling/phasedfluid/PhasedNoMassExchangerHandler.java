@@ -143,7 +143,12 @@ public class PhasedNoMassExchangerHandler
         } else if (maxDeltaThis < 0.0 && maxDeltaOhter > 0.0) {
             fromThis = true;
         } else {
-            throw new CalculationException("Undefined energy flow direction");
+            // throw new CalculationException("Undefined energy flow direction");
+            // This can be triggered if there is equal temperatures and no 
+            // power transfer due to this.
+            setNoPowerTransfer();
+            otherSide.setNoPowerTransfer();
+            return true;
         }
         
         double transfEnergy = 0.99 * Math.min(Math.abs(maxDeltaThis),
@@ -204,6 +209,24 @@ public class PhasedNoMassExchangerHandler
             if (pn.getFlow((AbstractElement) element) < 0.0) {
                 pn.setHeatEnergy(inEnergy + deltaEnergy,
                         (AbstractElement) element);
+                break;
+            }
+        }
+        calculationFinished = true;
+    }
+    
+    @Override
+    public void setNoPowerTransfer() {
+        double inEnergy = 0.0;
+        for (PhasedNode pn : phasedNodes) { // get node by flow direction
+            if (pn.getFlow((AbstractElement) element) > 0.0) {
+                inEnergy = pn.getHeatEnergy((AbstractElement) element);
+                break;
+            }
+        }
+        for (PhasedNode pn : phasedNodes) { // get node by flow direction
+            if (pn.getFlow((AbstractElement) element) < 0.0) {
+                pn.setHeatEnergy(inEnergy, (AbstractElement) element);
                 break;
             }
         }
