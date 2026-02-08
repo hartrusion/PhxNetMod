@@ -72,5 +72,7 @@ public interface PhasedEnergyExchangerHandler {
      * @return K
      */
     public double getInTemperature();
+    
+    public void setEfficency(double efficiency);
 
 }

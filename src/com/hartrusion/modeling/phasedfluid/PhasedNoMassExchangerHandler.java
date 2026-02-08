@@ -62,6 +62,8 @@ public class PhasedNoMassExchangerHandler
      * calculation run for both sides.
      */
     private boolean calculationFinished;
+    
+    private double efficiency = 1.0;
 
     PhasedNoMassExchangerHandler(PhasedFluidProperties fluidProperties,
             PhasedElement parent) {
@@ -151,7 +153,7 @@ public class PhasedNoMassExchangerHandler
             return true;
         }
         
-        double transfEnergy = 0.99 * Math.min(Math.abs(maxDeltaThis),
+        double transfEnergy = efficiency * Math.min(Math.abs(maxDeltaThis),
                 Math.abs(maxDeltaOhter));
         if (fromThis) {
             setPowerTransfer(-transfEnergy);
@@ -322,5 +324,10 @@ public class PhasedNoMassExchangerHandler
     @Override
     public void setOtherSide(PhasedEnergyExchangerHandler otherSide) {
         this.otherSide = otherSide;
+    }
+    
+    @Override
+    public void setEfficency(double efficiency) {
+        this.efficiency = efficiency;
     }
 }

@@ -59,7 +59,7 @@ public class HeatNoMassEnergyExchangerHandler implements HeatHandler,
      */
     private double specHeatCap = 4186;
 
-    private double ntu = 0.9;
+    private double efficiency = 1.0;
 
     /**
      * Marks the calculation state as finished, this is faster than checking a
@@ -154,7 +154,7 @@ public class HeatNoMassEnergyExchangerHandler implements HeatHandler,
             return true;
         }
         
-        double transfEnergy = 0.99 * Math.min(Math.abs(maxDeltaThis),
+        double transfEnergy = efficiency * Math.min(Math.abs(maxDeltaThis),
                 Math.abs(maxDeltaOhter));
         if (fromThis) {
             setPowerTransfer(-transfEnergy);
@@ -302,6 +302,11 @@ public class HeatNoMassEnergyExchangerHandler implements HeatHandler,
     @Override
     public void setOtherSide(PhasedEnergyExchangerHandler otherSide) {
         this.otherSide = otherSide;
+    }
+    
+    @Override
+    public void setEfficency(double efficiency) {
+        this.efficiency = efficiency;
     }
 
 }
