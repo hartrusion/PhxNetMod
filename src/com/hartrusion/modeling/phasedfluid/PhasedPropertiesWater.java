@@ -51,14 +51,14 @@ public class PhasedPropertiesWater implements
 
     @Override
     public double getSaturationEffort(double temperature) {
-        return 1e5 * Math.pow((temperature - 273.5) / 100.0, 4.0);
+        return 1e5 * Math.pow((temperature - 273.15) / 100.0, 4.0);
     }
 
     @Override
     public double getSaturationTemperature(double effortValue) {
         // Temperature = 4th root of pressure times 100 with
         // pressure in bar and temperature in °C
-        return 100.0 * Math.pow(effortValue * 1e-5, 0.25) + 273.5;
+        return 100.0 * Math.pow(effortValue * 1e-5, 0.25) + 273.15;
     }
 
     @Override
