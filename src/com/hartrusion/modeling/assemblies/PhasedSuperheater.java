@@ -29,9 +29,6 @@ import com.hartrusion.modeling.general.ClosedOrigin;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
-import com.hartrusion.modeling.heatfluid.HeatNoMassEnergyExchangerResistance;
-import com.hartrusion.modeling.heatfluid.HeatNode;
-import com.hartrusion.modeling.heatfluid.HeatThermalExchanger;
 import com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoir;
 import com.hartrusion.modeling.phasedfluid.PhasedElement;
 import com.hartrusion.modeling.phasedfluid.PhasedFluidProperties;
@@ -50,7 +47,7 @@ import com.hartrusion.modeling.phasedfluid.PhasedThermalVolumeHandler;
  */
 public class PhasedSuperheater {
 
-    private final PhasedThermalExchanger secondarySideReservoir;
+    private final PhasedThermalExchanger secondaryReservoirLoop;
     private final PhasedNoMassExchangerElement secondarySideCondenser;
     private final PhasedNoMassExchangerElement primarySideCondenser;
     private final PhasedClosedSteamedReservoir primarySideReservoir;
@@ -86,7 +83,7 @@ public class PhasedSuperheater {
 
     public PhasedSuperheater(PhasedFluidProperties fluidProperties) {
         // Generate elements that require the PhasedFluidProperties
-        secondarySideReservoir
+        secondaryReservoirLoop
                 = new PhasedThermalExchanger(fluidProperties);
         secondarySideCondenser
                 = new PhasedNoMassExchangerElement(fluidProperties);
@@ -113,23 +110,36 @@ public class PhasedSuperheater {
         // connect the thermal network to the elements
         primaryReservoirHandler.setThermalEffortSource(
                 primaryReservoirTemperature);
-        secondarySideReservoir.setInnerThermalEffortSource(
+        // As the primary primaryReservoirHandler was called and not the element
+        // itself, we manually need to set the coupled element for the solver.
+        primarySideReservoir.setCoupledElement(primaryReservoirTemperature);
+        // This call here does call the setCoupledElement:
+        secondaryReservoirLoop.setInnerThermalEffortSource(
                 secondaryTemperature);
 
-        // connect both primary side and secondary sides elements
+        // connect both primary side and secondary sides elements. This will 
+        // occupy node index 0 on all 4 elements.
         primarySideCondenser.connectToVia(
                 primarySideReservoir, primaryInnerNode);
         secondarySideCondenser.connectToVia(
-                secondarySideReservoir, secondaryInnerNode);
+                secondaryReservoirLoop, secondaryInnerNode);
 
-        // link both no-mass sides (a cast must be possible here)
+        // link both no-mass sides (a cast must be possible here) handlers so
+        // they can exchange the heat energy.
         primarySideCondenser.setOtherSide(
-                (PhasedEnergyExchangerHandler) secondarySideCondenser.getPhasedHandler());
+                (PhasedEnergyExchangerHandler) secondarySideCondenser
+                        .getPhasedHandler());
         secondarySideCondenser.setOtherSide(
-                (PhasedEnergyExchangerHandler) primarySideCondenser.getPhasedHandler());
+                (PhasedEnergyExchangerHandler) primarySideCondenser
+                        .getPhasedHandler());
 
-        primarySideCondenser.setCoupledElement(secondarySideCondenser);
-        secondarySideCondenser.setCoupledElement(primarySideCondenser);
+        // Some shortcut for the solver
+        //primarySideCondenser.setCoupledElement(secondarySideCondenser);
+        //secondarySideCondenser.setCoupledElement(primarySideCondenser);
+
+        // Use an efficiency value of 1.0 for 100 % energy transfer
+        ((PhasedEnergyExchangerHandler) primarySideCondenser.getPhasedHandler()).setEfficency(1.0);
+        ((PhasedEnergyExchangerHandler) secondarySideCondenser.getPhasedHandler()).setEfficency(1.0);
     }
 
     /**
@@ -146,7 +156,7 @@ public class PhasedSuperheater {
             double ambientPressure) {
         primarySideReservoir.setBaseArea(primaryBaseArea);
         primarySideReservoir.setAmbientPressure(ambientPressure);
-        secondarySideReservoir.getPhasedHandler().setInnerHeatedMass(secondaryMass);
+        secondaryReservoirLoop.getPhasedHandler().setInnerHeatedMass(secondaryMass);
         thermalFlowReservoirResistance.setConductanceParameter(kTimesA);
     }
 
@@ -176,7 +186,7 @@ public class PhasedSuperheater {
         node = new PhasedNode();
         secondarySideCondenser.connectTo(node);
         node = new PhasedNode();
-        secondarySideReservoir.connectTo(node);
+        secondaryReservoirLoop.connectTo(node);
     }
 
     /**
@@ -193,8 +203,8 @@ public class PhasedSuperheater {
                 name + "PrimarySideReservoir");
         secondarySideCondenser.setName(
                 name + "SecondarySideCondenser");
-        secondarySideReservoir.setName(
-                name + "SecondarySideReservoir");
+        secondaryReservoirLoop.setName(
+                name + "SecondaryReservoirLoop");
         if (nodesGenerated) {
             getPhasedNode(PRIMARY_IN).setName(
                     name + "PrimaryIn");
@@ -223,7 +233,7 @@ public class PhasedSuperheater {
         thermalFlowReservoirResistance.setName(
                 name + "ThermalFlowReservoirResistance");
     }
-    
+
     /**
      * Sets the fluid temperature on both sides (initial condition). This also
      * sets the pressure on the primary side.
@@ -236,9 +246,9 @@ public class PhasedSuperheater {
      * @param primaryTemp in Kelvin
      * @param secondaryHeatEnergy Energy in the mass of the secondary reservoir.
      * @param fillHeight fill level of the primary reservoir (meters)
-     * @param secondaryPressure pressure of the secondary loop (needed to get 
+     * @param secondaryPressure pressure of the secondary loop (needed to get
      * the temperature out of the secondaryHeatEnergy value).
-     * 
+     *
      */
     public void initConditions(double primaryTemp, double secondaryHeatEnergy,
             double fillHeight, double secondaryPressure) {
@@ -258,9 +268,9 @@ public class PhasedSuperheater {
         primaryReservoirHandler.setInitialHeatEnergy(
                 primaryTemp * fp.getSpecificHeatCapacity());
         primarySideReservoir.setInitialEffort(pressure);
-        secondarySideReservoir.getPhasedHandler().setInitialHeatEnergy(
+        secondaryReservoirLoop.getPhasedHandler().setInitialHeatEnergy(
                 secondaryHeatEnergy);
-        ((PhasedThermalVolumeHandler) secondarySideReservoir.getPhasedHandler())
+        ((PhasedThermalVolumeHandler) secondaryReservoirLoop.getPhasedHandler())
                 .setPreviousPressure(secondaryPressure);
         primarySideReservoir.setInitialState(
                 primarySideReservoir.getMassForHeight(fillHeight, primaryTemp),
@@ -282,15 +292,15 @@ public class PhasedSuperheater {
             case PRIMARY_INNER:
                 return primaryInnerNode;
             case SECONDARY_IN:
-                return (PhasedNode) secondarySideCondenser.getNode(1);
+                return (PhasedNode) secondaryReservoirLoop.getNode(1);
             case SECONDARY_OUT:
-                return (PhasedNode) secondarySideReservoir.getNode(1);
+                return (PhasedNode) secondarySideCondenser.getNode(1);
             case SECONDARY_INNER:
                 return secondaryInnerNode;
         }
         return null;
     }
-    
+
     public PhasedNoMassExchangerElement getPrimarySideCondenser() {
         return primarySideCondenser;
     }
@@ -300,14 +310,14 @@ public class PhasedSuperheater {
     }
 
     public PhasedThermalExchanger getSecondarySideReservoir() {
-        return secondarySideReservoir;
+        return secondaryReservoirLoop;
     }
-    
+
     public PhasedNoMassExchangerElement getSecondarysideCondenser() {
         return secondarySideCondenser;
     }
-    
-   /**
+
+    /**
      * Gets the mass flow into the primary condenser. Positive means it goes
      * into the condenser (expected behavior).
      *
