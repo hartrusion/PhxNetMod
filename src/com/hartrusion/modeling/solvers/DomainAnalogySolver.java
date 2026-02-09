@@ -637,7 +637,7 @@ public class DomainAnalogySolver {
         GeneralNode otherNode;
         for (GeneralNode n : modelNodes) {
             if (n.getNumberOfElements() == 1) {
-                n.setFlow(0.0, n.getElement(0), false);
+                n.setFlow(0.0, n.getElement(0), true);
             }
             if (!n.effortUpdated()) {
                 if (n.getNumberOfElements() == 0) {

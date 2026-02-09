@@ -131,7 +131,7 @@ import static com.hartrusion.util.ArraysExt.*;
  * @author Viktor Alexander Hartung
  */
 public class TransferSubnet extends LinearNetwork {
-    
+
     private static final Logger LOGGER = Logger.getLogger(
             TransferSubnet.class.getName());
 
@@ -831,7 +831,7 @@ public class TransferSubnet extends LinearNetwork {
         // linked elements that way. Also copy the effort value.
         for (GeneralNode n : nodes) {
             if (n.getNumberOfElements() == 1) {
-                n.setFlow(0.0, n.getElement(0), false);
+                n.setFlow(0.0, n.getElement(0), true);
             }
             if (!n.effortUpdated()) {
                 if (n.getNumberOfElements() == 0) {
@@ -850,6 +850,34 @@ public class TransferSubnet extends LinearNetwork {
         }
         for (idx = 0; idx < linkedElements.size(); idx++) {
             if (!isTransferable[idx]) {
+                // Fixing more bad networks: Check if the element is 
+                // also connected to a deadend node. This would not get the 0.0
+                // flow transfered as we can't cast this.
+                if (linkedElements.get(idx) instanceof FlowThrough) {
+                    if (linkedElements.get(idx)
+                            .getNode(0).getNumberOfElements() == 1
+                            || linkedElements.get(idx)
+                                    .getNode(1).getNumberOfElements() == 1) {
+                        // If one end is a dead-end, make sure both nodes
+                        // have a 0.0 flow torwards that element. Check if the
+                        // flow towards that element is updated, if not, set it
+                        // to 0.0 manually.
+                        if (!linkedElements.get(idx)
+                                .getNode(0).flowUpdated(
+                                linkedElements.get(idx))) {
+                            linkedElements.get(idx)
+                                    .getNode(0).setFlow(0.0,
+                                    linkedElements.get(idx), true);
+                        }
+                        if (!linkedElements.get(idx)
+                                .getNode(1).flowUpdated(
+                                linkedElements.get(idx))) {
+                            linkedElements.get(idx)
+                                    .getNode(1).setFlow(0.0,
+                                    linkedElements.get(idx), true);
+                        }
+                    }
+                }
                 continue;
             }
             sourceElement = (LinearDissipator) elements.get(idx);
