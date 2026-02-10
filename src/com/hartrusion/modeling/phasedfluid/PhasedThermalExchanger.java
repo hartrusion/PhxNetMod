@@ -26,6 +26,7 @@ package com.hartrusion.modeling.phasedfluid;
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.assemblies.PhasedCondenser;
+import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.FlowThrough;
 import com.hartrusion.modeling.general.GeneralNode;
@@ -36,10 +37,10 @@ import com.hartrusion.modeling.general.OpenOrigin;
  * energy to a thermal system. Commonly used as one side of a heat exchanger
  * system.
  * <p>
- * As the thermal network that is connected to this element is transferring 
- * temperature, not heat energy, a pressure value has to be managed and passed 
- * to the handler so the temperature without the evaporation energy part can 
- * be calculated and used.
+ * As the thermal network that is connected to this element is transferring
+ * temperature, not heat energy, a pressure value has to be managed and passed
+ * to the handler so the temperature without the evaporation energy part can be
+ * calculated and used.
  *
  * @author Viktor Alexander Hartung
  */
@@ -51,12 +52,12 @@ public class PhasedThermalExchanger extends FlowThrough
     private OpenOrigin thermalOrigin;
     private EffortSource thermalEffortSource;
     private GeneralNode thermalNode;
-    
+
     private boolean previousPressureSet;
-    
+
     /**
      * A reference to a condenser assembly that uses this element. This is used
-     * to have the prepareCalculation call on the assembly as this will set 
+     * to have the prepareCalculation call on the assembly as this will set
      * different resistances there.
      */
     private PhasedCondenser externalPhasedCondenserAssembly;
@@ -96,7 +97,7 @@ public class PhasedThermalExchanger extends FlowThrough
         if (thermalOrigin != null) {
             didSomething = thermalOrigin.doCalculation();
         }
-        
+
         if (!previousPressureSet) {
             if (getNode(0).effortUpdated()) {
                 phasedHandler.setPreviousPressure(getNode(0).getEffort());
@@ -258,6 +259,24 @@ public class PhasedThermalExchanger extends FlowThrough
     @Override
     public PhasedFluidProperties getPhasedFluidProperties() {
         return phasedHandler.getPhasedFluidProperties();
+    }
+
+    /**
+     * Returns the current temperature of the fluid inside the volume.
+     *
+     * @return
+     */
+    public double getTemperature() {
+        if (getNode(0).effortUpdated()) {
+            return phasedHandler.getPhasedFluidProperties().getTemperature(
+                    phasedHandler.getHeatEnergy(), getNode(0).getEffort());
+        } else if (getNode(1).effortUpdated()) {
+            return phasedHandler.getPhasedFluidProperties().getTemperature(
+                    phasedHandler.getHeatEnergy(), getNode(0).getEffort());
+        }
+        throw new ModelErrorException(
+                    "None of both nodes is in required updated state for "
+                            + "this operation.");
     }
 
 }
