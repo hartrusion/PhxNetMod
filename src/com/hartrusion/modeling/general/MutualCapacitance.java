@@ -49,7 +49,7 @@ import com.hartrusion.modeling.PhysicalDomain;
  */
 public class MutualCapacitance extends Capacitance {
     
-    MutualCapacitance(PhysicalDomain domain) {
+    public MutualCapacitance(PhysicalDomain domain) {
         super(domain);
     }
 

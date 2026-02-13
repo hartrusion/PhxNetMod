@@ -30,7 +30,7 @@
  *
  * <pre>
  *            Effort     Flow        Capacitance  Inductance     Dissipator
- * Mechanic   Force      Velocity    Spring       Mass           Dampener
+ * Mechanic   Velocity   Force       Mass         Spring         Dampener
  * Hydraulic  Pressure   Volume flow Tank         Long Pipe      Press. Drop
  * Electric   Voltage    Current     Capacitor    Coil           Resistor
  * Thermal    Temp.      Heat flow   Mass         n/a            Heat transfer
