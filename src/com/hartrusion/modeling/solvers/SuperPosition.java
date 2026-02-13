@@ -71,6 +71,8 @@ public class SuperPosition extends LinearNetwork {
     private static final Logger LOGGER = Logger.getLogger(
             SuperPosition.class.getName());
 
+    private static final boolean USE_OVERLAY = true;
+
     /**
      * Holds references for all created nodes on all layers. [layer
      * number][index in nodes list]. The array has paired nodes to the nodes
@@ -106,7 +108,18 @@ public class SuperPosition extends LinearNetwork {
     /**
      * Reference to overlays which were created by this superposition algorithm.
      */
-    private Overlay[] layer;
+    private Overlay[] layerOverlay;
+
+    /**
+     * Recursive solvers if no overlay is used
+     */
+    private RecursiveSimplifier[] layerRecursive;
+
+    /**
+     * Can be either overlay or recursive simplifier, this is a reference to the
+     * base class when common methods of that base class are used.
+     */
+    private LinearNetwork[] layer;
 
     /**
      * Saves the index for elements.get(index) for each layer[layer-number].
@@ -192,8 +205,14 @@ public class SuperPosition extends LinearNetwork {
             } // end for jdx elements
         } // end for idx layers
 
-        for (idx = 0; idx < numberOfSources; idx++) {
-            layer[idx].prepareCalculation();
+        if (USE_OVERLAY) {
+            for (idx = 0; idx < numberOfSources; idx++) {
+                layerOverlay[idx].prepareCalculation();
+            }
+        } else {
+            for (idx = 0; idx < numberOfSources; idx++) {
+                layerRecursive[idx].prepareRecursiveCalculation();
+            }
         }
     }
 
@@ -243,11 +262,20 @@ public class SuperPosition extends LinearNetwork {
             }
 
         } else {
-            for (idx = 0; idx < numberOfSources; idx++) {
-                if (!zeroValue[idx]) {
-                    layer[idx].doCalculation();
+            if (USE_OVERLAY) {
+                for (idx = 0; idx < numberOfSources; idx++) {
+                    if (!zeroValue[idx]) {
+                        layerOverlay[idx].doCalculation();
+                    }
+                }
+            } else {
+                for (idx = 0; idx < numberOfSources; idx++) {
+                    if (!zeroValue[idx]) {
+                        layerRecursive[idx].doRecursiveCalculation();
+                    }
                 }
             }
+
         }
 
         for (idx = 0; idx < numberOfSources; idx++) {
@@ -387,7 +415,13 @@ public class SuperPosition extends LinearNetwork {
                 = new boolean[numberOfSources][elements.size()];
         layerElementReplacedFlowSource
                 = new boolean[numberOfSources][elements.size()];
-        layer = new Overlay[numberOfSources];
+        if (USE_OVERLAY) {
+            layerOverlay = new Overlay[numberOfSources];
+        } else {
+            layerRecursive = new RecursiveSimplifier[numberOfSources];
+        }
+        layer = new LinearNetwork[numberOfSources];
+
         soleSource = new int[numberOfSources];
         layerCalculationCallables = new ArrayList<>(numberOfSources);
         zeroValue = new boolean[numberOfSources];
@@ -409,7 +443,13 @@ public class SuperPosition extends LinearNetwork {
 
         // generate one full network for each source.
         for (idx = 0; idx < numberOfSources; idx++) {
-            layer[idx] = new Overlay();
+            if (USE_OVERLAY) {
+                layerOverlay[idx] = new Overlay();
+                layer[idx] = layerOverlay[idx];
+            } else {
+                layerRecursive[idx] = new RecursiveSimplifier();
+                layer[idx] = layerRecursive[idx];
+            }
 
             // generate the nodes
             for (jdx = 0; jdx < nodes.size(); jdx++) {
@@ -494,25 +534,38 @@ public class SuperPosition extends LinearNetwork {
 
             // connect elements as they are connected in original network
             for (jdx = 0; jdx < elements.size(); jdx++) {
-                layerElement[idx][jdx].registerNode(layerNodes[idx][node0idx[jdx]]);
+                layerElement[idx][jdx].registerNode(
+                        layerNodes[idx][node0idx[jdx]]);
                 layerNodes[idx][node0idx[jdx]].registerElement(
                         layerElement[idx][jdx]);
                 if (node1idx[jdx] >= 0) {
-                    layerElement[idx][jdx].registerNode(layerNodes[idx][node1idx[jdx]]);
+                    layerElement[idx][jdx].registerNode(
+                            layerNodes[idx][node1idx[jdx]]);
                     layerNodes[idx][node1idx[jdx]].registerElement(
                             layerElement[idx][jdx]);
                 }
             }
 
-            // add those connected elements to overlay
-            for (jdx = 0; jdx < elements.size(); jdx++) {
-                layer[idx].registerElement(layerElement[idx][jdx],
-                        layerElementReplacedFlowSource[idx][jdx],
-                        layerElementReplacedEffortSource[idx][jdx]);
+            if (USE_OVERLAY) {
+                // add those connected elements to overlay
+                for (jdx = 0; jdx < elements.size(); jdx++) {
+                    layerOverlay[idx].registerElement(layerElement[idx][jdx],
+                            layerElementReplacedFlowSource[idx][jdx],
+                            layerElementReplacedEffortSource[idx][jdx]);
+                }
+
+                // simplify layers to prepare solving
+                layerOverlay[idx].overlaySetup();
+            } else {
+                // add those connected elements to overlay
+                for (jdx = 0; jdx < elements.size(); jdx++) {
+                    layerRecursive[idx].registerElement(layerElement[idx][jdx]);
+                }
+
+                // simplify layers to prepare solving
+                layerRecursive[idx].recursiveSimplificationSetup(0);
             }
 
-            // simplify layers to prepare solving
-            layer[idx].overlaySetup();
         } // end for idx all layers
 
         LOGGER.log(Level.INFO, "... SuperPosition set up with "
