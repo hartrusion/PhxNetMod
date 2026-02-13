@@ -48,7 +48,7 @@ import com.hartrusion.modeling.PhysicalDomain;
  *
  * <p>
  * As the number of elements will be the same for each layer and the layers
- * match the base network, everything is organzied in two-dimensional array
+ * match the base network, everything is organized in two-dimensional array
  * instead of lists as it will be quite static and predictable. Each layer is a
  * network extended to simplification class to provide solving methods for each
  * layer.
@@ -61,7 +61,7 @@ import com.hartrusion.modeling.PhysicalDomain;
  * another layer to make some simplifications by manipulating the model by
  * removing the replaced sources instead of replacing them. It was decided to
  * keep this class as it is as it is tested and working, that is why the sources
- * which will not be needed in one layer are still beeing created, even though
+ * which will not be needed in one layer are still being created, even though
  * they will be deleted in next step. This step was just added later.
  *
  * @author Viktor Alexander Hartung
@@ -147,10 +147,12 @@ public class SuperPosition extends LinearNetwork {
 
     int numberOfSources = 0;
 
+    private boolean[] deviationErrorOccured;
+
     /**
-     * Transfers all prameters from this network to all layer networks. This
+     * Transfers all parameters from this network to all layer networks. This
      * will update all resistance values, transfering a new state of the network
-     * throug all childs of the simplification later on. Used to prepare for a
+     * through all childs of the simplification later on. Used to prepare for a
      * new calculation cycle.
      */
     @Override
@@ -373,8 +375,13 @@ public class SuperPosition extends LinearNetwork {
                 // if (flow > 1e-11 || flow < -1e-11) {
                 // with growing model, it was set to 1e-2. This is not good.
                 if (flow > 1e-3 || flow < -1e-3) {
-                    LOGGER.log(Level.WARNING,
-                            "High deviation on expected flow sum on node.");
+                    if (!deviationErrorOccured[nodes.indexOf(p)]) {
+                        LOGGER.log(Level.WARNING,
+                                "High deviation on expected flow sum on node.");
+                        deviationErrorOccured[nodes.indexOf(p)] = true;
+                    }
+                } else { 
+                    deviationErrorOccured[nodes.indexOf(p)] = false;
                 }
             } else {
                 LOGGER.log(Level.WARNING,
@@ -425,6 +432,7 @@ public class SuperPosition extends LinearNetwork {
         soleSource = new int[numberOfSources];
         layerCalculationCallables = new ArrayList<>(numberOfSources);
         zeroValue = new boolean[numberOfSources];
+        deviationErrorOccured = new boolean[nodes.size()];
 
         idx = 0;
         for (AbstractElement e : elements) {
