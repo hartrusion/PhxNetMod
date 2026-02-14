@@ -349,6 +349,7 @@ public class DomainAnalogySolver {
         List<GeneralNode> foundNodes = new ArrayList<>();
         boolean allElementsLinear = true;
         boolean closedCircuit = true;
+        boolean noEnergySavingElements = true;
         int numberOfSources = 0;
         // boolean containsExpansionElement;
         boolean expansionPathFound;
@@ -446,14 +447,18 @@ public class DomainAnalogySolver {
             // Determine if this is a closed circuit without energy saving
             // elements. Such can be solved directly with a SuperPosition 
             // solver without the need of the TransferSubnet solver.
-            if (e.getElementType() == ElementType.CAPACTIANCE
-                    || e.getElementType() == ElementType.ENFORCER
-                    || e.getElementType() == ElementType.INDUCTANCE
+            if (e.getElementType() == ElementType.ENFORCER
+                    || e instanceof SelfCapacitance
                     || e instanceof OpenOrigin
                     || e instanceof SteamIsobaricIsochoricEvaporator
                     || e instanceof PhasedExpandingThermalExchanger) {
                 closedCircuit = false;
             }
+            if (e.getElementType() == ElementType.CAPACTIANCE
+                    || e.getElementType() == ElementType.INDUCTANCE) {
+                noEnergySavingElements = false;
+            }
+            
             if (e.getElementType() == ElementType.FLOWSOURCE
                     || e.getElementType() == ElementType.EFFORTSOURCE) {
                 numberOfSources++;
@@ -576,7 +581,11 @@ public class DomainAnalogySolver {
             }
             // </editor-fold>
 
-        } else if (allElementsLinear && closedCircuit) {
+        } else if (allElementsLinear && closedCircuit 
+                && noEnergySavingElements) {
+            // Networks that can be solved by superposition solver will be added
+            // to that solver type directly without the use of any transfer type
+            // layer.
             sp = new SuperPosition();
             for (GeneralNode fn : foundNodes) {
                 sp.registerNode(fn);
