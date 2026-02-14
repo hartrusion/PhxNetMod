@@ -68,8 +68,19 @@ public class PhasedThermalVolumeHandler extends PhasedAbstractVolumizedHandler {
         super.preparePhasedCalculation();
         // Set the temperature as effort on the temperature source, making the 
         // connection between the two domains.
-        thermalSource.setEffort(
-                fluidProperties.getTemperature(heatEnergy, previousPressure));
+        if (previousPressure >= 0.0) {
+            thermalSource.setEffort(
+                    fluidProperties.getTemperature(
+                            heatEnergy, previousPressure));
+        } else {
+            // This should not happen but due to some numeric issues a negative
+            // pressure could happen, resulting in some total corrupt value. 
+            // to not crash at this point, we set a value of 0.0 which is 
+            // absolute zero.
+            thermalSource.setEffort(
+                    fluidProperties.getTemperature(
+                            heatEnergy, 0.0));
+        }
     }
 
     @Override
