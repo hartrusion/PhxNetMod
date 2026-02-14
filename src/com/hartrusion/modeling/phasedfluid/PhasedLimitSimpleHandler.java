@@ -114,6 +114,16 @@ public class PhasedLimitSimpleHandler implements PhasedHandler {
             if (!inNode.heatEnergyUpdated((AbstractElement) element)) {
                 return didSomething; // nothing to do if this is unknown yet
             }
+            
+            if (inNode.noHeatEnergy((AbstractElement) element)) {
+                // Problem: There might be no heat energy set even with a set 
+                // flow direction, this is a result of numeric calculation 
+                // errors and a failure to detect them. In this case, we just
+                // propagate the no-energy state to keep the model running.
+                outNode.setNoHeatEnergy((AbstractElement) element);
+                return true;
+            }
+                  
             inHeatEnergy = inNode.getHeatEnergy((AbstractElement) element);
 
             // Calculate the heat energy for the out node for a given 
