@@ -394,10 +394,10 @@ public class GeneralNode {
     public AbstractElement getElement(int idx) {
         return connectedElements.get(idx);
     }
-    
+
     /**
      * Checks if a provided element is registered to this node.
-     * 
+     *
      * @param e AbstractElement to check
      * @return true, if the provided Element is registered at this node.
      */
@@ -427,6 +427,26 @@ public class GeneralNode {
         }
         idx = -idx + 1; // switch 0 and 1
         return connectedElements.get(idx);
+    }
+
+    /**
+     * Sums up the flow values from this node and returns the sum of the flows
+     * from this node. This must be 0.0, however, when not all flows are updated
+     * the value will return 0 as a calculation is not yet possible.
+     * <p>
+     * Used to validate solver results.
+     *
+     * @return Difference - positive: Goes out of the node.
+     */
+    public double getFlowSum() {
+        if (!allFlowsUpdated()) {
+            return 0.0;
+        }
+        double flowSum = 0.0;
+        for (FlowProperties fp : flowToElements) {
+           flowSum += fp.getFlowValue();
+        }
+        return flowSum;
     }
 }
 
