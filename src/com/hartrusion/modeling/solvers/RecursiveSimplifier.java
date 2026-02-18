@@ -1170,6 +1170,8 @@ public class RecursiveSimplifier extends ChildNetwork {
         if (!isCalculationFinished()) {
             LOGGER.log(Level.WARNING, "Network solving not finished "
                     + "on child layer no. " + childLayer);
+        } else {
+            validateNetworkCalulation();
         }
     }
 }

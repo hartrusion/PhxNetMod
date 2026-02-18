@@ -29,6 +29,9 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.general.GeneralNode;
+import static com.hartrusion.util.ArraysExt.newArrayLength;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Describes a network of linear components for network analysis.
@@ -57,6 +60,9 @@ import com.hartrusion.modeling.general.GeneralNode;
  * @author Viktor Alexander Hartung
  */
 public abstract class LinearNetwork {
+
+    private static final Logger LOGGER = Logger.getLogger(
+            LinearNetwork.class.getName());
 
     /**
      * Initial size for arrays. Smaller arrays will not get resized
@@ -94,7 +100,7 @@ public abstract class LinearNetwork {
     private int numberOfNodes = 0, numberOfElements = 0, numberOfOrigins = 0;
 
     public LinearNetwork() {
-        node0idx = new int[INIT_ARRAY_SIZE];
+        node0idx = new int[1];
         node1idx = new int[INIT_ARRAY_SIZE];
     }
 
@@ -185,14 +191,8 @@ public abstract class LinearNetwork {
             }
 
             // keep track of node0/node1 array size
-            if (node0idx.length <= elements.size()) {
-                int[] node2idx = new int[node0idx.length + 1];
-                System.arraycopy(node0idx, 0, node2idx, 0, node0idx.length);
-                node0idx = node2idx;
-                int[] node3idx = new int[node1idx.length + 1];
-                System.arraycopy(node1idx, 0, node3idx, 0, node1idx.length);
-                node1idx = node3idx;
-            }
+            node0idx = newArrayLength(node0idx, elements.size() + 1);
+            node1idx = newArrayLength(node1idx, elements.size() + 1);
 
             if (e.getElementType() == ElementType.CAPACTIANCE
                     || e.getElementType() == ElementType.INDUCTANCE) {
@@ -267,6 +267,19 @@ public abstract class LinearNetwork {
      */
     public AbstractElement getElement(int index) {
         return elements.get(index);
+    }
+
+    /**
+     * Validates the networks calculation, if errors are found, a warning will
+     * be logged.
+     */
+    public void validateNetworkCalulation() {
+        for (GeneralNode n : nodes) {
+            if (Math.abs(n.getFlowSum()) > 1e-6) {
+                LOGGER.log(Level.WARNING, "High flow sum error on node "
+                        + n.toString() + " of " + n.getFlowSum());
+            }
+        }
     }
 
     /**
