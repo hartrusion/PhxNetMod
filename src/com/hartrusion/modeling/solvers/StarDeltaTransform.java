@@ -412,7 +412,9 @@ public class StarDeltaTransform {
                 avgStarEffort += parentStarNodes[idx].getEffort();
             }
             avgStarEffort = avgStarEffort / 3;
-            starNode.setEffort(avgStarEffort, parentStarElements[0], true);
+            if (!starNode.effortUpdated()) { // parent can already set this.
+                starNode.setEffort(avgStarEffort, parentStarElements[0], true);
+            }
             for (idx = 0; idx < 3; idx++) {
                 parentStarElements[idx].setFlow(0, starNode);
                 starNode.setFlow(0, parentStarElements[idx], true);
