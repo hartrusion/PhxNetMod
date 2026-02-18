@@ -34,11 +34,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
+ * Specialized tests that trigger the TwoSeriesSolver class in the
+ * RecursiveSimplifier solver class.
  *
  * @author Viktor Alexander Hartung
  */
 public class TwoSeriesSolverTest {
-    
+
     @BeforeClass
     public static void setUpClass() throws Exception {
         // Keep Log out clean during test run
@@ -103,17 +105,19 @@ public class TwoSeriesSolverTest {
         // A special solver is needed for this circuit. Usually this is
         // selected automatically by the solving network but we will add
         // it here manually, since no network solver is used.
-        TwoSeriesSolver solver = new TwoSeriesSolver();
-        solver.addElement(z);
-        solver.addElement(u);
-        solver.addElement(r1);
-        solver.addElement(r2);
+        RecursiveSimplifier solver = new RecursiveSimplifier();
+        solver.registerNode(p0);
+        solver.registerNode(p1);
+        solver.registerNode(p2);
+        solver.registerElement(z);
+        solver.registerElement(u);
+        solver.registerElement(r1);
+        solver.registerElement(r2);
+        
+        solver.recursiveSimplificationSetup(0);
 
-        r1.prepareCalculation();
-        r2.prepareCalculation();
-        u.prepareCalculation();
-
-        solver.solve();
+        solver.prepareCalculation();
+        solver.doRecursiveCalculation();
 
         // calculation must be finished
         assertEquals(u.isCalculationFinished(), true);
@@ -174,17 +178,19 @@ public class TwoSeriesSolverTest {
         // A special solver is needed for this circuit. Usually this is
         // selected automatically by the solving network but we will add
         // it here manually, since no network solver is used.
-        TwoSeriesSolver solver = new TwoSeriesSolver();
-        solver.addElement(z);
-        solver.addElement(u);
-        solver.addElement(r1);
-        solver.addElement(r2);
+        RecursiveSimplifier solver = new RecursiveSimplifier();
+        solver.registerNode(p0);
+        solver.registerNode(p1);
+        solver.registerNode(p2);
+        solver.registerElement(z);
+        solver.registerElement(u);
+        solver.registerElement(r1);
+        solver.registerElement(r2);
+        
+        solver.recursiveSimplificationSetup(0);
 
-        r1.prepareCalculation();
-        r2.prepareCalculation();
-        u.prepareCalculation();
-
-        solver.solve();
+        solver.prepareCalculation();
+        solver.doRecursiveCalculation();
 
         // calculation must be finished
         assertEquals(u.isCalculationFinished(), true);
@@ -203,13 +209,9 @@ public class TwoSeriesSolverTest {
         r1.setResistanceParameter(330);
         r2.setOpenConnection();
 
-        // recalculate
-        z.prepareCalculation();
-        r1.prepareCalculation();
-        r2.prepareCalculation();
-        u.prepareCalculation();
-
-        solver.solve();
+        // Recalculate
+        solver.prepareCalculation();
+        solver.doRecursiveCalculation();
 
         // calculation must be finished
         assertEquals(u.isCalculationFinished(), true);
@@ -281,17 +283,19 @@ public class TwoSeriesSolverTest {
         // A special solver is needed for this circuit. Usually this is
         // selected automatically by the solving network, but we will add
         // it here manually, since no network solver is used.
-        TwoSeriesSolver solver = new TwoSeriesSolver();
-        solver.addElement(z);
-        solver.addElement(u);
-        solver.addElement(r1);
-        solver.addElement(r2);
+        RecursiveSimplifier solver = new RecursiveSimplifier();
+        solver.registerNode(p0);
+        solver.registerNode(p1);
+        solver.registerNode(p2);
+        solver.registerElement(z);
+        solver.registerElement(u);
+        solver.registerElement(r1);
+        solver.registerElement(r2);
+        
+        solver.recursiveSimplificationSetup(0);
 
-        r1.prepareCalculation();
-        r2.prepareCalculation();
-        u.prepareCalculation();
-
-        solver.solve();
+        solver.prepareCalculation();
+        solver.doRecursiveCalculation();
 
         // calculation must be finished
         assertEquals(u.isCalculationFinished(), true);
@@ -304,14 +308,10 @@ public class TwoSeriesSolverTest {
 
         // run a few iterations
         for (int idx = 0; idx < 50; idx++) {
-            z.prepareCalculation();
-            r1.prepareCalculation();
-            r2.prepareCalculation();
-            u.prepareCalculation();
-            
-            solver.solve();
+            solver.prepareCalculation();
+            solver.doRecursiveCalculation();
         }
-        
+
         // it is expected for the nodes not to float away
         assertEquals(p1.getEffort(), 3.0, 10.0, "Source floating away");
         assertEquals(p1.getEffort(), 3.0, 10.0, "Source floating away");
@@ -372,18 +372,19 @@ public class TwoSeriesSolverTest {
         // A special solver is needed for this circuit. Usually this is
         // selected automatically by the solving network, but we will add
         // it here manually, since no network solver is used.
-        TwoSeriesSolver solver = new TwoSeriesSolver();
-        solver.addElement(z);
-        solver.addElement(u);
-        solver.addElement(r1);
-        solver.addElement(r2);
+        RecursiveSimplifier solver = new RecursiveSimplifier();
+        solver.registerNode(p0);
+        solver.registerNode(p1);
+        solver.registerNode(p2);
+        solver.registerElement(z);
+        solver.registerElement(u);
+        solver.registerElement(r1);
+        solver.registerElement(r2);
+        
+        solver.recursiveSimplificationSetup(0);
 
-        z.prepareCalculation();
-        r1.prepareCalculation();
-        r2.prepareCalculation();
-        u.prepareCalculation();
-
-        solver.solve();
+        solver.prepareCalculation();
+        solver.doRecursiveCalculation();
 
         // calculation must be finished
         assertEquals(u.isCalculationFinished(), true);
@@ -401,12 +402,8 @@ public class TwoSeriesSolverTest {
         r2.setBridgedConnection();
 
         // Run test again
-        z.prepareCalculation();
-        r1.prepareCalculation();
-        r2.prepareCalculation();
-        u.prepareCalculation();
-
-        solver.solve();
+        solver.prepareCalculation();
+        solver.doRecursiveCalculation();
 
         // calculation must be finished
         assertEquals(u.isCalculationFinished(), true);
