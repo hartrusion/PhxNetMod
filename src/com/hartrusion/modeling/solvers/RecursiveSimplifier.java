@@ -113,6 +113,19 @@ public class RecursiveSimplifier extends ChildNetwork {
     private StarPolygonTransform starPolygon;
 
     /**
+     * Instance to solve a two-elements-in-series situation which can occur when
+     * simplifying networks by series and parallel simplification. This is
+     * handled by this special solver to provide a solution even if resistors
+     * are open or shorted and have that origin node between them.
+     */
+    private TwoSeriesSolver twoSeriesSolver;
+
+    /**
+     * Instance to solve another special arrangement of resistors and sources.
+     */
+    private DeltaSourceSolver deltaSourceSolver;
+
+    /**
      * For not spamming the validation error message, this will save that the
      * error happened and sends the message only once.
      */
@@ -319,7 +332,10 @@ public class RecursiveSimplifier extends ChildNetwork {
                         // Another special case: if the last found node is the
                         // same as the first one, the series is actually a loop
                         // that can not be added to the next simplification.
-                        substitutesFound = prevSubstituesFound; // undo
+                        //        substitutesFound = prevSubstituesFound; // undo
+                        // removed this line after adding solvers for specific end 
+                        // situations, this requires the simplified network to be
+                        // build, those floating loops will just be missing then.
                         rep.setFloatingLoop();
                         rep.calculateEnclosedNodes();
                         // just some random check:
@@ -905,27 +921,42 @@ public class RecursiveSimplifier extends ChildNetwork {
             return generateChild(parentLayers);
         }
 
-        // We might end with a floating loop in the last recursion. In this 
-        // case, elements which are part of the loop are isSubstituted[idx] =
-        // true but no substitutuion was performed (otherwise we would not get
-        // here because of the return statements above).
-        numberOfElements = elements.size();
-        if (containsFloatingLoop) { // subtract those.
-            for (int idx = 0; idx < isSubstituted.length; idx++) {
-                numberOfElements -= 1;
+        // The end. Check if it is necessary to have a more detailed solution
+        // for the last step.
+        if (elements.size() == 4) {
+            // Try to set up the specific solution.
+            twoSeriesSolver = new TwoSeriesSolver();
+            if (!twoSeriesSolver.init(nodes, elements)) {
+                twoSeriesSolver = null; // dump it, does not work.
+            }
+        } else if (elements.size() == 5) {
+            deltaSourceSolver = new DeltaSourceSolver();
+            if (!deltaSourceSolver.init(nodes, elements)) {
+                deltaSourceSolver = null; // dump it, does not work.
             }
         }
 
-        if (numberOfElements <= 4) {
+        // Output the Recursion end state to log, including the used end solver.
+        if (elements.size() <= 3) {
             LOGGER.log(
                     Level.INFO, (parentLayers + 1)
                     + " layers created, last layer containing "
-                    + numberOfElements + " elements.");
+                    + elements.size() + " elements.");
+        } else if (elements.size() == 4 && twoSeriesSolver != null) {
+            LOGGER.log(
+                    Level.INFO, (parentLayers + 1)
+                    + " layers created, last layer containing "
+                    + elements.size() + " elements, using TwoSeriesSolver");
+        } else if (elements.size() == 5 && deltaSourceSolver != null) {
+            LOGGER.log(
+                    Level.INFO, (parentLayers + 1)
+                    + " layers created, last layer containing "
+                    + elements.size() + " elements, using DeltaSourceSolver");
         } else {
             LOGGER.log(
                     Level.WARNING, (parentLayers + 1)
                     + " layers created, last layer still containing "
-                    + numberOfElements + " elements. No solution guaranteed.");
+                    + elements.size() + " elements. No solution guaranteed.");
         }
         return parentLayers;
     }
@@ -1069,6 +1100,14 @@ public class RecursiveSimplifier extends ChildNetwork {
                     validationErrorOccured[idx] = false;
                 }
             }
+        }
+
+        // Call specialized solvers at the end, those handle situations that
+        // can not be simplified further but have an obvious solution.
+        if (twoSeriesSolver != null) {
+            twoSeriesSolver.solve();
+        } else if (deltaSourceSolver != null) {
+            deltaSourceSolver.solve();
         }
 
         // now run the super class method, this will run an iterative call

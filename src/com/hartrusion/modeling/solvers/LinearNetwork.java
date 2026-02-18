@@ -77,14 +77,6 @@ public abstract class LinearNetwork {
     protected SimpleIterator iterativeSolver = new SimpleIterator();
 
     /**
-     * Instance to solve a two-elements-in-series situation which can occur when
-     * simplifying networks by series and parallel simplification. This is
-     * handled by this special solver to provide a solution even if resistors
-     * are open or shorted and have that origin node between them.
-     */
-    private final TwoSeriesSolver twoSeriesSolver = new TwoSeriesSolver();
-
-    /**
      * Index of node 0 from element. The array index represents the index of the
      * element in elements list. The array value at that index represents the
      * index in nodes arraylist of node index 0 of nodes arraylist.
@@ -111,6 +103,9 @@ public abstract class LinearNetwork {
      */
     public void prepareCalculation() {
         iterativeSolver.prepareCalculation();
+        for (GeneralNode n : nodes) {
+            n.prepareCalculation();
+        }
     }
 
     /**
@@ -119,9 +114,6 @@ public abstract class LinearNetwork {
      */
     public void doCalculation() {
         iterativeSolver.doCalculation();
-        if (!isCalculationFinished()) {
-            twoSeriesSolver.solve(); // try this
-        }
     }
 
     /**
@@ -130,6 +122,14 @@ public abstract class LinearNetwork {
      * @return true, if everything was calculated.
      */
     public boolean isCalculationFinished() {
+        for (GeneralNode n : nodes) {
+            if (!n.effortUpdated()) {
+                return false;
+            }
+            if (!n.allFlowsUpdated()) {
+                return false;
+            }
+        }
         return iterativeSolver.isCalculationFinished();
     }
 
@@ -152,7 +152,7 @@ public abstract class LinearNetwork {
 
     /**
      * Register element inside network.Requires element to be connected to node
-     * alrealdy, also requires the nodes to be present already in both node
+     * already, also requires the nodes to be present already in both node
      * lists, so registerNode(GeneralNode p) has to be used to add all nodes
      * before calling this. Each element will be checked wether the nodes are
      * also part of the network. This ensures that no ports will be missing in
@@ -247,7 +247,6 @@ public abstract class LinearNetwork {
                 numberOfElements++;
                 if (e.getElementType() != null) {
                     iterativeSolver.addElement(e);
-                    twoSeriesSolver.addElement(e);
                 }
             }
         } else {

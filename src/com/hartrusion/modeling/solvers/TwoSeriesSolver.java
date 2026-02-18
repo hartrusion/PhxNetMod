@@ -30,6 +30,12 @@ import com.hartrusion.modeling.exceptions.NoFlowThroughException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.ElementType;
+import static com.hartrusion.modeling.ElementType.BRIDGED;
+import static com.hartrusion.modeling.ElementType.DISSIPATOR;
+import static com.hartrusion.modeling.ElementType.EFFORTSOURCE;
+import static com.hartrusion.modeling.ElementType.FLOWSOURCE;
+import static com.hartrusion.modeling.ElementType.OPEN;
+import static com.hartrusion.modeling.ElementType.ORIGIN;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.ClosedOrigin;
@@ -43,41 +49,39 @@ import com.hartrusion.modeling.general.ClosedOrigin;
  */
 public class TwoSeriesSolver {
 
-    private final List<GeneralNode> nodes = new ArrayList<>();
-    private final List<AbstractElement> elements = new ArrayList<>();
+    private List<GeneralNode> nodes;
+    private List<AbstractElement> elements;
 
-    public void addElement(AbstractElement e) {
-        if (!elements.contains(e)) {
-            elements.add(e);
-            for (int idx = 0; idx < e.getNumberOfNodes(); idx++) {
-                if (!nodes.contains(e.getNode(idx))) {
-                    nodes.add(e.getNode(idx));
-                }
-            }
+    private LinearDissipator resistorX = null;
+    private LinearDissipator resistorY = null;
+    private ClosedOrigin orig = null;
+    private AbstractElement source = null;
+    private ElementType sourceType;
+    private GeneralNode middleNode = null;
+    private GeneralNode nodeX;
+    private GeneralNode nodeY;
 
-        }
-    }
+    private int resistors = 0;
+    private int sources = 0;
+    private int origins = 0;
 
-    public boolean solve() {
-        int resistors = 0;
-        int sources = 0;
-        int origins = 0;
-        int idx;
-        boolean open, shortcut, bothOpen;
-        LinearDissipator resistorX = null;
-        LinearDissipator resistorY = null;
-        ClosedOrigin orig = null;
-        AbstractElement source = null;
-        ElementType sourceType;
-        GeneralNode middleNode = null;
-        GeneralNode nodeX;
-        GeneralNode nodeY;
-        double resistance, effort, flow;
+    /**
+     * Initializes the solver with a given list of nodes and elements. It will
+     * return true if everything is fine, otherwise FALSE (the solver cant be
+     * used then)
+     *
+     * @param nodes
+     * @param elements
+     * @return
+     */
+    public boolean init(List<GeneralNode> nodes,
+            List<AbstractElement> elements) {
+        this.nodes = nodes;
+        this.elements = elements;
 
         if (elements.size() != 4) {
             return false; // this is the most general depedency
         }
-
         // count number of elements
         for (AbstractElement e : elements) {
             switch (e.getElementType()) {
@@ -102,38 +106,34 @@ public class TwoSeriesSolver {
         // node between the resistors with the origin.
         for (GeneralNode n : nodes) {
             if (n.getNumberOfElements() == 3) {
-                resistors = 0;
-                sources = 0;
-                origins = 0;
-                for (idx = 0; idx < 3; idx++) {
+                double mResistors = 0;
+                double mSources = 0;
+                double mOrigins = 0;
+                for (int idx = 0; idx < 3; idx++) {
                     switch (n.getElement(idx).getElementType()) {
                         case DISSIPATOR:
                         case OPEN:
                         case BRIDGED:
-                            resistors++;
+                            mResistors++;
                             break;
                         case FLOWSOURCE:
                         case EFFORTSOURCE:
-                            sources++;
+                            mSources++;
                             break;
                         case ORIGIN:
-                            origins++;
+                            mOrigins++;
                             break;
                     }
                 }
                 middleNode = n; // remember node, will be used later
+                // Check the exact number of elements on the middle node
+                if (mResistors != 2 || mSources != 0 || mOrigins != 1) {
+                    return false; // wrong combination on 3-element-node
+                }
             }
         }
-        if (resistors != 2 || sources != 0 || origins != 1) {
-            return false; // wrong combination on 3-element-node
-        }
-        // If this line is reached, we have the described situation.
-        // Get references to those elements and check if one is open or
-        // both are closed.
+
         sourceType = ElementType.NONE;
-        open = false;
-        bothOpen = true;
-        shortcut = true;
         for (AbstractElement e : elements) {
             if (isElementResistorType(e)) {
                 // there are 2 resistors, assign them to X and Y
@@ -142,12 +142,6 @@ public class TwoSeriesSolver {
                 } else {
                     resistorY = (LinearDissipator) e;
                 }
-                // check for open connection or shortcut for another
-                // special case
-                open = open || e.getElementType() == ElementType.OPEN;
-                bothOpen = bothOpen && e.getElementType() == ElementType.OPEN;
-                shortcut = shortcut
-                        && e.getElementType() == ElementType.BRIDGED;
             } else if (e.getElementType() == ElementType.ORIGIN) {
                 orig = (ClosedOrigin) e;
             } else if (e.getElementType() == ElementType.EFFORTSOURCE) {
@@ -158,6 +152,37 @@ public class TwoSeriesSolver {
                 sourceType = ElementType.FLOWSOURCE;
             }
         }
+        // Check if everything was assigned
+        if (orig == null || resistorX == null || middleNode == null
+                || resistorY == null || source == null) {
+            return false; // prevent nullpointer, supress warning message...
+        }
+        // Assign the nodes
+        try {
+            nodeX = resistorX.getOnlyOtherNode(middleNode);
+        } catch (NoFlowThroughException ex) {
+            throw new ModelErrorException("Expected flow through element has "
+                    + "inconsistent number of nodes.");
+        }
+        try {
+            nodeY = resistorY.getOnlyOtherNode(middleNode);
+        } catch (NoFlowThroughException ex) {
+            throw new ModelErrorException("Expected flow through element has "
+                    + "inconsistent number of nodes.");
+        }
+        return true;
+    }
+
+    public boolean solve() {
+        double resistance, effort, flow;
+
+        boolean open = resistorX.getElementType() == ElementType.OPEN
+                || resistorY.getElementType() == ElementType.OPEN;
+        boolean bothOpen = resistorX.getElementType() == ElementType.OPEN
+                && resistorY.getElementType() == ElementType.OPEN;
+        boolean shortcut = resistorX.getElementType() == ElementType.BRIDGED
+                && resistorY.getElementType() == ElementType.BRIDGED;
+
         // there are some special cases which need to be adressed first.
         if (open && sourceType == ElementType.FLOWSOURCE) {
             throw new UnsupportedOperationException("Model error: Flow "
@@ -181,23 +206,6 @@ public class TwoSeriesSolver {
         //  nodeY       resistorY        |
         //                              _|_ orig
         //
-        if (orig == null || resistorX == null || middleNode == null
-                || resistorY == null || source == null) {
-            return false; // prevent nullpointer, supress warning message...
-        }
-        try {
-            nodeX = resistorX.getOnlyOtherNode(middleNode);
-        } catch (NoFlowThroughException ex) {
-            throw new ModelErrorException("Expected flow through element has "
-                    + "inconsistent number of nodes.");
-        }
-        try {
-            nodeY = resistorY.getOnlyOtherNode(middleNode);
-        } catch (NoFlowThroughException ex) {
-            throw new ModelErrorException("Expected flow through element has "
-                    + "inconsistent number of nodes.");
-        }
-
         orig.doCalculation(); // this will cause effort update on middle node.
 
         // if one resistor is of type "open connection", there will be 

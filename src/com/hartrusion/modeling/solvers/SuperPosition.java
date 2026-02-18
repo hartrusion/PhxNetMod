@@ -289,6 +289,7 @@ public class SuperPosition extends LinearNetwork {
                     // value of 0, this will skip this layer on the for loop to
                     // sum it up. This is cheaper than having to call the more
                     // expensive isCalculationFinished method all the time.
+                    layer[idx].doCalculation();
                     zeroValue[idx] = true;
                 }
             }

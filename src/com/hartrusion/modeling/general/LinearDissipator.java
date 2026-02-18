@@ -50,15 +50,15 @@ public class LinearDissipator extends FlowThrough {
     protected double resistance = 10.0; // main parameter
     private double externalDeltaEffort;
     private boolean externalDeltaEffortKnown;
-    
+
     /**
      * Disables all validation checks.
      */
     private boolean noChecks;
-    
+
     /**
      * Remembers that a validation failed to prevent spamming the logs.
-    */
+     */
     private boolean diffErrorOccured;
 
     /**
@@ -71,7 +71,7 @@ public class LinearDissipator extends FlowThrough {
         super(domain);
         elementType = ElementType.DISSIPATOR;
     }
-    
+
     /**
      * Creates an instance of a linear dissipator which will either be a
      * shortcut or an open connection
@@ -160,7 +160,7 @@ public class LinearDissipator extends FlowThrough {
     @Override
     public boolean doCalculation() {
         boolean retVal = calculateOhmsLaw();
-        double diff;
+        double diff, flow0, flow1, eff;
         if (noChecks) { // no more checks to validate results.
             return retVal;
         }
@@ -185,7 +185,28 @@ public class LinearDissipator extends FlowThrough {
                     && nodes.get(1).effortUpdated()) {
                 diff = Math.abs(nodes.get(0).getEffort()
                         - nodes.get(1).getEffort());
-                if (diff > 1e-2) {
+                // Revert all those ideas here. Bring back this check as it is
+                // more important than ever thought (see commented out stuff 
+                // below!)
+                if (diff > 1e-3) {
+                    LOGGER.log(Level.WARNING, "Briged Nodes with different "
+                            + "effort values of " + diff
+                            + " on element " + toString());
+                }
+            }
+            if (nodes.get(0).flowUpdated(this)
+                    && nodes.get(1).flowUpdated(this)) {
+                flow0 = nodes.get(0).getFlow(this);
+                flow1 = nodes.get(1).getFlow(this);
+                if (Math.abs(flow1 + flow0) > 1e-8) {
+                    LOGGER.log(Level.WARNING, "Flow-through element with flow "
+                            + "difference of " + (flow1 - flow0)
+                            + " detected.");
+                }
+            }
+
+            /*
+                if (diff > 1e-6) {
                     // update 1: reduce diff from 1e-8 to 1e-3.
                     // update 2: reducing from 1e-3 to 1e-2 now, seems to be a
                     // real issue during valve opening and closing O.o
@@ -212,8 +233,34 @@ public class LinearDissipator extends FlowThrough {
                     } else {
                         diffErrorOccured = false;
                     }
+                } 
+            } */
+        } else {
+            // If all values are known and it is not a bridge nor an open 
+            // connection, do an ohms law and flow validation check here.
+            if (nodes.get(0).flowUpdated(this)
+                    && nodes.get(1).flowUpdated(this)
+                    && nodes.get(0).effortUpdated()
+                    && nodes.get(1).effortUpdated()) {
+
+                flow0 = nodes.get(0).getFlow(this);
+                flow1 = nodes.get(1).getFlow(this);
+                if (Math.abs(flow1 + flow0) > 1e-8) {
+                    LOGGER.log(Level.WARNING, "Flow-through element with flow "
+                            + "difference of " + (flow1 - flow0)
+                            + " detected.");
+                }
+                diff = nodes.get(1).getEffort() - nodes.get(0).getEffort(); // U
+                // Do an ohms law U = R * I and compare U with R*I
+                eff = flow1 * resistance;
+                if (Math.abs(diff - (flow1 * resistance)) > 1e-6) {
+                     LOGGER.log(Level.WARNING, "Ohms law detection faled with "
+                            + "an effort error of " 
+                            + (diff - (flow0 * resistance))
+                    + "on element " + toString());
                 }
             }
+
         }
         return retVal;
     }
@@ -240,9 +287,11 @@ public class LinearDissipator extends FlowThrough {
                 // enforcing of efforts possible anyhow.
                 if (!nodes.get(0).flowUpdated(this)) {
                     nodes.get(0).setFlow(0.0, this, true);
+                    didSomething = true;
                 }
                 if (!nodes.get(1).flowUpdated(this)) {
                     nodes.get(1).setFlow(0.0, this, true);
+                    didSomething = true;
                 }
             } else if (nodes.get(0).getNumberOfElements() == 1
                     || nodes.get(1).getNumberOfElements() == 1) {
@@ -250,19 +299,23 @@ public class LinearDissipator extends FlowThrough {
                 // There will be no flow through the resistor then.
                 if (!nodes.get(0).flowUpdated(this)) {
                     nodes.get(0).setFlow(0.0, this, true);
+                    didSomething = true;
                 }
                 if (!nodes.get(1).flowUpdated(this)) {
                     nodes.get(1).setFlow(0.0, this, true);
+                    didSomething = true;
                 }
                 // Set the dead end effort to the same value as the other node.
                 if (nodes.get(1).effortUpdated()
                         && !nodes.get(0).effortUpdated()
                         && nodes.get(0).getNumberOfElements() == 1) {
                     nodes.get(0).setEffort(nodes.get(1).getEffort());
+                    didSomething = true;
                 } else if (nodes.get(0).effortUpdated()
                         && !nodes.get(1).effortUpdated()
                         && nodes.get(1).getNumberOfElements() == 1) {
                     nodes.get(1).setEffort(nodes.get(0).getEffort());
+                    didSomething = true;
                 }
             } else if (nodes.get(0).flowUpdated(this)
                     && nodes.get(0).effortUpdated()
@@ -343,22 +396,22 @@ public class LinearDissipator extends FlowThrough {
     public void setStepTime(double dt) {
         // this class does not use step time
     }
-    
+
     /**
-     * Disables validations of effort, flow and resistance values. Usually, 
-     * after calculation or assigning values, the element would check if those 
-     * are valid. It is likely that some solvers do set values and no 
-     * calculation by the element itself are necessary, in this case, those 
-     * checks help to detect bugs or artifacts. However, the overlay class does 
-     * some kind of simplification where assumptions of the network itself do 
-     * not match the overlays parent network layer. As only flow values are of 
-     * interest, this is not an issue but would throw warnings. For this case, 
+     * Disables validations of effort, flow and resistance values. Usually,
+     * after calculation or assigning values, the element would check if those
+     * are valid. It is likely that some solvers do set values and no
+     * calculation by the element itself are necessary, in this case, those
+     * checks help to detect bugs or artifacts. However, the overlay class does
+     * some kind of simplification where assumptions of the network itself do
+     * not match the overlays parent network layer. As only flow values are of
+     * interest, this is not an issue but would throw warnings. For this case,
      * those checks can be disabled.
-     * 
-     * @param noChecks 
+     *
+     * @param noChecks
      */
     public void setNoChecks(boolean noChecks) {
-        this.noChecks = noChecks;
+        // this.noChecks = noChecks;
     }
 
 }
