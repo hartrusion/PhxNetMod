@@ -749,6 +749,108 @@ public class RecursiveSimplifierTest {
         // After method call, whole network must be in fully calculated state.
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished());
-
     }
+
+    /**
+     * Test case generated from debugging, this was initially considered to be a
+     * test caste that triggers ohms law validation but the validation itself
+     * had an issue in generating the error message. It will be kept here as it
+     * triggers star delta a few times.
+     */
+    @Test
+    public void testOhmsLawValidationFail() {
+        RecursiveSimplifier instance = new RecursiveSimplifier();
+
+        // --- Nodes (5) ---
+        GeneralNode[] node = new GeneralNode[5];
+        for (int idx = 0; idx < node.length; idx++) {
+            node[idx] = new GeneralNode(PhysicalDomain.ELECTRICAL);
+            node[idx].setName("node" + idx);
+        }
+
+        // --- Dissipators (8) ---
+        LinearDissipator[] r = new LinearDissipator[8];
+        for (int idx = 0; idx < r.length; idx++) {
+            r[idx] = new LinearDissipator(PhysicalDomain.ELECTRICAL);
+            r[idx].setName("R" + idx);
+        }
+
+        r[0].setBridgedConnection();
+        r[1].setResistanceParameter(39126.993805309736);
+        r[2].setResistanceParameter(4320.0);
+        r[3].setResistanceParameter(1144.4444444444443);
+        r[4].setResistanceParameter(4320.0);
+        r[5].setResistanceParameter(3016.9568747867625);
+        r[6].setResistanceParameter(2800.9821349382332);
+        r[7].setOpenConnection();
+
+        EffortSource u = new EffortSource(PhysicalDomain.ELECTRICAL);
+        u.setEffort(6870156.962688095);
+        u.setName("U");
+
+        ClosedOrigin zero = new ClosedOrigin(PhysicalDomain.ELECTRICAL);
+        zero.setName("zero");
+
+        // --- Connections ---
+        u.registerNode(node[3]);
+        node[3].registerElement(u);
+        u.registerNode(node[4]);
+        node[4].registerElement(u);
+        zero.connectTo(node[3]);
+        r[0].registerNode(node[4]);
+        node[4].registerElement(r[0]);
+        r[0].registerNode(node[2]);
+        node[2].registerElement(r[0]);
+        r[1].registerNode(node[4]);
+        node[4].registerElement(r[1]);
+        r[1].registerNode(node[1]);
+        node[1].registerElement(r[1]);
+        r[2].registerNode(node[0]);
+        node[0].registerElement(r[2]);
+        r[2].registerNode(node[2]);
+        node[2].registerElement(r[2]);
+        r[3].registerNode(node[0]);
+        node[0].registerElement(r[3]);
+        r[3].registerNode(node[1]);
+        node[1].registerElement(r[3]);
+        r[4].registerNode(node[0]);
+        node[0].registerElement(r[4]);
+        r[4].registerNode(node[3]);
+        node[3].registerElement(r[4]);
+        r[5].registerNode(node[1]);
+        node[1].registerElement(r[5]);
+        r[5].registerNode(node[2]);
+        node[2].registerElement(r[5]);
+        r[6].registerNode(node[1]);
+        node[1].registerElement(r[6]);
+        r[6].registerNode(node[3]);
+        node[3].registerElement(r[6]);
+        r[7].registerNode(node[3]);
+        node[3].registerElement(r[7]);
+        r[7].registerNode(node[2]);
+        node[2].registerElement(r[7]);
+
+        for (GeneralNode n : node) {
+            instance.registerNode(n);
+        }
+        instance.registerElement(u);
+        instance.registerElement(zero);
+        instance.registerElement(r[0]);
+        instance.registerElement(r[1]);
+        instance.registerElement(r[2]);
+        instance.registerElement(r[3]);
+        instance.registerElement(r[4]);
+        instance.registerElement(r[5]);
+        instance.registerElement(r[6]);
+        instance.registerElement(r[7]);
+        
+        instance.recursiveSimplificationSetup(0);
+        instance.prepareRecursiveCalculation();
+        instance.doRecursiveCalculation();
+        assertTrue(instance.isCalculationFinished(), 
+                "Calculation did not finish.");
+        // This value was calculated manually and is expected here.
+        assertEquals(r[1].getFlow(), 87.6, 0.4);
+    }
+
 }
