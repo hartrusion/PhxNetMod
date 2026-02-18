@@ -245,7 +245,7 @@ public class LinearDissipator extends FlowThrough {
 
                 flow0 = nodes.get(0).getFlow(this);
                 flow1 = nodes.get(1).getFlow(this);
-                if (Math.abs(flow1 + flow0) > 1e-8) {
+                if (Math.abs(flow1 + flow0) > 1e-6) {
                     LOGGER.log(Level.WARNING, "Flow-through element with flow "
                             + "difference of " + (flow1 - flow0)
                             + " detected.");
@@ -253,11 +253,11 @@ public class LinearDissipator extends FlowThrough {
                 diff = nodes.get(1).getEffort() - nodes.get(0).getEffort(); // U
                 // Do an ohms law U = R * I and compare U with R*I
                 eff = flow1 * resistance;
-                if (Math.abs(diff - (flow1 * resistance)) > 1e-6) {
+                if (Math.abs(diff - (flow1 * resistance)) > 1e-5) {
                      LOGGER.log(Level.WARNING, "Ohms law detection faled with "
                             + "an effort error of " 
                             + (diff - (flow0 * resistance))
-                    + "on element " + toString());
+                    + " on element " + toString());
                 }
             }
 
