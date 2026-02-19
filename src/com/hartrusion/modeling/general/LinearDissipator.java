@@ -256,7 +256,7 @@ public class LinearDissipator extends FlowThrough {
                 if (Math.abs(diff - (flow1 * resistance)) > 1e-5) {
                      LOGGER.log(Level.WARNING, "Ohms law detection faled with "
                             + "an effort error of " 
-                            + (diff - (flow0 * resistance))
+                            + (diff - (flow1 * resistance))
                     + " on element " + toString());
                 }
             }
