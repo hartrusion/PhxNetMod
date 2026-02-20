@@ -33,14 +33,20 @@ package com.hartrusion.modeling.initial;
 public interface InitialConditions {
 
     /**
-     * Generate the inital condition from the curent state of the Element.This
-     * will likely generate different initial conditions or no initial condition
-     * at all, depending on the element type.
+     * Generate the initial condition from the current state of the Element.
+     * This will likely generate different initial conditions or no initial
+     * condition at all, depending on the element type.
      *
      * @return AbstractInitialCondition object that is derived to a more
-     * specific IC.
+     * specific IC. This will always return a new object.
      */
     public AbstractInitialCondition getState();
 
+    /**
+     * Sets the provided initial condition to the element so it has the same
+     * state as when saving the IC.
+     *
+     * @param ic Initial Condition object
+     */
     public void setInitialCondition(AbstractInitialCondition ic);
 }

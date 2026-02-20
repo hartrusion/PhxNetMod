@@ -24,11 +24,13 @@
 package com.hartrusion.modeling.initial;
 
 /**
+ * An initial condition object for general elements that store one energy value.
+ * This can be the effort on capacitances or the flow value on inductances.
  *
  * @author Viktor Alexander Hartung
  */
 public class EnergyStorageInitialCondition extends AbstractInitialCondition {
-    
+
     private double stateValue;
 
     public double getStateValue() {
@@ -38,5 +40,5 @@ public class EnergyStorageInitialCondition extends AbstractInitialCondition {
     public void setStateValue(double stateValue) {
         this.stateValue = stateValue;
     }
-    
+
 }

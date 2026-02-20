@@ -24,6 +24,8 @@
 package com.hartrusion.modeling.initial;
 
 /**
+ * Base class for initial conditions. An initial condition is a value that
+ * represents the state of a network.
  *
  * @author Viktor Alexander Hartung
  */
