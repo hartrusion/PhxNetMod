@@ -61,6 +61,11 @@ public class LinearDissipator extends FlowThrough {
      */
     private boolean diffErrorOccured;
 
+    private boolean openFlowWarningOccured;
+    private boolean bridgedEffortWarningOccured;
+    private boolean flowThroughDiffFlowWarningOccured;
+    private boolean ohmsLawCheckOccured;
+
     /**
      * Creates an instance of a linear dissipator with a given resistance value,
      * acting as an energy dissipating element.
@@ -166,21 +171,31 @@ public class LinearDissipator extends FlowThrough {
         }
         // Perform some additional checks to validate results
         if (elementType == ElementType.OPEN) {
+            flowThroughDiffFlowWarningOccured = false;
+            bridgedEffortWarningOccured = false;
+            ohmsLawCheckOccured = false;
             if (nodes.get(0).flowUpdated(this)
                     && nodes.get(1).flowUpdated(this)) {
-                if (nodes.get(0).getFlow(this) > 1e-6
-                        || nodes.get(0).getFlow(this) < -1e-6 // was 1e-10
-                        || nodes.get(1).getFlow(this) > 1e-6
-                        || nodes.get(1).getFlow(this) < -1e-6) {
-                    //throw new CalculationException(
-                    //         "A node contains flow to an open Element.");
-                    LOGGER.log(Level.WARNING, "A node contains flow to this "
-                            + "open Element. Forcing 0.0");
+                if (nodes.get(0).getFlow(this) > 1e-4
+                        || nodes.get(0).getFlow(this) < -1e-4 // was 1e-10
+                        || nodes.get(1).getFlow(this) > 1e-4
+                        || nodes.get(1).getFlow(this) < -1e-4) {
+                    if (!openFlowWarningOccured) {
+                        LOGGER.log(Level.WARNING, "A node contains flow to "
+                                + "this open Element. Forcing 0.0");
+                    }
                     nodes.get(0).setFlow(0.0, this, false);
                     nodes.get(1).setFlow(0.0, this, false);
+                    openFlowWarningOccured = true;
+                } else {
+                    openFlowWarningOccured = false;
                 }
+            } else {
+                openFlowWarningOccured = false;
             }
         } else if (elementType == ElementType.BRIDGED) {
+            openFlowWarningOccured = false;
+            ohmsLawCheckOccured = false;
             if (nodes.get(0).effortUpdated()
                     && nodes.get(1).effortUpdated()) {
                 diff = Math.abs(nodes.get(0).getEffort()
@@ -189,9 +204,14 @@ public class LinearDissipator extends FlowThrough {
                 // more important than ever thought (see commented out stuff 
                 // below!)
                 if (diff > 1e-3) {
-                    LOGGER.log(Level.WARNING, "Briged Nodes with different "
-                            + "effort values of " + diff
-                            + " on element " + toString());
+                    if (!bridgedEffortWarningOccured) {
+                        LOGGER.log(Level.WARNING, "Briged Nodes with different "
+                                + "effort values of " + diff
+                                + " on element " + toString());
+                    }
+                    bridgedEffortWarningOccured = true;
+                } else {
+                    bridgedEffortWarningOccured = false;
                 }
             }
             if (nodes.get(0).flowUpdated(this)
@@ -199,68 +219,53 @@ public class LinearDissipator extends FlowThrough {
                 flow0 = nodes.get(0).getFlow(this);
                 flow1 = nodes.get(1).getFlow(this);
                 if (Math.abs(flow1 + flow0) > 1e-8) {
-                    LOGGER.log(Level.WARNING, "Flow-through element with flow "
-                            + "difference of " + (flow1 - flow0)
-                            + " detected.");
-                }
-            }
-
-            /*
-                if (diff > 1e-6) {
-                    // update 1: reduce diff from 1e-8 to 1e-3.
-                    // update 2: reducing from 1e-3 to 1e-2 now, seems to be a
-                    // real issue during valve opening and closing O.o
-                    // update 3: remove Exception, log a warning instead.
-                    // throw new CalculationException(
-                    //        "Different effort on nodes of bridged element.");
-                    // update 4: The issue comes from Overlay class and the
-                    // simplification there not to be compatible with the
-                    // superposition solver. This was fixed by adding a small
-                    // workaround in overlay.
-                    // update 5: This workaround is not good, let's add the
-                    // flow too. The issue only happens if there is zero flow 
-                    // and due to the zero flow, the overlay made some bad
-                    // simplification.
-                    if (nodes.get(0).getFlow(this) > 1e-6
-                            || nodes.get(0).getFlow(this) < -1e-6
-                            || nodes.get(1).getFlow(this) > 1e-6
-                            || nodes.get(1).getFlow(this) < -1e-6) {
-                        if (!diffErrorOccured) {
-                            LOGGER.log(Level.WARNING, "Different effort on "
-                                    + "nodes of bridged element: " + diff);
-                        }
-                        diffErrorOccured = true; // throw warning only once.
+                    if (!flowThroughDiffFlowWarningOccured) {
+                        LOGGER.log(Level.WARNING, "Flow-through element "
+                                + "with flow "
+                                + "difference of " + (flow1 - flow0)
+                                + " detected.");
+                        flowThroughDiffFlowWarningOccured = true;
                     } else {
-                        diffErrorOccured = false;
+                        flowThroughDiffFlowWarningOccured = false;
                     }
-                } 
-            } */
-        } else {
-            // If all values are known and it is not a bridge nor an open 
-            // connection, do an ohms law and flow validation check here.
-            if (nodes.get(0).flowUpdated(this)
-                    && nodes.get(1).flowUpdated(this)
-                    && nodes.get(0).effortUpdated()
-                    && nodes.get(1).effortUpdated()) {
-
-                flow0 = nodes.get(0).getFlow(this);
-                flow1 = nodes.get(1).getFlow(this);
-                if (Math.abs(flow1 + flow0) > 1e-6) {
-                    LOGGER.log(Level.WARNING, "Flow-through element with flow "
-                            + "difference of " + (flow1 - flow0)
-                            + " detected.");
                 }
-                diff = nodes.get(1).getEffort() - nodes.get(0).getEffort(); // U
-                // Do an ohms law U = R * I and compare U with R*I
-                eff = flow1 * resistance;
-                if (Math.abs(diff - (flow1 * resistance)) > 1e-5) {
-                     LOGGER.log(Level.WARNING, "Ohms law detection faled with "
-                            + "an effort error of " 
-                            + (diff - (flow1 * resistance))
-                    + " on element " + toString());
+            } else {
+                openFlowWarningOccured = false;
+                bridgedEffortWarningOccured = false;
+                // If all values are known and it is not a bridge nor an open 
+                // connection, do an ohms law and flow validation check here.
+                if (nodes.get(0).flowUpdated(this)
+                        && nodes.get(1).flowUpdated(this)
+                        && nodes.get(0).effortUpdated()
+                        && nodes.get(1).effortUpdated()) {
+                    flow0 = nodes.get(0).getFlow(this);
+                    flow1 = nodes.get(1).getFlow(this);
+                    if (Math.abs(flow1 + flow0) > 1e-6) {
+                        if (!flowThroughDiffFlowWarningOccured) {
+                            LOGGER.log(Level.WARNING, "Flow-through element "
+                                    + "with flow difference of "
+                                    + (flow1 - flow0)
+                                    + " detected.");
+                            flowThroughDiffFlowWarningOccured = true;
+                        }
+                    } else {
+                        flowThroughDiffFlowWarningOccured = false;
+                    }
+                    diff = nodes.get(1).getEffort() - nodes.get(0).getEffort();
+                    // Do an ohms law U = R * I and compare U with R*I
+                    eff = flow1 * resistance;
+                    if (Math.abs(diff - (flow1 * resistance)) > 1e-2) {
+                        if (!ohmsLawCheckOccured) {
+                            LOGGER.log(Level.WARNING, "Ohms law detection faled "
+                                    + "with an effort error of "
+                                    + (diff - (flow1 * resistance))
+                                    + " on element " + toString());
+                        }
+                    } else {
+                        ohmsLawCheckOccured = false;
+                    }
                 }
             }
-
         }
         return retVal;
     }
