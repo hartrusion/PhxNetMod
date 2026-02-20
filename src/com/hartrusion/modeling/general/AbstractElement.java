@@ -23,7 +23,7 @@
  */
 package com.hartrusion.modeling.general;
 
-import com.hartrusion.modeling.initial.AbstractInitialCondition;
+import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
@@ -264,7 +264,7 @@ public abstract class AbstractElement implements CalculationStep,
      *
      * @param ic Initial condition object
      */
-    protected void checkInitialConditionName(AbstractInitialCondition ic) {
+    protected void checkInitialConditionName(AbstractIC ic) {
         if (elementName != null) {
             if (!ic.getElementName().equals(elementName)) {
                 throw new UnsupportedOperationException("Element name mismatch"

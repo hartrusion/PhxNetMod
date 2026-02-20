@@ -24,29 +24,28 @@
 package com.hartrusion.modeling.initial;
 
 /**
- * Elements implementing this interface have so called "Initial Conditions"
- * which are used to determine the model state after setting them. Those
- * conditions can be as simple as a state space variable.
+ * Base class for initial conditions. An initial condition is a value that
+ * represents the state of a network.
  *
  * @author Viktor Alexander Hartung
  */
-public interface InitialConditions {
+public class AbstractIC implements java.io.Serializable {
+    
+    private static final long serialVersionUID = 1L;
 
     /**
-     * Generate the initial condition from the current state of the Element.
-     * This will likely generate different initial conditions or no initial
-     * condition at all, depending on the element type.
-     *
-     * @return AbstractInitialCondition object that is derived to a more
-     * specific IC. This will always return a new object.
+     * Describes the name of the object that generated this object. Will be used
+     * to check the correct assignment when loading saved initial states. All
+     * initial conditions will have a name assigned to them to identify the
+     * element which they belong to.
      */
-    public AbstractIC getState();
+    String elementName;
 
-    /**
-     * Sets the provided initial condition to the element so it has the same
-     * state as when saving the IC.
-     *
-     * @param ic Initial Condition object
-     */
-    public void setInitialCondition(AbstractIC ic);
+    public String getElementName() {
+        return elementName;
+    }
+
+    public void setElementName(String elementName) {
+        this.elementName = elementName;
+    }
 }

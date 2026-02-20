@@ -28,7 +28,7 @@ import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
-import com.hartrusion.modeling.initial.AbstractInitialCondition;
+import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.general.OpenOrigin;
 
 /**

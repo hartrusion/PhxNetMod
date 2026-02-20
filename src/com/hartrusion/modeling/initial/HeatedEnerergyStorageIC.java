@@ -24,26 +24,19 @@
 package com.hartrusion.modeling.initial;
 
 /**
- * Base class for initial conditions. An initial condition is a value that
- * represents the state of a network.
  *
  * @author Viktor Alexander Hartung
  */
-public class AbstractInitialCondition {
+public class HeatedEnerergyStorageIC extends EnergyStorageIC {
 
-    /**
-     * Describes the name of the object that generated this object. Will be used
-     * to check the correct assignment when loading saved initial states. All
-     * initial conditions will have a name assigned to them to identify the
-     * element which they belong to.
-     */
-    String elementName;
+    private double temperature;
 
-    public String getElementName() {
-        return elementName;
+    public double getTemperature() {
+        return temperature;
     }
 
-    public void setElementName(String elementName) {
-        this.elementName = elementName;
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
     }
+
 }

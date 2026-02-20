@@ -27,8 +27,8 @@ import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.SelfCapacitance;
-import com.hartrusion.modeling.initial.AbstractInitialCondition;
-import com.hartrusion.modeling.initial.HeatedEnerergyStorageInitialCondition;
+import com.hartrusion.modeling.initial.AbstractIC;
+import com.hartrusion.modeling.initial.HeatedEnerergyStorageIC;
 
 /**
  * Represents an open tank that can be filled with a fluid with different
@@ -163,9 +163,9 @@ public class HeatFluidTank extends SelfCapacitance implements HeatElement {
     }
     
     @Override
-    public AbstractInitialCondition getState() {
-        HeatedEnerergyStorageInitialCondition ic
-                = new HeatedEnerergyStorageInitialCondition();
+    public AbstractIC getState() {
+        HeatedEnerergyStorageIC ic
+                = new HeatedEnerergyStorageIC();
         ic.setElementName(elementName);
         ic.setStateValue(stateValue);
         ic.setTemperature(heatHandler.getTemperature());
@@ -173,12 +173,11 @@ public class HeatFluidTank extends SelfCapacitance implements HeatElement {
     }
 
     @Override
-    public void setInitialCondition(AbstractInitialCondition ic) {
+    public void setInitialCondition(AbstractIC ic) {
         checkInitialConditionName(ic);
         stateValue
-                = ((HeatedEnerergyStorageInitialCondition) ic).getStateValue();
-        heatHandler.setInitialTemperature(
-                ((HeatedEnerergyStorageInitialCondition) ic).getTemperature());
+                = ((HeatedEnerergyStorageIC) ic).getStateValue();
+        heatHandler.setInitialTemperature(((HeatedEnerergyStorageIC) ic).getTemperature());
     }
 
 }

@@ -30,9 +30,9 @@ import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.OpenOrigin;
-import com.hartrusion.modeling.initial.AbstractInitialCondition;
+import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.InitialConditions;
-import com.hartrusion.modeling.initial.TemperatureInitialCondition;
+import com.hartrusion.modeling.initial.TemperatureIC;
 
 /**
  * Represents a fixed volume with mass that can be heated up and expand to some
@@ -262,8 +262,8 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     }
 
     @Override
-    public AbstractInitialCondition getState() {
-        TemperatureInitialCondition ic = new TemperatureInitialCondition();
+    public AbstractIC getState() {
+        TemperatureIC ic = new TemperatureIC();
         ic.setElementName(elementName);
         // todo - also no temperature IC, will be own class.
         // ic.setTemperature(phasedHandler.getTemperature());
@@ -271,7 +271,7 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     }
 
     @Override
-    public void setInitialCondition(AbstractInitialCondition ic) {
+    public void setInitialCondition(AbstractIC ic) {
         checkInitialConditionName(ic);
         // todo
         //phasedHandler.setInitialTemperature(

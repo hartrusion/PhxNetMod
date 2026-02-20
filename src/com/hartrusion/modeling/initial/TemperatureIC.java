@@ -27,8 +27,8 @@ package com.hartrusion.modeling.initial;
  *
  * @author Viktor Alexander Hartung
  */
-public class HeatedEnerergyStorageInitialCondition extends EnergyStorageInitialCondition {
-
+public class TemperatureIC extends AbstractIC {
+    
     private double temperature;
 
     public double getTemperature() {
@@ -38,5 +38,5 @@ public class HeatedEnerergyStorageInitialCondition extends EnergyStorageInitialC
     public void setTemperature(double temperature) {
         this.temperature = temperature;
     }
-
+    
 }

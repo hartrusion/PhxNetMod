@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2025 Viktor Alexander Hartung.
+ * Copyright 2026 viktor.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,39 @@
 package com.hartrusion.modeling.initial;
 
 /**
+ * Holds a heat energy value and a previous cycle pressure value additionally to
+ * the energy storage itself. The use of the previous pressure is not mandatory
+ * and depending on what kind of phased handler is used in the element.
  *
- * @author Viktor Alexander Hartung
+ * @author viktor
  */
-public class TemperatureInitialCondition extends AbstractInitialCondition {
-    
-    private double temperature;
+public class PhasedPressurizedEnergyStorageIC extends EnergyStorageIC {
 
-    public double getTemperature() {
-        return temperature;
+    private double heatEnergy;
+    private double previousPressure;
+    private double ambientPressure;
+
+    public double getHeatEnergy() {
+        return heatEnergy;
     }
 
-    public void setTemperature(double temperature) {
-        this.temperature = temperature;
+    public void setHeatEnergy(double heatEnergy) {
+        this.heatEnergy = heatEnergy;
     }
-    
+
+    public double getPreviousPressure() {
+        return previousPressure;
+    }
+
+    public void setPreviousPressure(double previousPressure) {
+        this.previousPressure = previousPressure;
+    }
+
+    public double getAmbientPressure() {
+        return ambientPressure;
+    }
+
+    public void setAmbientPressure(double ambientPressure) {
+        this.ambientPressure = ambientPressure;
+    }
 }

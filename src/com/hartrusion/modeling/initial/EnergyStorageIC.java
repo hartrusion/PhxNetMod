@@ -29,7 +29,7 @@ package com.hartrusion.modeling.initial;
  *
  * @author Viktor Alexander Hartung
  */
-public class EnergyStorageInitialCondition extends AbstractInitialCondition {
+public class EnergyStorageIC extends AbstractIC {
 
     private double stateValue;
 

@@ -26,6 +26,9 @@ package com.hartrusion.modeling.phasedfluid;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.SelfCapacitance;
+import com.hartrusion.modeling.initial.AbstractIC;
+import com.hartrusion.modeling.initial.EnergyStorageIC;
+import com.hartrusion.modeling.initial.PhasedPressurizedEnergyStorageIC;
 
 /**
  * A closed reservoir filled with phased fluid. The fluid can be heated up to
@@ -294,6 +297,35 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
             } else {
                 handler.setPreviousPressure(ambientPressure);
             }
+        }
+    }
+
+    @Override
+    public AbstractIC getState() {
+        PhasedPressurizedEnergyStorageIC ic = new PhasedPressurizedEnergyStorageIC();
+        ic.setElementName(elementName);
+        ic.setStateValue(stateValue);
+        ic.setAmbientPressure(ambientPressure);
+        ic.setHeatEnergy(phasedHandler.getHeatEnergy());
+        if (phasedHandler instanceof PhasedThermalVolumeHandler) {
+            ic.setPreviousPressure(((PhasedThermalVolumeHandler) phasedHandler)
+                    .getPreviousPressure());
+        }
+        return ic;
+    }
+
+    @Override
+    public void setInitialCondition(AbstractIC ic) {
+        checkInitialConditionName(ic);
+        PhasedPressurizedEnergyStorageIC cIc
+                = // cast to expected type
+                (PhasedPressurizedEnergyStorageIC) ic;
+        stateValue = cIc.getStateValue();
+        ambientPressure = cIc.getAmbientPressure();
+        phasedHandler.setInitialHeatEnergy(cIc.getHeatEnergy());
+        if (phasedHandler instanceof PhasedThermalVolumeHandler) {
+            ((PhasedThermalVolumeHandler) phasedHandler).setPreviousPressure(
+                    cIc.getPreviousPressure());
         }
     }
 

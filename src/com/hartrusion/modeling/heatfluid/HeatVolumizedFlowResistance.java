@@ -23,8 +23,8 @@
  */
 package com.hartrusion.modeling.heatfluid;
 
-import com.hartrusion.modeling.initial.TemperatureInitialCondition;
-import com.hartrusion.modeling.initial.AbstractInitialCondition;
+import com.hartrusion.modeling.initial.TemperatureIC;
+import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.InitialConditions;
 
 /**
@@ -59,17 +59,16 @@ public class HeatVolumizedFlowResistance extends HeatAbstractFlowResistance
     }
     
     @Override
-    public AbstractInitialCondition getState() {
-        TemperatureInitialCondition ic = new TemperatureInitialCondition();
+    public AbstractIC getState() {
+        TemperatureIC ic = new TemperatureIC();
         ic.setElementName(elementName);
         ic.setTemperature(heatHandler.getTemperature());
         return ic;
     }
 
     @Override
-    public void setInitialCondition(AbstractInitialCondition ic) {
+    public void setInitialCondition(AbstractIC ic) {
         checkInitialConditionName(ic);
-        heatHandler.setInitialTemperature(
-                ((TemperatureInitialCondition) ic).getTemperature());
+        heatHandler.setInitialTemperature(((TemperatureIC) ic).getTemperature());
     }
 }

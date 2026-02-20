@@ -24,8 +24,8 @@
 package com.hartrusion.modeling.general;
 
 import com.hartrusion.modeling.initial.InitialConditions;
-import com.hartrusion.modeling.initial.AbstractInitialCondition;
-import com.hartrusion.modeling.initial.EnergyStorageInitialCondition;
+import com.hartrusion.modeling.initial.AbstractIC;
+import com.hartrusion.modeling.initial.EnergyStorageIC;
 import com.hartrusion.modeling.PhysicalDomain;
 
 /**
@@ -85,16 +85,16 @@ abstract class EnergyStorage extends AbstractElement
     }
 
     @Override
-    public AbstractInitialCondition getState() {
-        EnergyStorageInitialCondition ic = new EnergyStorageInitialCondition();
+    public AbstractIC getState() {
+        EnergyStorageIC ic = new EnergyStorageIC();
         ic.setElementName(elementName);
         ic.setStateValue(stateValue);
         return ic;
     }
 
     @Override
-    public void setInitialCondition(AbstractInitialCondition ic) {
+    public void setInitialCondition(AbstractIC ic) {
         checkInitialConditionName(ic);
-        stateValue = ((EnergyStorageInitialCondition) ic).getStateValue();
+        stateValue = ((EnergyStorageIC) ic).getStateValue();
     }
 }
