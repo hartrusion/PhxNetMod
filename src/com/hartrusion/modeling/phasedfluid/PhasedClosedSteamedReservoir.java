@@ -319,7 +319,9 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         PhasedPressurizedEnergyStorageIC cIc
                 = // cast to expected type
                 (PhasedPressurizedEnergyStorageIC) ic;
+        nextStateValue = cIc.getStateValue();
         stateValue = cIc.getStateValue();
+        phasedHandler.setInnerHeatedMass(stateValue);
         ambientPressure = cIc.getAmbientPressure();
         phasedHandler.setInitialHeatEnergy(cIc.getHeatEnergy());
         if (phasedHandler instanceof PhasedThermalVolumeHandler) {
