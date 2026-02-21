@@ -37,6 +37,8 @@ import com.hartrusion.modeling.general.FlowThrough;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.OpenOrigin;
 import com.hartrusion.modeling.general.SelfCapacitance;
+import com.hartrusion.modeling.initial.AbstractIC;
+import com.hartrusion.modeling.initial.InitialConditions;
 import com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchanger;
 import com.hartrusion.modeling.steam.SteamIsobaricIsochoricEvaporator;
 import java.util.logging.Level;
@@ -64,6 +66,8 @@ public class DomainAnalogySolver {
     private final List<GeneralNode> modelNodes = new ArrayList<>();
 
     private final List<AbstractElement> modelElements = new ArrayList<>();
+
+    private String name;
 
     /**
      * TRUE for all modelNodes [index] which have their effort forced either by
@@ -123,6 +127,18 @@ public class DomainAnalogySolver {
      * parallel computing will be used.
      */
     private ExecutorService threadPool;
+
+    public void setString(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        if (name != null) {
+            return name;
+        }
+        return super.toString();
+    }
 
     /**
      * Traverses through a network, needs one node as a starting point. Calling
@@ -458,7 +474,7 @@ public class DomainAnalogySolver {
                     || e.getElementType() == ElementType.INDUCTANCE) {
                 noEnergySavingElements = false;
             }
-            
+
             if (e.getElementType() == ElementType.FLOWSOURCE
                     || e.getElementType() == ElementType.EFFORTSOURCE) {
                 numberOfSources++;
@@ -581,7 +597,7 @@ public class DomainAnalogySolver {
             }
             // </editor-fold>
 
-        } else if (allElementsLinear && closedCircuit 
+        } else if (allElementsLinear && closedCircuit
                 && noEnergySavingElements) {
             // Networks that can be solved by superposition solver will be added
             // to that solver type directly without the use of any transfer type
@@ -680,5 +696,44 @@ public class DomainAnalogySolver {
             }
         }
         return true;
+    }
+
+    /**
+     * Generates a List which holds all initial conditions for all elements that
+     * do have such conditions and are known to this solver.
+     *
+     * @return List of AbstractIC elements.
+     */
+    public List<AbstractIC> getCurrentNetworkCondition() {
+        List<AbstractIC> icList = new ArrayList<>();
+        for (AbstractElement e : modelElements) {
+            if (e instanceof InitialConditions) {
+                AbstractIC ic
+                        = ((InitialConditions) e).getState();
+                if (ic != null) {
+                    icList.add(ic);
+                }
+            }
+        }
+        return icList;
+    }
+
+    /**
+     * Sets an initial condition as the new current state of the network. The
+     * provided List of ICs must match to what the solver has, its intended to
+     * generate the IC list using getCurrentNetworkCondition method.
+     *
+     * @param states List of AbstractIC elements.
+     */
+    public void setNetworkInitialCondition(List<AbstractIC> states) {
+        for (AbstractIC ic : states) {
+            for (AbstractElement e : modelElements) {
+                if (e instanceof InitialConditions
+                        && e.toString().equals(ic.getElementName())) {
+                    ((InitialConditions) e).setInitialCondition(ic);
+                    break;
+                }
+            }
+        }
     }
 }

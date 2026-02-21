@@ -166,7 +166,7 @@ public class HeatFluidTank extends SelfCapacitance implements HeatElement {
     public AbstractIC getState() {
         HeatedEnerergyStorageIC ic
                 = new HeatedEnerergyStorageIC();
-        ic.setElementName(elementName);
+        ic.setElementName(toString());
         ic.setStateValue(stateValue);
         ic.setTemperature(heatHandler.getTemperature());
         return ic;

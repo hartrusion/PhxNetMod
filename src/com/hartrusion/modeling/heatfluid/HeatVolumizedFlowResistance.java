@@ -61,7 +61,7 @@ public class HeatVolumizedFlowResistance extends HeatAbstractFlowResistance
     @Override
     public AbstractIC getState() {
         TemperatureIC ic = new TemperatureIC();
-        ic.setElementName(elementName);
+        ic.setElementName(toString());
         ic.setTemperature(heatHandler.getTemperature());
         return ic;
     }

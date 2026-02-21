@@ -87,7 +87,7 @@ abstract class EnergyStorage extends AbstractElement
     @Override
     public AbstractIC getState() {
         EnergyStorageIC ic = new EnergyStorageIC();
-        ic.setElementName(elementName);
+        ic.setElementName(toString());
         ic.setStateValue(stateValue);
         return ic;
     }

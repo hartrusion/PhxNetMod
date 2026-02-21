@@ -79,7 +79,7 @@ public abstract class AbstractElement implements CalculationStep,
     /**
      * Sets a unique name for this element. The name can be returned by using
      * the toString function of java.lang.object.
-     * 
+     *
      * @param name Unique name of the element.
      */
     public void setName(String name) {
@@ -265,18 +265,16 @@ public abstract class AbstractElement implements CalculationStep,
      * @param ic Initial condition object
      */
     protected void checkInitialConditionName(AbstractIC ic) {
-        if (elementName != null) {
-            if (!ic.getElementName().equals(elementName)) {
-                throw new UnsupportedOperationException("Element name mismatch"
-                        + " on provided InitialCondition object");
-            }
+        if (!ic.getElementName().equals(toString())) {
+            throw new UnsupportedOperationException("Element identifier " +
+                    "mismatch on provided InitialCondition object");
         }
     }
 
     /**
-     * Determine weather an element has a linear behaviour so it can be solved
+     * Determine weather an element has a linear behavior so it can be solved
      * with the provided linear solvers. Method is intended to be overridden by
-     * non-linear elements and return false to identify nonlinear behaviour.
+     * non-linear elements and return false to identify nonlinear behavior.
      *
      * @return true for linear elements
      */
@@ -303,8 +301,8 @@ public abstract class AbstractElement implements CalculationStep,
      * the element itself but represents a connection to another network, for
      * example, a heat exchanger volume has a thermal network connected to it
      * and this coupled element can be a reference between those tho domains.
-     * It's not required for the network to work but for the solver to be
-     * able to see that there is something else he has to take care of.
+     * It's not required for the network to work but for the solver to be able
+     * to see that there is something else he has to take care of.
      *
      * @param coupledElement An element that has some connection with this one.
      */

@@ -302,7 +302,7 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
     @Override
     public AbstractIC getState() {
         PhasedPressurizedEnergyStorageIC ic = new PhasedPressurizedEnergyStorageIC();
-        ic.setElementName(elementName);
+        ic.setElementName(toString());
         ic.setStateValue(stateValue);
         ic.setAmbientPressure(ambientPressure);
         ic.setHeatEnergy(phasedHandler.getHeatEnergy());

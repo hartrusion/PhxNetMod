@@ -265,7 +265,7 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     @Override
     public AbstractIC getState() {
         PhasedExpandingExchangerIC ic = new PhasedExpandingExchangerIC();
-        ic.setElementName(elementName);
+        ic.setElementName(toString());
         phasedHandler.writeToIcStateObject(ic);
         return ic;
     }

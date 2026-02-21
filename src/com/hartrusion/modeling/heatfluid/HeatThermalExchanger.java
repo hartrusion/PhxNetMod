@@ -188,7 +188,7 @@ public class HeatThermalExchanger extends HeatPassive
     @Override
     public AbstractIC getState() {
         TemperatureIC ic = new TemperatureIC();
-        ic.setElementName(elementName);
+        ic.setElementName(toString());
         ic.setTemperature(heatHandler.getTemperature());
         return ic;
     }
