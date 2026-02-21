@@ -48,4 +48,8 @@ public class AbstractIC implements java.io.Serializable {
     public void setElementName(String elementName) {
         this.elementName = elementName;
     }
+    
+    public String toString() {
+        return "AbstractAC-" + elementName;
+    }
 }
