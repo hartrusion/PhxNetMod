@@ -26,18 +26,19 @@ package com.hartrusion.modeling.phasedfluid;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.hartrusion.modeling.initial.PhasedExpandingExchangerIC;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
 
 /**
- * Handles the heating and evaporation of a given volume with expansion. This
- * is used for the PhasedExpandingThermalExchanger. Contrary to other network
+ * Handles the heating and evaporation of a given volume with expansion. This is
+ * used for the PhasedExpandingThermalExchanger. Contrary to other network
  * elements, the flow can be set by the handler after calculation of the
  * expansion. This requires a certain state of the calculation to do so, the
  * intended behavior is given if the element is connected to a reservoir where
  * the flow can go into. It is also considered in the solvers so the element
- * will get its values assigned differently than other elements. There are
- * two modes of calculation.
+ * will get its values assigned differently than other elements. There are two
+ * modes of calculation.
  * <p>
  * Intended, normal operation:
  * <ul>
@@ -45,12 +46,12 @@ import java.util.logging.Logger;
  * thermal source will add or remove heat energy to the mass inside.</li>
  * <li>The next specific heat energy will be calculated by adding the heat
  * energy from the inflow to the existing mass and adding the thermal energy
- * from the connected thermal network. This value will be saved and used in
- * next calculation cycle.</li>
- * <li>A new density will be calculated for that specific mixture. Note that
- * it is already specific energy.</li>
- * <li>The mass out flow for the current time step will be calculated using
- * the present mass minus the mass that can be in the volume according to the
+ * from the connected thermal network. This value will be saved and used in next
+ * calculation cycle.</li>
+ * <li>A new density will be calculated for that specific mixture. Note that it
+ * is already specific energy.</li>
+ * <li>The mass out flow for the current time step will be calculated using the
+ * present mass minus the mass that can be in the volume according to the
  * density and the volume and the additional mass that is inside the element.
  * </li>
  * <li>If there would be some kind of possible suction instead of mass out flow,
@@ -58,8 +59,8 @@ import java.util.logging.Logger;
  * variable of this instance. If there is positive mass flow again, the out flow
  * will first fill up that negative accumulated mass before any out flow
  * happens. This way, sucking in an unknown amount of mass with unknown energy
- * properties is avoided. This is just a neat trick to keep a stable solution
- * in such events.
+ * properties is avoided. This is just a neat trick to keep a stable solution in
+ * such events.
  * </ul>
  * Reverse flow mode:
  * <p>
@@ -68,22 +69,22 @@ import java.util.logging.Logger;
  * element first. Keep in mind that this was designed to be an evaporator where
  * flow gets pushed through, not sucked in. But to provide a solution for this
  * problem, the reverse flow mode is available. Maybe you want to drain the
- * evaporator or pump fluid though it in the reverse way, this can happen in
- * the RBMK simulator when cooling down the reactor on MPC failure or with ECCS
- * in operation.
+ * evaporator or pump fluid though it in the reverse way, this can happen in the
+ * RBMK simulator when cooling down the reactor on MPC failure or with ECCS in
+ * operation.
  * <ul>
- * <li>A flow out of the element is set to a node before the flow in is set.
- * The flow out is set on the node that is not directing towards the reservoir.
+ * <li>A flow out of the element is set to a node before the flow in is set. The
+ * flow out is set on the node that is not directing towards the reservoir.
  * </li>
  * <li>The specific energy of the current state is set to that out flow as it
  * would also be set during normal operation.</li>
  * <li>A flow in has to be calculated now. For the first iteration, we have to
  * assume that we do not know how much volume change there will be due to the
- * specific energy coming in with that flow. It was decided not to do some
- * kind of "request" this information from the model as this brings other
- * maintaining issues. The thermal source will be considered so any expansion
- * or retraction by temperature changes from this source is considered. The flow
- * will be set and the calculation cycle finishes.</li>
+ * specific energy coming in with that flow. It was decided not to do some kind
+ * of "request" this information from the model as this brings other maintaining
+ * issues. The thermal source will be considered so any expansion or retraction
+ * by temperature changes from this source is considered. The flow will be set
+ * and the calculation cycle finishes.</li>
  * <li>The solver or the node will assign the unknown specific heat energy and
  * the next calculation step can begin.</li>
  * <li>With the now available heat in value, the next specific heat of the
@@ -94,8 +95,8 @@ import java.util.logging.Logger;
 public class PhasedExpandingThermalVolumeHandler
         extends PhasedAbstractVolumizedHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(
-            PhasedExpandingThermalVolumeHandler.class.getName());
+//    private static final Logger LOGGER = Logger.getLogger(
+//            PhasedExpandingThermalVolumeHandler.class.getName());
 
     /**
      * Reference to the effort source representing the temperature for the
@@ -158,7 +159,7 @@ public class PhasedExpandingThermalVolumeHandler
     private boolean waitForReverseOutProperties;
 
     private double reverseOutMassCorretion;
-    
+
     private boolean previousReversOutActive = false;
 
     private double nextDelayedInHeatEnergy;
@@ -383,7 +384,6 @@ public class PhasedExpandingThermalVolumeHandler
             }
 
             // nextHeatEnergy = energyWithoutOutflow;
-
             // The behaviour of the PhasedExpandingThermalExchanger is defined
             // to never have a kind of "suction" mass flow, but what to do if
             // the massOut ever would be negative? This can happen if
@@ -451,7 +451,7 @@ public class PhasedExpandingThermalVolumeHandler
                 nextInnerHeatMass = innerHeatMass - outMassQuantity
                         + firstUpdatedNode.getFlow(aElement) * stepTime;
             }
-            
+
             // sum up thermal energy going into element
             heatedMassFlowIn = 0.0;
             flowIn = 0.0;
@@ -464,14 +464,14 @@ public class PhasedExpandingThermalVolumeHandler
                 }
             }
             nextHeatEnergy = (innerHeatMass * heatEnergy
-                        - thermalSource.getFlow() * stepTime
-                        + heatedMassFlowIn) / (innerHeatMass + flowIn);
+                    - thermalSource.getFlow() * stepTime
+                    + heatedMassFlowIn) / (innerHeatMass + flowIn);
 
             heatEnergyPrepared = true;
 
             // reset this here in case the flow direction changes back and again
             reverseOutMassCorretion = 0.0;
-            
+
             previousReversOutActive = false;
 
             didSomething = true;
@@ -499,9 +499,10 @@ public class PhasedExpandingThermalVolumeHandler
                     - delayedInHeatEnergy);
 
             // Calculate the mass amount that has to flow into the element
-            massIn =  // massCapacity - innerHeatMass
-                    - firstUpdatedNode.getFlow(aElement) * stepTime;
-                  //  - reverseOutMassCorretion; // consider previous cycle!
+            massIn
+                    = // massCapacity - innerHeatMass
+                    -firstUpdatedNode.getFlow(aElement) * stepTime;
+            //  - reverseOutMassCorretion; // consider previous cycle!
             // Todo: This is still a problem and highly unstable. For now it
             //  does work and provide a solution but it is very bad.
 
@@ -565,8 +566,8 @@ public class PhasedExpandingThermalVolumeHandler
             // A positive value is considered to be too much in the volume so
             // it will be less mass in requested if this value is positive.
             reverseOutMassCorretion = innerHeatMass - massCapacity
-                    -firstUpdatedNode.getFlow(aElement) * stepTime
-                    -otherNode.getFlow(aElement) * stepTime;
+                    - firstUpdatedNode.getFlow(aElement) * stepTime
+                    - otherNode.getFlow(aElement) * stepTime;
 
             // Next mass is calculated by sum up what happened
             nextInnerHeatMass = innerHeatMass
@@ -592,6 +593,33 @@ public class PhasedExpandingThermalVolumeHandler
         nextDelayedInHeatEnergy = delayedInHeatEnergy;
     }
 
+    /**
+     * Writes the current state to the supplied IC state object.
+     *
+     * @param ic PhasedExpandingExchangerIC
+     */
+    public void writeToIcStateObject(PhasedExpandingExchangerIC ic) {
+        ic.setDelayedInHeatEnergy(delayedInHeatEnergy);
+        ic.setInnerHeatedMass(innerHeatMass);
+        ic.setHeatEnergy(heatEnergy);
+        ic.setNegativeMass(negativeMass);
+    }
+    
+    /**
+     * Applies the provided initial condition object to this handler, setting it
+     * to the saved state provided.
+     * 
+     * @param ic PhasedExpandingExchangerIC
+     */
+    public void applyIcState(PhasedExpandingExchangerIC ic) {
+        heatEnergy = ic.getHeatEnergy();
+        nextHeatEnergy = ic.getHeatEnergy();
+        delayedInHeatEnergy = ic.getDelayedInHeatEnergy();
+        nextDelayedInHeatEnergy = ic.getDelayedInHeatEnergy();
+        innerHeatMass = ic.getInnerHeatedMass();
+        nextInnerHeatMass = ic.getInnerHeatedMass();
+    }
+
     @Override
     public void setSteamOutput(PhasedNode pn, boolean isSteamOut) {
         // The element using this handler does not make a difference between
@@ -600,13 +628,13 @@ public class PhasedExpandingThermalVolumeHandler
     }
 
     /**
-     * Calculates and returns the current temperature inside the volume by
-     * using the pressure (its isobaric) and heat energy.
-     * 
+     * Calculates and returns the current temperature inside the volume by using
+     * the pressure (its isobaric) and heat energy.
+     *
      * @return Temperature in Kelvin
      */
     public double getTemperature() {
-        return fluidProperties.getTemperature(heatEnergy, 
+        return fluidProperties.getTemperature(heatEnergy,
                 phasedNodes.get(0).getEffort());
     }
 }

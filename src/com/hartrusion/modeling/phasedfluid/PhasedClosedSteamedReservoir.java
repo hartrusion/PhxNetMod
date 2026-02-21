@@ -27,7 +27,6 @@ import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.SelfCapacitance;
 import com.hartrusion.modeling.initial.AbstractIC;
-import com.hartrusion.modeling.initial.EnergyStorageIC;
 import com.hartrusion.modeling.initial.PhasedPressurizedEnergyStorageIC;
 
 /**

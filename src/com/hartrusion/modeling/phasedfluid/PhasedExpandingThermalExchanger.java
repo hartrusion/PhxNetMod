@@ -32,6 +32,7 @@ import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.OpenOrigin;
 import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.InitialConditions;
+import com.hartrusion.modeling.initial.PhasedExpandingExchangerIC;
 import com.hartrusion.modeling.initial.TemperatureIC;
 
 /**
@@ -263,19 +264,16 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
 
     @Override
     public AbstractIC getState() {
-        TemperatureIC ic = new TemperatureIC();
+        PhasedExpandingExchangerIC ic = new PhasedExpandingExchangerIC();
         ic.setElementName(elementName);
-        // todo - also no temperature IC, will be own class.
-        // ic.setTemperature(phasedHandler.getTemperature());
+        phasedHandler.writeToIcStateObject(ic);
         return ic;
     }
 
     @Override
     public void setInitialCondition(AbstractIC ic) {
         checkInitialConditionName(ic);
-        // todo
-        //phasedHandler.setInitialTemperature(
-        //        ((TemperatureInitialCondition) ic).getTemperature());
+        phasedHandler.applyIcState((PhasedExpandingExchangerIC) ic);
     }
 
     @Override

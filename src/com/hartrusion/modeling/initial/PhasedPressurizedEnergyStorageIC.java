@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2026 viktor.
+ * Copyright 2026 Viktor Alexander Hartung.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,21 +28,12 @@ package com.hartrusion.modeling.initial;
  * the energy storage itself. The use of the previous pressure is not mandatory
  * and depending on what kind of phased handler is used in the element.
  *
- * @author viktor
+ * @author Viktor Alexander Hartung
  */
-public class PhasedPressurizedEnergyStorageIC extends EnergyStorageIC {
+public class PhasedPressurizedEnergyStorageIC extends PhasedEnergyStorageIC {
 
-    private double heatEnergy;
     private double previousPressure;
     private double ambientPressure;
-
-    public double getHeatEnergy() {
-        return heatEnergy;
-    }
-
-    public void setHeatEnergy(double heatEnergy) {
-        this.heatEnergy = heatEnergy;
-    }
 
     public double getPreviousPressure() {
         return previousPressure;

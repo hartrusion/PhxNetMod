@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2025 Viktor Alexander Hartung.
+ * Copyright 2026 Viktor Alexander Hartung.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,15 +21,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package com.hartrusion.modeling.initial;
+
 /**
- * Contains various combinations of elements for the purpose of having an
- * overall smaller codebase and better maintainability. Assemblies are basically
- * system components which are made of multiple elements and nodes and maybe
- * even more components. You could build a heat exchanger with all its single
- * elements yourself each time or just use the assembly class.
- * <p>
- * Assemblies strictly do not have their own state variables so the initial
- * conditions of the elements contained in the assemblies are in no relation to
- * the assembly itself.
+ * Specialized initial condition for the PhasedExpandingThermalExchanger class.
+ * The properties used here are only used by that class which already breaks
+ * some of the used conventions.
+ *
+ * @author Viktor Alexander Hartung
  */
-package com.hartrusion.modeling.assemblies;
+public class PhasedExpandingExchangerIC extends PhasedEnergyStorageIC {
+
+    private double innerHeatedMass;
+    private double delayedInHeatEnergy;
+    private double negativeMass;
+
+    public double getNegativeMass() {
+        return negativeMass;
+    }
+
+    public void setNegativeMass(double negativeMass) {
+        this.negativeMass = negativeMass;
+    }
+
+    public double getInnerHeatedMass() {
+        return innerHeatedMass;
+    }
+
+    public void setInnerHeatedMass(double innerHeatedMass) {
+        this.innerHeatedMass = innerHeatedMass;
+    }
+
+    public double getDelayedInHeatEnergy() {
+        return delayedInHeatEnergy;
+    }
+
+    public void setDelayedInHeatEnergy(double delayedInHeatEnergy) {
+        this.delayedInHeatEnergy = delayedInHeatEnergy;
+    }
+
+}
