@@ -30,7 +30,8 @@ package com.hartrusion.modeling.initial;
  *
  * @author Viktor Alexander Hartung
  */
-public class PhasedExpandingExchangerIC extends PhasedEnergyStorageIC {
+public class PhasedExpandingExchangerIC
+        extends PhasedPressurizedEnergyStorageIC {
 
     private double innerHeatedMass;
     private double delayedInHeatEnergy;

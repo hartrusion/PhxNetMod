@@ -603,6 +603,7 @@ public class PhasedExpandingThermalVolumeHandler
         ic.setInnerHeatedMass(innerHeatMass);
         ic.setHeatEnergy(heatEnergy);
         ic.setNegativeMass(negativeMass);
+        ic.setPreviousPressure(previousPressure);
     }
     
     /**
@@ -618,6 +619,8 @@ public class PhasedExpandingThermalVolumeHandler
         nextDelayedInHeatEnergy = ic.getDelayedInHeatEnergy();
         innerHeatMass = ic.getInnerHeatedMass();
         nextInnerHeatMass = ic.getInnerHeatedMass();
+        negativeMass = ic.getNegativeMass();
+        previousPressure = ic.getPreviousPressure();
     }
 
     @Override

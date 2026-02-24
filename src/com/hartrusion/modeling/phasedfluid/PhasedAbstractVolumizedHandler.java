@@ -203,6 +203,8 @@ public abstract class PhasedAbstractVolumizedHandler implements PhasedHandler {
     @Override
     public void setInitialHeatEnergy(double q) {
         heatEnergy = q;
+        nextHeatEnergy = q;
+        heatEnergyUpdated = true;
     }
 
     @Override
@@ -234,7 +236,7 @@ public abstract class PhasedAbstractVolumizedHandler implements PhasedHandler {
         }
         isSteamOutput[phasedNodes.indexOf(pn)] = isSteamOut;
     }
-    
+
     public boolean getSteamOutput(PhasedNode pn) {
         if (!phasedNodes.contains(pn)) {
             throw new ModelErrorException("Provided node is not registered "

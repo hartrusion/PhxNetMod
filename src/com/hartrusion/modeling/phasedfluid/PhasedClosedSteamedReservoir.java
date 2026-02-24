@@ -324,10 +324,9 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         phasedHandler.setInnerHeatedMass(stateValue);
         ambientPressure = cIc.getAmbientPressure();
         phasedHandler.setInitialHeatEnergy(cIc.getHeatEnergy());
-        if (phasedHandler instanceof PhasedThermalVolumeHandler) {
-            ((PhasedThermalVolumeHandler) phasedHandler).setPreviousPressure(
-                    cIc.getPreviousPressure());
-        }
+        fluidTemperature = cIc.getHeatEnergy()
+                / fluidProperties.getSpecificHeatCapacity();
+
     }
 
     /**
