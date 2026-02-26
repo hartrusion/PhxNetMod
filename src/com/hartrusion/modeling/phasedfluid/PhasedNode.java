@@ -35,9 +35,8 @@ import com.hartrusion.modeling.general.GeneralNode;
  * Extends port for capability to hold scalar heat energy value. The heat energy
  * is linked to flow variable and calculated by assuming that all incoming flows
  * from elements (negative sign) mix perfectly having the same specific heat
- * capacity. This allows to simplyfy the whole thing and just use
- * heat energy as one scalar value but does not allow mixing of different
- * fluids.
+ * capacity. This allows to simplyfy the whole thing and just use heat energy as
+ * one scalar value but does not allow mixing of different fluids.
  *
  * <p>
  * Nodes do in no way store heat energy. They get their heat energies assigned
@@ -81,8 +80,8 @@ public class PhasedNode extends GeneralNode {
 
     /**
      * Sets the heat energy towards an element which is connected to this port.
-     * This is usually called by a phased handler from inside a connected element
-     * that has a flow towards this port.
+     * This is usually called by a phased handler from inside a connected
+     * element that has a flow towards this port.
      *
      * @param heatEnergy
      * @param source
@@ -275,8 +274,17 @@ public class PhasedNode extends GeneralNode {
                 // all connections leaving the port will have this heat energy:
                 for (int idx = 0; idx < connectedElements.size(); idx++) {
                     if (!heatProps.get(idx).isHeatEnergyUpdated()) {
-                        heatProps.get(idx).setHeatEnergyValue(
-                                avgOutHeatEnergy);
+                        // in cases of allFlowsZero not working properly (some 
+                        // numerical stuff), the division above with / inFlow
+                        // will still be a div by zero, mostly happening in 
+                        // already illegal states. To prevent instant crashes,
+                        // set a no-energy state here.
+                        if (Double.isFinite(avgOutHeatEnergy)) {
+                            heatProps.get(idx).setHeatEnergyValue(
+                                    avgOutHeatEnergy);
+                        } else {
+                            heatProps.get(idx).setNoHeatEnergyValue();
+                        }
                         didSomething = true;
                     }
                 }
