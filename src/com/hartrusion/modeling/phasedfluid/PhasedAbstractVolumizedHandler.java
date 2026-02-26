@@ -204,7 +204,7 @@ public abstract class PhasedAbstractVolumizedHandler implements PhasedHandler {
     public void setInitialHeatEnergy(double q) {
         heatEnergy = q;
         nextHeatEnergy = q;
-        heatEnergyUpdated = true;
+        heatEnergyPrepared = false;
     }
 
     @Override
