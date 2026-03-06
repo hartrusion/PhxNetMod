@@ -46,9 +46,9 @@ public class HydraulicLinearValve extends LinearDissipator {
     private double opening; // 0..100 %
     private double resistanceFullOpen;
     protected double stepTime;
-    private boolean linear = true;
-    private double closedFactor = 5;
-    
+    private boolean advancedCharacteristic = false;
+    private double otherResistance, overallEffort, fullFlow;
+
     private double cfM, cfB;
 
     public HydraulicLinearValve() {
@@ -70,13 +70,41 @@ public class HydraulicLinearValve extends LinearDissipator {
 
     /**
      * Sets the resistance parameter for the valve when it is on 100 % opening
-     * state.
+     * state. This disables the advanced characteristic curve and uses a 1/R
+     * approach.
      *
      * @param r Resistance as Effort/Flow
      */
     public void setResistanceFullOpen(double r) {
         resistanceFullOpen = r;
-        updateCfValues();
+        advancedCharacteristic = false;
+    }
+
+    /**
+     * Sets the valves characteristic to behave linear when connected to a
+     * certain system that is defined by an effort and a resistance value. The
+     * effort value describes the overall effort pushing flow through a given
+     * resistance. The valve will behave linear if effort is matched and
+     * resistance is correct. The provided effort and flow values are only used
+     * to calculate an effective resistance for any given valve position, if the
+     * effort of the system is different, the valve will not behave as desired
+     * but still work.
+     *
+     * @param flowOpen Desired flow on maximum open position.
+     * @param effort Effort that is between the valve and the resistance.
+     * @param resistance Resistance of a system that this valve is connected to.
+     * Note that this is NOT the valves resistance.
+     */
+    public void setAdvancedCharacteristic(double flowOpen,
+            double effort, double resistance) {
+        if (effort / flowOpen < resistance) {
+            throw new IllegalArgumentException("Given flow is too high for "
+                    + "given resistance and effort.");
+        }
+        advancedCharacteristic = true;
+        fullFlow = flowOpen;
+        overallEffort = effort;
+        otherResistance = resistance;
     }
 
     /**
@@ -97,10 +125,11 @@ public class HydraulicLinearValve extends LinearDissipator {
         } else {
             opening = o;
             elementType = ElementType.DISSIPATOR;
-            if (linear) {
+            if (!advancedCharacteristic) {
                 resistance = resistanceFullOpen * 100 / opening;
             } else {
-                resistance = cfM * opening + cfB;
+                resistance = overallEffort / (fullFlow * opening / 100)
+                        - otherResistance;
             }
         }
     }
@@ -136,10 +165,11 @@ public class HydraulicLinearValve extends LinearDissipator {
                 }
             }
         } else {
-            if (linear) {
+            if (!advancedCharacteristic) {
                 resistance = resistanceFullOpen * 100 / opening;
             } else {
-                resistance = cfM * opening + cfB;
+                resistance = overallEffort / (fullFlow * opening / 100) 
+                        - otherResistance;
             }
             didSomething = super.doCalculation();
         }
@@ -151,40 +181,4 @@ public class HydraulicLinearValve extends LinearDissipator {
     public void setStepTime(double dt) {
         stepTime = dt;
     }
-
-    /**
-     * Sets the characteristic between opening and the actual flow resistance.
-     * The default value is linear and the calculation will be
-     * <pre>
-     * R = R_max * 100 / opening
-     * </pre>
-     * <p>
-     * This is basically a a linear behavior of the conductance (1/R) value. It
-     * will result in a high resistance only in values close to 0.
-     * <p>
-     * Alternatively a factor and linear=false can be specified. It will then be
-     * <pre>
-     * R = closedFactor * R_max + opening * (1 - closedFactor) / 100
-     * </pre>
-     * @param linear: Default, uses the 100/opening formula when true.
-     * @param closedFactor:
-     */
-    public void setCharacteristic(boolean linear, double closedFactor) {
-        if (!linear && closedFactor <= 1.0) {
-            throw new IllegalArgumentException("closedFactor must be "
-                    + "higher than 1.0!");
-        }
-        this.linear = linear;
-        this.closedFactor = closedFactor;
-        updateCfValues();
-    }
-    
-    /**
-     * Calculates line values for y=mx+b for the closedFactor operating curve.
-     */
-    private void updateCfValues() {
-        cfM = (resistanceFullOpen - closedFactor * resistanceFullOpen) / 100;
-        cfB = closedFactor * resistanceFullOpen;
-    }
-
 }
