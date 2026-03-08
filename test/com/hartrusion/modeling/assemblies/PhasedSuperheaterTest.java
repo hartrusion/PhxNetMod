@@ -23,28 +23,52 @@
  */
 package com.hartrusion.modeling.assemblies;
 
-import com.hartrusion.modeling.heatfluid.HeatFlowSource;
-import com.hartrusion.modeling.heatfluid.HeatNode;
-import com.hartrusion.modeling.heatfluid.HeatOrigin;
-import com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoir;
 import com.hartrusion.modeling.phasedfluid.PhasedFlowSource;
-import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerElement;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
 import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
-import com.hartrusion.modeling.phasedfluid.PhasedThermalExchanger;
+import com.hartrusion.modeling.phasedfluid.PhasedSimpleFlowResistance;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 /**
+ * Connects flow sources to the primary and secondary side with the secondary
+ * side having a resistor for simulating pressure level. This allows to test the
+ * superheater element like it would behave in the model.
+ * <pre>
+ *                                      This resistor will create a pressure
+ *        priInFlowSource               linear to the set secondary flow:
+ *     o------(|)----->---
+ *    _|_                |                  secOutFlowPressure
+ * priOrigSource         |                o-----XXXXXXXX-->---o secOrigDrainNode
+ *            PRIMARY_IN |                |  SECONDARY_OUT    |
+ *         o==============================|=========o        _|_
+ *         |             |                |         |   secOrigDrain
+ *         |  saturated [|]======XXX=====[|]        |
+ *         |  phased     | noMassThermal  ^         |
+ *         |  fluid      V exhchangers    |         |
+ *         |                              |         |
+ *         |------------------------------|---------|   Properties of the fluid
+ *         |          mass based       [ sec ]      |   will be set to the open
+ *         |         thermal exchange  [mass ]      |   origins which serve as
+ *         |                              |         |   a boundry.
+ *         o==============================|=========o
+ *    PRIMARY_OUT V                       ^  SECONDARY_IN
+ *                |                       |                     This part is the
+ * priCondensate  |                       |                     HP turbine out
+ * OutFlowSource (-)                     (-)  secPhasedFlow     that gets super-
+ *                |                       |                     heated.
+ *   priDrainNode o                       o   secOrigSourceNode
+ *               _|_                     _|_  secOrigSource
+ *         priOrigCondensateDrain
+ * </pre>
  *
- * @author viktor
+ * @author Viktor Alexander Hartung
  */
 public class PhasedSuperheaterTest {
 
@@ -52,13 +76,14 @@ public class PhasedSuperheaterTest {
 
     private PhasedPropertiesWater water = new PhasedPropertiesWater();
 
-    private PhasedFlowSource flowIn, flowOut;
-    private PhasedNode pn1, pn2;
-    private PhasedOrigin pz1, pz2;
+    private PhasedFlowSource priInFlowSource, priCondensateOutFlowSource;
+    private PhasedNode priSourceNode, priDrainNode;
+    private PhasedOrigin priOrigSource, priOrigCondensateDrain;
 
     private PhasedFlowSource secPhasedFlow;
-    private PhasedNode pnSec;
-    private PhasedOrigin secOrig1, secOrig2;
+    private PhasedNode secOrigSourceNode, secOrigDrainNode;
+    private PhasedOrigin secOrigDrain, secOrigSource;
+    private PhasedSimpleFlowResistance secOutFlowPressure;
 
     private DomainAnalogySolver solver;
 
@@ -81,60 +106,68 @@ public class PhasedSuperheaterTest {
         instance.initCharacteristic(1.0, 200, 2e4, 1e5);
 
         // Generate additonal model elements
-        flowIn = new PhasedFlowSource();
-        flowOut = new PhasedFlowSource();
-        pn1 = new PhasedNode();
-        pn2 = new PhasedNode();
-        pz1 = new PhasedOrigin();
-        pz2 = new PhasedOrigin();
+        priInFlowSource = new PhasedFlowSource();
+        priCondensateOutFlowSource = new PhasedFlowSource();
+        priSourceNode = new PhasedNode();
+        priDrainNode = new PhasedNode();
+        priOrigSource = new PhasedOrigin();
+        priOrigCondensateDrain = new PhasedOrigin();
         secPhasedFlow = new PhasedFlowSource();
-        pnSec = new PhasedNode();
-        secOrig1 = new PhasedOrigin();
-        secOrig2 = new PhasedOrigin();
+        secOrigSourceNode = new PhasedNode();
+        secOrigSource = new PhasedOrigin();
+        secOrigDrainNode = new PhasedNode();
+        secOrigDrain = new PhasedOrigin();
+        secOutFlowPressure = new PhasedSimpleFlowResistance();
 
-        flowIn.setName("FlowIn");
-        flowOut.setName("FlowOut");
-        pn1.setName("pn1");
-        pn2.setName("pn2");
-        pz1.setName("pz1");
-        pz2.setName("pz2");
+        priInFlowSource.setName("PriInFlowSource");
+        priCondensateOutFlowSource.setName("PriCondensateFlowOut");
+        priSourceNode.setName("PriSourceNode");
+        priDrainNode.setName("PriDrainNode");
+        priOrigSource.setName("PriOrigSource");
+        priOrigCondensateDrain.setName("PriOrigCondensateDrain");
         secPhasedFlow.setName("HeatFluidFlow");
-        pnSec.setName("hn");
-        secOrig1.setName("hz1");
-        secOrig2.setName("hz2");
+        secOrigSourceNode.setName("SecOriginSourceNode");
+        secOrigSource.setName("SecOriginSource");
+        secOrigDrainNode.setName("SecOriginDrainNode");
+        secOrigDrain.setName("SecOriginDrain");
+        secOutFlowPressure.setName("secOutFlowPressure");
 
-        // connect elements like in schematic
-        pz2.connectToVia(flowOut, pn2);
-        flowOut.connectTo(
-                instance.getPhasedNode(PhasedCondenser.PRIMARY_OUT));
-        pz1.connectToVia(flowIn, pn1);
-        flowIn.connectTo(
+        // connect elements
+        priOrigSource.connectToVia(priInFlowSource, priSourceNode);
+        priInFlowSource.connectTo(
                 instance.getPhasedNode(PhasedCondenser.PRIMARY_IN));
-        secOrig2.connectToVia(secPhasedFlow, pnSec);
+        priOrigCondensateDrain.connectToVia(priCondensateOutFlowSource,
+                priDrainNode);
+        priCondensateOutFlowSource.connectTo(
+                instance.getPhasedNode(PhasedCondenser.PRIMARY_OUT));
+        secOrigSource.connectToVia(secPhasedFlow, secOrigSourceNode);
         secPhasedFlow.connectTo(
                 instance.getPhasedNode(PhasedCondenser.SECONDARY_IN));
-        secOrig1.connectTo(
-                instance.getPhasedNode(PhasedCondenser.SECONDARY_OUT));
+        secOutFlowPressure.connectBetween(
+                instance.getPhasedNode(PhasedCondenser.SECONDARY_OUT),
+                secOrigDrainNode);
+        secOrigDrain.connectTo(secOrigDrainNode);
 
         // Setup solver
         solver = new DomainAnalogySolver();
-        solver.addNetwork(pnSec);
+        solver.addNetwork(secOrigSourceNode);
     }
 
     @AfterMethod
     public void tearDownMethod() throws Exception {
         // clear all references 
         instance = null;
-        flowIn = null;
-        flowOut = null;
-        pn1 = null;
-        pn2 = null;
-        pz1 = null;
-        pz2 = null;
+        priInFlowSource = null;
+        priCondensateOutFlowSource = null;
+        priSourceNode = null;
+        priDrainNode = null;
+        priOrigSource = null;
+        priOrigCondensateDrain = null;
         secPhasedFlow = null;
-        pnSec = null;
-        secOrig1 = null;
-        secOrig2 = null;
+        secOrigSourceNode = null;
+        secOrigDrain = null;
+        secOrigDrainNode = null;
+        secOrigSource = null;
     }
 
     /**
@@ -150,18 +183,18 @@ public class PhasedSuperheaterTest {
         // 300 * c = 1.260.000
         double heatEnergy = temperature * water.getSpecificHeatCapacity();
 
-        pz1.setOriginHeatEnergy(heatEnergy);
-        pz2.setOriginHeatEnergy(heatEnergy);
-        secOrig1.setOriginHeatEnergy(heatEnergy);
-        secOrig2.setOriginHeatEnergy(heatEnergy);
-        
+        priOrigSource.setOriginHeatEnergy(heatEnergy);
+        priOrigCondensateDrain.setOriginHeatEnergy(heatEnergy);
+        secOrigDrain.setOriginHeatEnergy(heatEnergy);
+        secOrigSource.setOriginHeatEnergy(heatEnergy);
+
         // pressurize secondary loop
-        secOrig1.setEffort(5e6);
-        secOrig1.setEffort(5e6);
+        secOrigDrain.setEffort(5e6);
+        secOrigDrain.setEffort(5e6);
 
         instance.initConditions(temperature, heatEnergy, 1.0, 5e6);
-        flowIn.setFlow(0.0);
-        flowOut.setFlow(0.0);
+        priInFlowSource.setFlow(0.0);
+        priCondensateOutFlowSource.setFlow(0.0);
         secPhasedFlow.setFlow(0);
 
         for (int idx = 0; idx < 10; idx++) {
@@ -179,43 +212,76 @@ public class PhasedSuperheaterTest {
 
         assertEquals(instance.getPrimarySideReservoir().getTemperature(),
                 temperature, 1e-8);
-
     }
 
-   // @Test // no automated test here, just to mess around here.
-    public void testFailingAuxCondenser() {
-        // Those parameters are from the rbmk sims auxiliary condenser 
-        instance.initCharacteristic(4.0, 500, 5e5, 1e5);
+    /**
+     * Uses the conditions of the chernobyl RBMK simulator and allows testing
+     * the class for that designed purpose. This case here showed an unexpected
+     * behavior with the temperature in the condenser rising above any physical
+     * accepted level. The condition is a way too hot condensate that should be
+     * cooled down by the steam from the HP turbine.
+     */
+    @Test
+    public void chernobylTurbine() {
+        // Conditions after starting up turbine:
+        // Primary in: Goes into nomassexchanger
+        // 12.87 kg/s, 4439777, 812387 Pa
+        // Primary Condenser conditions: 1856301 heatEnergy, 13095 kg (h=60 cm)
+        // Secondary in: Goes into reservoir loop
+        // 238.85 kg/s, 3337775, 86979 Pa
+        // Secondary Reservoir loop condition: 2989426 heatEnergy
 
-        double temperaturePrimary = 273.15 + 140; // 413.5 - 140 °C
-        double temperatureSecondary = 293.15; // 20 °C
-        double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity() + water.getVaporizationHeatEnergy();
+        // same configuration as in simulator, no ambient pressure
+        // changed: Obviously there is some serious issue if the thermal 
+        // conductivity kTimesA gets higher than 1e6 
+        instance.initCharacteristic(25.0, 200, 5e5, 0.0);
 
-        pz1.setOriginHeatEnergy(heatEnergy);
-        pz2.setOriginHeatEnergy(heatEnergy); // optional, this is the out-origin
-        //hz2.setOriginTemperature(temperatureSecondary);
+        // Initial conditions: A temperature for saturation is usually given
+        // but here a pressure is used, so we calculate saturation temp:
+        instance.initConditions(water.getSaturationTemperature(812387),
+                2989426, 0.6, 2989426);
 
-        // Set flow through both primary and secondary sides
-        instance.initConditions(temperatureSecondary, temperatureSecondary, 0.2, 5e5);
-        flowIn.setFlow(30.0);
-        flowOut.setFlow(-30.0);
-        secPhasedFlow.setFlow(600); // fully opened coolant loop: 600 kg/s
+        // Primary in flow (the pressure is obtained from the saturated steam)
+        priOrigSource.setOriginHeatEnergy(4439777);
+        priInFlowSource.setFlow(12.87);
+
+        // Secondary in flow:
+        secOrigSource.setOriginHeatEnergy(3337775);
+        secPhasedFlow.setFlow(238.85);
+        // Calculate a flow resistance that will generate the desired pressure
+        // on the phased fluid in the secondary flow part:
+        secOutFlowPressure.setResistanceParameter(86979 / 238.85);
+
+        // To test: The temperature of the resercoir needs to go down each 
+        // cycle as it is beeing cooled. Init with high value for first cycle.
+        double oldReservoirTemperature = 10000;
 
         for (int idx = 0; idx < 100; idx++) {
             solver.prepareCalculation();
             solver.doCalculation();
-//            System.out.println("Pri: Res. Level:"
-//                    + String.format("%.2f", instance.getPrimarySideReservoir().getFillHeight() * 100) // cm
-//                    + ", Res Temp: "
-//                    + String.format("%.2f", instance.getPrimarySideReservoir().getTemperature() - 273.15)
-//                    + ", Mid-Node: "
-//                    + String.format("%.2f", instance.getPhasedNode(PhasedCondenserNoMass.PRIMARY_INNER).getHeatEnergy() / water.getSpecificHeatCapacity() - 273.15)
-//                    + ", 2nd: Res-Loop "
-//                    + String.format("%.2f", instance.getSecondarySideReservoir().getHeatHandler().getTemperature() - 273.15)
-//                    + ", Mid-Node: "
-//                    + String.format("%.2f", instance.getHeatNode(PhasedCondenserNoMass.SECONDARY_INNER).getTemperature() - 273.15)
-//                    + ", Top Out: "
-//                    + String.format("%.2f", instance.getHeatNode(PhasedCondenserNoMass.SECONDARY_OUT).getTemperature() - 273.15));
+
+            double primaryInTemperature = water.getTemperature(
+                    instance.getPhasedNode(PhasedSuperheater.PRIMARY_IN)
+                            .getHeatEnergy(),
+                    instance.getPhasedNode(PhasedSuperheater.PRIMARY_IN)
+                            .getEffort()) - 273.15;
+            double secondaryOutTemperature = water.getTemperature(
+                    instance.getPhasedNode(PhasedSuperheater.SECONDARY_OUT)
+                            .getHeatEnergy(),
+                    instance.getPhasedNode(PhasedSuperheater.SECONDARY_OUT)
+                            .getEffort()) - 273.15;
+
+            // Check that the reservoir actually strictly cools down. The
+            // Initial state seems buggy.
+            if (idx > 1) {
+                assertEquals(oldReservoirTemperature
+                        > instance.getPrimarySideReservoir().getTemperature(),
+                        true, "Reservoir must cool down each cycle.");
+            }
+            // save for next cycle
+            oldReservoirTemperature
+                    = instance.getPrimarySideReservoir().getTemperature();
         }
     }
+
 }
