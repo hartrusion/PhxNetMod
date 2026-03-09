@@ -136,6 +136,8 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         } else {
             absoluteFluidPressure = ambientPressure;
         }
+        
+        previousPressureSet = false;
     }
 
     @Override
@@ -326,7 +328,10 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         phasedHandler.setInitialHeatEnergy(cIc.getHeatEnergy());
         fluidTemperature = cIc.getHeatEnergy()
                 / fluidProperties.getSpecificHeatCapacity();
-
+        if (phasedHandler instanceof PhasedThermalVolumeHandler) {
+            ((PhasedThermalVolumeHandler) phasedHandler).setPreviousPressure(
+                    cIc.getPreviousPressure());
+        }
     }
 
     /**
