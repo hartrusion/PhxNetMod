@@ -149,7 +149,8 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(0.0); // no fluid flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setInitialState(1.0, 1e5, temperature, temperature);
+        instance.setThermalDimension(1.0, 0.0);
+        instance.setInitialState(1e5, temperature, temperature);
 
         for (int steps = 0; steps <= 10; steps++) {
             run();
@@ -177,7 +178,8 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(10.0); // 10 kg/s in flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setInitialState(1.0, 1e5, 298.15, 298.15);
+        instance.setThermalDimension(1.0, 0.0);
+        instance.setInitialState(1e5, 298.15, 298.15);
 
         for (int steps = 0; steps <= 10; steps++) {
             run();
@@ -201,7 +203,8 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(0.0); // zero kg/s in flow
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setInitialState(1.0, 1e5, 298.15, 298.15);
+        instance.setThermalDimension(1.0, 0.0);
+        instance.setInitialState(1e5, 298.15, 298.15);
 
         for (int steps = 0; steps <= 10; steps++) {
             run();
@@ -231,7 +234,8 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(0.0); // zero kg/s in flow
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
         effortSource.setEffort(pressure); // ambient pressure
-        instance.setInitialState(1.0, pressure, temperature, temperature);
+        instance.setThermalDimension(1.0, 0.0);
+        instance.setInitialState(pressure, temperature, temperature);
 
         for (int steps = 0; steps <= 10; steps++) {
             run();
@@ -259,7 +263,8 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(-10.0); // 10 kg/s reverse flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setInitialState(1.0, 1e5, 298.15, 298.15);
+        instance.setThermalDimension(1.0, 0.0);
+        instance.setInitialState(1e5, 298.15, 298.15);
 
         for (int steps = 0; steps <= 10; steps++) {
             run();
@@ -286,7 +291,8 @@ public class PhasedExpandingThermalExchangerTest {
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
         double heatFlow = 1e5;
         effortSource.setEffort(heatFlow); // ambient pressure
-        instance.setInitialState(1.0, pressure, temperature, temperature);
+        instance.setThermalDimension(1.0, 0.0);
+        instance.setInitialState(pressure, temperature, temperature);
 
         for (int steps = 0; steps <= 100; steps++) {
             run();

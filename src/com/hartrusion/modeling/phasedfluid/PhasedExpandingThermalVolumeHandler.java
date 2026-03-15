@@ -97,7 +97,6 @@ public class PhasedExpandingThermalVolumeHandler
 
 //    private static final Logger LOGGER = Logger.getLogger(
 //            PhasedExpandingThermalVolumeHandler.class.getName());
-
     /**
      * Reference to the effort source representing the temperature for the
      * thermal flow.
@@ -116,13 +115,12 @@ public class PhasedExpandingThermalVolumeHandler
      */
     private double volume = 1.0;
 
-    public double getVolume() {
-        return volume;
-    }
-
-    public void setVolume(double volume) {
-        this.volume = volume;
-    }
+    /**
+     * Additional static mass to delay the heat energy transfer, does not
+     * contribute to the mass inside the element in terms of density or volume
+     * but helps to stabilize the model if the mass is getting too low or empty.
+     */
+    private double staticMass = 100;
 
     /**
      * Calculates a voiding based on a reference effort value, the voiding will
@@ -319,15 +317,15 @@ public class PhasedExpandingThermalVolumeHandler
             if (firstUpdatedNode.noHeatEnergy(aElement)
                     || firstUpdatedNode.getFlow(aElement) == 0.0) {
                 // no flow in forced (closed valves etc):
-                energyWithoutOutflow = (innerHeatMass * heatEnergy
+                energyWithoutOutflow = ((innerHeatMass + staticMass) * heatEnergy
                         - thermalSource.getFlow() * stepTime)
-                        / innerHeatMass; // divided by next mass;
+                        / (innerHeatMass + staticMass); // divided by next mass;
             } else {
-                energyWithoutOutflow = (innerHeatMass * heatEnergy
+                energyWithoutOutflow = ((innerHeatMass + staticMass) * heatEnergy
                         + firstUpdatedNode.getFlow(aElement) * stepTime
                         * firstUpdatedNode.getHeatEnergy(aElement)
                         - thermalSource.getFlow() * stepTime)
-                        / (innerHeatMass // divided by next mass
+                        / ((innerHeatMass + staticMass) // divided by next mass
                         + firstUpdatedNode.getFlow(aElement) * stepTime);
             }
 
@@ -499,9 +497,8 @@ public class PhasedExpandingThermalVolumeHandler
                     - delayedInHeatEnergy);
 
             // Calculate the mass amount that has to flow into the element
-            massIn
-                    = // massCapacity - innerHeatMass
-                    -firstUpdatedNode.getFlow(aElement) * stepTime;
+            // massCapacity - innerHeatMass
+            massIn = -firstUpdatedNode.getFlow(aElement) * stepTime;
             //  - reverseOutMassCorretion; // consider previous cycle!
             // Todo: This is still a problem and highly unstable. For now it
             //  does work and provide a solution but it is very bad.
@@ -541,12 +538,12 @@ public class PhasedExpandingThermalVolumeHandler
 
             // Now the heat energy can be calculated as it was possible in
             // normal operation.
-            energyWithoutOutflow = (innerHeatMass * heatEnergy
+            energyWithoutOutflow = ((innerHeatMass + staticMass) * heatEnergy
                     + otherNode.getFlow(aElement) * stepTime
                     * otherNode.getHeatEnergy(aElement)
                     - thermalSource.getFlow() * stepTime)
                     // divided by next mass
-                    / (innerHeatMass
+                    / ((innerHeatMass + staticMass)
                     + otherNode.getFlow(aElement) * stepTime);
             nextHeatEnergy = energyWithoutOutflow;
             heatEnergyPrepared = true;
@@ -593,6 +590,18 @@ public class PhasedExpandingThermalVolumeHandler
         nextDelayedInHeatEnergy = delayedInHeatEnergy;
     }
 
+    public double getVolume() {
+        return volume;
+    }
+
+    public void setVolume(double volume) {
+        this.volume = volume;
+    }
+    
+    public void setStaticMass(double mass) {
+        this.staticMass = mass;
+    }
+
     /**
      * Writes the current state to the supplied IC state object.
      *
@@ -605,11 +614,11 @@ public class PhasedExpandingThermalVolumeHandler
         ic.setNegativeMass(negativeMass);
         ic.setPreviousPressure(previousPressure);
     }
-    
+
     /**
      * Applies the provided initial condition object to this handler, setting it
      * to the saved state provided.
-     * 
+     *
      * @param ic PhasedExpandingExchangerIC
      */
     public void applyIcState(PhasedExpandingExchangerIC ic) {

@@ -39,8 +39,8 @@ import com.hartrusion.modeling.initial.TemperatureIC;
  * Represents a fixed volume with mass that can be heated up and expand to some
  * limited extend. Designed to be used as an evaporator element with a given
  * flow direction. The solving classes will handle this element in a specific
- * way that only works if there is only one path towards a capacitance or
- * effort forcing element.
+ * way that only works if there is only one path towards a capacitance or effort
+ * forcing element.
  * <p>
  * The primary purpose of this class is to transfer heat from a thermal source
  * to the phased fluid system. It has a very rude density model that allows for
@@ -48,13 +48,13 @@ import com.hartrusion.modeling.initial.TemperatureIC;
  * to calculate some kind of voiding factor for a positive void coefficient
  * feedback loop (this is what this was designed for).
  * <p>
- * There are two designed operating modes: Forced fluid flow though this
- * element into a reservoir or no flow with expansion by thermal energy being
- * added. There is a so-called reverse flow mode that also allows a flow from
- * the reservoir through the element but this will produce highly inaccurate
+ * There are two designed operating modes: Forced fluid flow though this element
+ * into a reservoir or no flow with expansion by thermal energy being added.
+ * There is a so-called reverse flow mode that also allows a flow from the
+ * reservoir through the element but this will produce highly inaccurate
  * results, however, it is still providing a solution. The reverse flow was
- * intended to have means to drain the reservoir or keep the model stable
- * during accident simulations.
+ * intended to have means to drain the reservoir or keep the model stable during
+ * accident simulations.
  *
  * @author Viktor Alexander Hartung
  */
@@ -171,16 +171,24 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     }
 
     /**
-     * Sets the initial state of the element.
-     * 
+     * Sets the volume and mass of the element.
+     *
      * @param totalVolume Volume of the element
+     * @param staticMass additional mass that is passive but counts to dynamics
+     */
+    public void setThermalDimension(double totalVolume, double staticMass) {
+        phasedHandler.setVolume(totalVolume);
+    }
+
+    /**
+     * Sets the initial state of the element.
+     *
      * @param pressure current pressure (for getting rho)
      * @param temperatureIn Temperature at the inlet (for distribution)
      * @param temperatureState Temperature inside the element
      */
-    public void setInitialState(double totalVolume, double pressure,
+    public void setInitialState(double pressure,
             double temperatureIn, double temperatureState) {
-        phasedHandler.setVolume(totalVolume);
 
         PhasedFluidProperties fp = phasedHandler.getPhasedFluidProperties();
 
@@ -189,7 +197,7 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
                 fp.getSpecificHeatCapacity() * temperatureState,
                 pressure);
 
-        phasedHandler.setInnerHeatedMass(totalVolume * rho);
+        phasedHandler.setInnerHeatedMass(phasedHandler.getVolume() * rho);
         phasedHandler.setInitialHeatEnergy(
                 temperatureState * fp.getSpecificHeatCapacity());
         phasedHandler.setInitialInHeatEnergy(

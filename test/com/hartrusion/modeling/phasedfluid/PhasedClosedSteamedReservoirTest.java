@@ -130,7 +130,8 @@ public class PhasedClosedSteamedReservoirTest {
                 = temperature * fluidProperties.getSpecificHeatCapacity();
         
         reservoir.setInitialState(100, temperature);
-        heater.setInitialState(0.1, 1e5, temperature, temperature);
+        heater.setThermalDimension(0.1, 0.0);
+        heater.setInitialState(1e5, temperature, temperature);
         
         for (int idx = 0; idx < 10; idx++) {
             solver.prepareCalculation();
@@ -154,7 +155,8 @@ public class PhasedClosedSteamedReservoirTest {
                 = temperature * fluidProperties.getSpecificHeatCapacity();
         
         reservoir.setInitialState(100, temperature);
-        heater.setInitialState(0.1, 1e5, temperature, temperature);
+        heater.setThermalDimension(0.1, 0.0);
+        heater.setInitialState(1e5, temperature, temperature);
         
         flowSource.setFlow(10.0); // 10 kg/s with 100 kg in reservoir and heater
         
