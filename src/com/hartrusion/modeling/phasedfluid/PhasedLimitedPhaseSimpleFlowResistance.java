@@ -56,17 +56,17 @@ public class PhasedLimitedPhaseSimpleFlowResistance
 
     /**
      * Get the excess specific energy that was consumed by this element.
-     * 
+     *
      * @return value in J/kg
      */
     public double getExcessHeatEnergy() {
         return ((PhasedLimitSimpleHandler) phasedHandler).getExcessEnergy();
     }
-    
+
     /**
-     * Get the excess power that was consumed by this element. Requires the 
+     * Get the excess power that was consumed by this element. Requires the
      * element to be in fully updated state.
-     * 
+     *
      * @return value in J/s = Watts
      */
     public double getExcessPower() {

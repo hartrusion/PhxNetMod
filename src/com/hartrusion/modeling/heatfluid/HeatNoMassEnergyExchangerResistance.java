@@ -26,18 +26,25 @@ package com.hartrusion.modeling.heatfluid;
 import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
 
 /**
+ * A no-mass element designed to exchange thermal energy with a counterpart
+ * no-mass element in the phased domain.
  *
  * @author Viktor Alexander Hartung
  */
 public class HeatNoMassEnergyExchangerResistance extends HeatAbstractFlowResistance {
-    
+
     private final HeatNoMassEnergyExchangerHandler heatExchangeHandler
             = new HeatNoMassEnergyExchangerHandler(this);
-    
+
     public HeatNoMassEnergyExchangerResistance() {
         heatHandler = heatExchangeHandler;
     }
-    
+
+    /**
+     * Makes the counterpart known to this instance.
+     *
+     * @param otherSide Handler object of the other side
+     */
     public void setOtherSide(PhasedEnergyExchangerHandler otherSide) {
         heatExchangeHandler.setOtherSide(otherSide);
     }
