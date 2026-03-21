@@ -31,6 +31,10 @@ import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.FlowThrough;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.OpenOrigin;
+import com.hartrusion.modeling.initial.AbstractIC;
+import com.hartrusion.modeling.initial.EnergyStorageIC;
+import com.hartrusion.modeling.initial.InitialConditions;
+import com.hartrusion.modeling.initial.PhasedPressurizedIC;
 
 /**
  * Represents a fixed mass that can store heat energy and transfer this heat
@@ -45,7 +49,7 @@ import com.hartrusion.modeling.general.OpenOrigin;
  * @author Viktor Alexander Hartung
  */
 public class PhasedThermalExchanger extends FlowThrough
-        implements PhasedElement {
+        implements PhasedElement, InitialConditions {
 
     PhasedThermalVolumeHandler phasedHandler;
 
@@ -277,6 +281,25 @@ public class PhasedThermalExchanger extends FlowThrough
         throw new ModelErrorException(
                     "None of both nodes is in required updated state for "
                             + "this operation.");
+    }
+    
+    @Override
+    public AbstractIC getState() {
+        // use state value to save the temperature, this element just has one
+        // value that needs to be stored.
+        PhasedPressurizedIC ic = new PhasedPressurizedIC();
+        ic.setElementName(toString());
+        ic.setHeatEnergy(phasedHandler.getHeatEnergy());
+        ic.setPreviousPressure(phasedHandler.getPreviousPressure());
+        return ic;
+    }
+
+    @Override
+    public void setInitialCondition(AbstractIC ic) {
+        checkInitialConditionName(ic);
+        PhasedPressurizedIC cIc = (PhasedPressurizedIC) ic;
+        phasedHandler.setInitialHeatEnergy(cIc.getHeatEnergy());
+        phasedHandler.setPreviousPressure(cIc.getPreviousPressure());
     }
 
 }

@@ -23,13 +23,13 @@
  */
 package com.hartrusion.modeling.heatfluid;
 
-import com.hartrusion.modeling.initial.TemperatureIC;
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.general.OpenOrigin;
+import com.hartrusion.modeling.initial.EnergyStorageIC;
 import com.hartrusion.modeling.initial.InitialConditions;
 
 /**
@@ -187,15 +187,17 @@ public class HeatThermalExchanger extends HeatPassive
 
     @Override
     public AbstractIC getState() {
-        TemperatureIC ic = new TemperatureIC();
+        // use state value to save the temperature, this element just has one
+        // value that needs to be stored.
+        EnergyStorageIC ic = new EnergyStorageIC();
         ic.setElementName(toString());
-        ic.setTemperature(heatHandler.getTemperature());
+        ic.setStateValue(heatHandler.getTemperature());
         return ic;
     }
 
     @Override
     public void setInitialCondition(AbstractIC ic) {
         checkInitialConditionName(ic);
-        heatHandler.setInitialTemperature(((TemperatureIC) ic).getTemperature());
+        heatHandler.setInitialTemperature(((EnergyStorageIC) ic).getStateValue());
     }
 }
