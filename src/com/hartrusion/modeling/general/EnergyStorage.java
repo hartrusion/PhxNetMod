@@ -96,5 +96,6 @@ abstract class EnergyStorage extends AbstractElement
     public void setInitialCondition(AbstractIC ic) {
         checkInitialConditionName(ic);
         stateValue = ((EnergyStorageIC) ic).getStateValue();
+        nextStateValue = stateValue;
     }
 }
