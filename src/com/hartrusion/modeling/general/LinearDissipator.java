@@ -203,7 +203,7 @@ public class LinearDissipator extends FlowThrough {
                 // Revert all those ideas here. Bring back this check as it is
                 // more important than ever thought (see commented out stuff 
                 // below!)
-                if (diff > 1e-3) {
+                if (diff > 10.0) {
                     if (!bridgedEffortWarningOccured) {
                         LOGGER.log(Level.WARNING, "Briged Nodes with different "
                                 + "effort values of " + diff
