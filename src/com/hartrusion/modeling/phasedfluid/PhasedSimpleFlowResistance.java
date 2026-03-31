@@ -35,7 +35,7 @@ public class PhasedSimpleFlowResistance extends PhasedAbstractFlowResistance {
 
     @Override
     public PhasedFluidProperties getPhasedFluidProperties() {
-        // This kidn of element does not use FluidProperties.
+        // This kind of element does not use FluidProperties.
         return null;
     }
     

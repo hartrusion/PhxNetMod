@@ -121,11 +121,19 @@ public class LinearDissipator extends FlowThrough {
         resistance = 1.0 / g;
     }
 
+    /**
+     * Sets the resistance to infinite and the element type to OPEN, resulting 
+     * in a no-flow condition with no connection between the used nodes.
+     */
     public void setOpenConnection() {
         resistance = Double.POSITIVE_INFINITY;
         elementType = ElementType.OPEN;
     }
 
+    /**
+     * Sets the element to BRIDGED, this changes the element type and sets the
+     * resistance to 0, effectively being a bridge between two nodes.
+     */
     public void setBridgedConnection() {
         resistance = 0.0;
         elementType = ElementType.BRIDGED;
