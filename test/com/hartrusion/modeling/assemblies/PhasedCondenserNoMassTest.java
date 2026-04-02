@@ -74,7 +74,7 @@ public class PhasedCondenserNoMassTest {
         instance.initGenerateNodes();
         instance.initName("TestCondenserInstance");
         // 1 m² base area, 20 kg steam in condensing area,
-        instance.initCharacteristic(1.0, 200, 2e4, 1e5, 4.0);
+        instance.initCharacteristic(1.0, 200, 2e4, 1e5);
 
         // Generate additonal model elements
         flowIn = new PhasedFlowSource();
@@ -176,7 +176,7 @@ public class PhasedCondenserNoMassTest {
    // @Test // no automated test here, just to mess around here.
     public void testFailingAuxCondenser() {
         // Those parameters are from the rbmk sims auxiliary condenser 
-        instance.initCharacteristic(4.0, 500, 5e5, 1e5, 4.0);
+        instance.initCharacteristic(4.0, 500, 5e5, 1e5);
 
         double temperaturePrimary = 273.15 + 140; // 413.5 - 140 °C
         double temperatureSecondary = 293.15; // 20 °C

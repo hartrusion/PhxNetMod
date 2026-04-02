@@ -160,8 +160,7 @@ public class PhasedCondenserNoMass {
      */
     public void initCharacteristic(double primaryBaseArea,
             double secondaryMass, double kTimesA,
-            double ambientPressure,
-            double ntu) {
+            double ambientPressure) {
         primarySideReservoir.setBaseArea(primaryBaseArea);
         primarySideReservoir.setAmbientPressure(ambientPressure);
         secondarySideReservoir.getHeatHandler().setInnerThermalMass(secondaryMass);
