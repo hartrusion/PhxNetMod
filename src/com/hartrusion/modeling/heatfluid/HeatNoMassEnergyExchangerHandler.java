@@ -226,7 +226,7 @@ public class HeatNoMassEnergyExchangerHandler implements HeatHandler,
         // temperature of flows towards the element must be in 
         // updated state. a zero-flow is also handled and valid.
         for (HeatNode tp : heatNodes) {
-            if (tp.getFlow((AbstractElement) element) >= 0.0) {
+            if (tp.getFlow((AbstractElement) element) > 0.0) {
                 if (!tp.temperatureUpdated((AbstractElement) element)) {
                     return false;
                 }

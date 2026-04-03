@@ -248,7 +248,7 @@ public class PhasedNoMassExchangerHandler
         // temperature of flows towards the element must be in 
         // updated state. a zero-flow is also handled and valid.
         for (PhasedNode pn : phasedNodes) {
-            if (pn.getFlow((AbstractElement) element) >= 0.0) {
+            if (pn.getFlow((AbstractElement) element) > 0.0) {
                 if (!pn.heatEnergyUpdated((AbstractElement) element)) {
                     return false;
                 }
