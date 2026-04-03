@@ -105,6 +105,8 @@ public class HydraulicLinearValve extends LinearDissipator {
         fullFlow = flowOpen;
         overallEffort = effort;
         otherResistance = resistance;
+        
+        resistanceFullOpen = (effort / flowOpen) - resistance; 
     }
 
     /**
@@ -118,6 +120,8 @@ public class HydraulicLinearValve extends LinearDissipator {
             opening = o;
             elementType = ElementType.DISSIPATOR;
             resistance = resistanceFullOpen;
+            // when using advancedCharacteristic, the proper value is 
+            // initialized for resistanceFullOpen also.
         } else if (o <= 0.01) {
             opening = 0.0;
             elementType = ElementType.OPEN;
