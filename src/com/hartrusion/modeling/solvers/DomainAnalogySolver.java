@@ -92,11 +92,24 @@ public class DomainAnalogySolver {
     private int[] forcingElementForNode;
 
     /**
-     * This list contains all elements that are placed between two effort forced
-     * ports. Those elements can get a solution in terms of flow by just calling
-     * the doCalculation method once. *
+     * This list contains all dissipator (resistor, open or bridged) elements
+     * that are placed between two effort forced ports. Those elements can get a
+     * solution in terms of flow by just calling the doCalculation method once.
+     * The calculation is called already as they are also part of the
+     * effortForcingElements list, but for network traversing this is required.
      */
-    private final List<AbstractElement> selfSolvingElements = new ArrayList<>();
+    private final List<AbstractElement> selfSolvingDissipatorElements
+            = new ArrayList<>();
+
+    /**
+     * If self-solving dissipators are connected directly between effort
+     * enforcing elements, (those are origins and self-capacitances) there might
+     * be no necessity to even add the effort enforcing element to any solver as
+     * no complex network needs to be solved. Such elements are handled in this
+     * list and handled accordingly.
+     */
+    private final List<AbstractElement> selfSolvingEffortEnforcers
+            = new ArrayList<>();
 
     /**
      * Holds references to all created TransferSubnet solver instances.
@@ -150,7 +163,6 @@ public class DomainAnalogySolver {
         GeneralNode node;
         AbstractElement element;
         int idx, jdx, nr;
-        ElementType eType;
         int iterations = 50;
         // all found nodes and elements will be stored here so we know what we
         // have already seen
@@ -230,6 +242,8 @@ public class DomainAnalogySolver {
             for (idx = 0; idx < n.getNumberOfElements(); idx++) {
                 if (n.getElement(idx).getElementType() == ElementType.ORIGIN
                         || n.getElement(idx) instanceof SelfCapacitance) {
+                    // Mark all nodes which have their efforts forced directly
+                    // by an element in an array of bools.
                     hasForcedEffort[modelNodes.indexOf(n)] = true;
                     if (forcingElementForNode[modelNodes.indexOf(n)] != -1) {
                         throw new ModelErrorException("There can only be one "
@@ -237,7 +251,6 @@ public class DomainAnalogySolver {
                     }
                     forcingElementForNode[modelNodes.indexOf(n)]
                             = modelElements.indexOf(n.getElement(idx));
-
                     if (!effortForcingElements.contains(n.getElement(idx))) {
                         effortForcingElements.add(n.getElement(idx));
                     }
@@ -245,16 +258,44 @@ public class DomainAnalogySolver {
             }
         }
 
-        // There is no need to add elements which can solve themselves, so we
-        // make a list of those too. It is valid that flow sources will appear 
-        // here too.
+        // There is no need to add resistance elements which can be solved by
+        // simply using ohms law to a solver algorithm, 
+        // make a list of those too. 
         for (AbstractElement e : modelElements) {
             if (LinearNetwork.isElementResistorType(e)) {
                 idx = modelNodes.indexOf(e.getNode(0));
                 jdx = modelNodes.indexOf(e.getNode(1));
                 if (hasForcedEffort[idx] && hasForcedEffort[jdx]) {
-                    selfSolvingElements.add(e);
+                    selfSolvingDissipatorElements.add(e);
                 }
+            }
+        }
+
+        // It is possible that effort forcing elements are only connected to 
+        // self solving elments. As those are not getting added to any solver,
+        // the effort forcing element can happen to not be added to any solver
+        // too. We need to add them to a separate list to also handle them 
+        // properly.
+        boolean hasOnylySelfSolvingElementsConnected;
+        for (AbstractElement e : effortForcingElements) {
+            // Check ALL other elements on the attached nodes
+            hasOnylySelfSolvingElementsConnected = true; // init
+            for (idx = 0; idx < e.getNumberOfNodes(); idx++) {
+                node = e.getNode(idx); // iterate through all nodes:
+                for (jdx = 0; jdx < node.getNumberOfElements(); jdx++) {
+                    element = node.getElement(jdx);
+                    if (element == e) {
+                        continue; // self
+                    }
+                    // if one of them is not self-solving, we're done here.
+                    if (!selfSolvingDissipatorElements.contains(element)) {
+                        hasOnylySelfSolvingElementsConnected = false;
+                        break;
+                    }
+                }
+            }
+            if (hasOnylySelfSolvingElementsConnected) {
+                selfSolvingEffortEnforcers.add(e);
             }
         }
 
@@ -286,7 +327,15 @@ public class DomainAnalogySolver {
         while (!allElementsInSolvers()) {
             iterations--;
             if (iterations <= 0) {
-                throw new ModelErrorException("Endless iterations.");
+                for (AbstractElement e : modelElements) {
+                    if (!isElementInSolver(e)) {
+                        LOGGER.log(Level.SEVERE, "Aborting with iterations "
+                                + "Eception now. Element "
+                                + e.toString()
+                                + " was NOT added to any solver.");
+                    }
+                }
+                throw new ModelErrorException("Endless iterations, aborting.");
             }
             for (AbstractElement e : modelElements) {
                 if (!isElementInSolver(e)
@@ -311,7 +360,8 @@ public class DomainAnalogySolver {
     private boolean allElementsInSolvers() {
         boolean found;
         for (AbstractElement e : modelElements) {
-            found = selfSolvingElements.contains(e);
+            found = selfSolvingDissipatorElements.contains(e);
+            found |= selfSolvingEffortEnforcers.contains(e);
             for (TransferSubnet tf : subnets) {
                 found |= tf.containsElement(e);
             }
@@ -329,7 +379,10 @@ public class DomainAnalogySolver {
     }
 
     private boolean isElementInSolver(AbstractElement e) {
-        if (selfSolvingElements.contains(e)) {
+        if (selfSolvingDissipatorElements.contains(e)) {
+            return true;
+        }
+        if (selfSolvingEffortEnforcers.contains(e)) {
             return true;
         }
         for (TransferSubnet tf : subnets) {
@@ -623,7 +676,7 @@ public class DomainAnalogySolver {
 
     public void prepareCalculation() {
         lastIterator.prepareCalculation();
-        for (AbstractElement e : selfSolvingElements) {
+        for (AbstractElement e : selfSolvingDissipatorElements) {
             e.prepareCalculation();
         }
         for (TransferSubnet ts : subnets) {
@@ -644,7 +697,7 @@ public class DomainAnalogySolver {
         for (AbstractElement e : effortForcingElements) {
             e.doCalculation();
         }
-        for (AbstractElement e : selfSolvingElements) {
+        for (AbstractElement e : selfSolvingDissipatorElements) {
             e.doCalculation();
         }
         for (SuperPosition sp : superPosNets) {
