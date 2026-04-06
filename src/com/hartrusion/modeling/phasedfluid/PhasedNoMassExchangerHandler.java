@@ -169,9 +169,11 @@ public class PhasedNoMassExchangerHandler
     @Override
     public double getMaxEnergyDelta(double otherTemperature) {
         double inEnergy = 0.0;
+        double inEffort = 0.0;
         for (PhasedNode pn : phasedNodes) { // get nodes by flow direction
             if (pn.getFlow((AbstractElement) element) > 0.0) {
                 inEnergy = pn.getHeatEnergy((AbstractElement) element);
+                inEffort = pn.getEffort();
                 break;
             }
         }
@@ -187,10 +189,20 @@ public class PhasedNoMassExchangerHandler
             assumedOutEnergy = otherTemperature 
                     * fluidProperties.getSpecificHeatCapacity();
         } else {
-            // heat up (and eventually evaporate):
-            assumedOutEnergy = otherTemperature 
-                    * fluidProperties.getSpecificHeatCapacity() 
-                    + fluidProperties.getVaporizationHeatEnergy();
+            // Check if the temperature reaches boiling or not
+            double tSat = fluidProperties.getSaturationTemperature(inEffort);
+            if (otherTemperature < tSat) {
+                // If not, the vaproization can not be reached due to 
+                // too low temperature, the energy is limited to the fluid part.
+                assumedOutEnergy = otherTemperature 
+                        * fluidProperties.getSpecificHeatCapacity();
+            } else {
+                // On saturation temperature and above, evaporation becomes
+                // possible:
+                assumedOutEnergy = otherTemperature 
+                        * fluidProperties.getSpecificHeatCapacity() 
+                        + fluidProperties.getVaporizationHeatEnergy();
+            }
         }
         return (assumedOutEnergy - inEnergy) * getInFlow();
         // positive: heats up this element

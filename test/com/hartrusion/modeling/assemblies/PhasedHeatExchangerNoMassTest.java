@@ -159,9 +159,13 @@ public class PhasedHeatExchangerNoMassTest {
         solver = null;
     }
 
+    /**
+     * It happened that the temperature of the phased fluid was extremely high,
+     * this dedicated test case examines that and validates the externally 
+     * calculated result for further changes.
+     */
     @Test
-    public void testGetSecondarySide() {
-
+    public void testAuxCondensateFailure() {
         solver.addNetwork(phDrainNode);
 
         double phasedMassFlow = 87; // kg/s
@@ -170,7 +174,7 @@ public class PhasedHeatExchangerNoMassTest {
         double heatInTemp = 295.15; // Kelvin
         double heatMassFlow = 44000; // kg/s
 
-        phR.setResistanceParameter(phasedMassFlow / phasedPressure);
+        phR.setResistanceParameter(phasedPressure / phasedMassFlow);
         phFlow.setFlow(phasedMassFlow);
         phSrcOrig.setOriginHeatEnergy( // 1,235,850
                 phasedInTemp * water.getSpecificHeatCapacity());
@@ -181,7 +185,7 @@ public class PhasedHeatExchangerNoMassTest {
         solver.prepareCalculation();
         solver.doCalculation();
         
-        // Problem
+        // Problem: this was 3,138,978, which is way too much.
         double phasedOutEnergy = 
                 instance.getPhasedNode(PhasedHeatExchangerNoMass.PRIMARY_OUT)
                         .getHeatEnergy();
@@ -190,7 +194,12 @@ public class PhasedHeatExchangerNoMassTest {
                 instance.getPhasedNode(PhasedHeatExchangerNoMass.PRIMARY_OUT)
                         .getEffort());
         
+        double heatOutTemp = instance.getHeatNode(
+                PhasedHeatExchangerNoMass.SECONDARY_OUT).getTemperature();
         
+        // There must be a full temperature transfer as this is an ideal
+        // exchanger element:
+        assertEquals(phasedOutTemp, heatInTemp, 1e-10);
     }
 
 }
