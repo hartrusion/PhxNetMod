@@ -78,6 +78,9 @@ public class PhasedVolumeSeparationHandler
             // sum up thermal energy going into element
             for (PhasedNode pn : phasedNodes) {
                 flow = pn.getFlow((AbstractElement) element);
+                if (flow <= 0.0) {
+                    continue; // only consider flows into element.
+                }
                 // It is possible that a flow exists in terms of double
                 // precision issues but the heat energy is in a non-present
                 // state. Simply skip these values and accept
@@ -89,7 +92,7 @@ public class PhasedVolumeSeparationHandler
                 heatedVolumeFlowIn = heatedVolumeFlowIn + flow * stepTime
                         * (pn.getHeatEnergy((AbstractElement) element));
             }
-            if (flowIn != 0.0) {
+            if (flowIn > 0.0) {
                 nextHeatEnergy = (innerHeatMass * heatEnergy
                         + heatedVolumeFlowIn) / (innerHeatMass + flowIn);
             } else {
