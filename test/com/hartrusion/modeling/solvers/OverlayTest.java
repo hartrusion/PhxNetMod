@@ -316,4 +316,240 @@ public class OverlayTest {
         // the recursive simplifier instead) but this will risk too much 
         // complexity and the need of more star polygon transforms.
     }
+
+    /**
+     * Auto-generated test case which throws a warning with bridged effort error
+     * on solving.
+     */
+    @Test
+    public void bridgedElementError() {
+        // instance to test and examine
+        Overlay instance = new Overlay();
+
+        GeneralNode[] node = new GeneralNode[23];
+        for (int idx = 0; idx < node.length; idx++) {
+            node[idx] = new GeneralNode(PhysicalDomain.ELECTRICAL);
+            node[idx].setName("node" + idx);
+        }
+
+        LinearDissipator[] r = new LinearDissipator[29];
+        for (int idx = 0; idx < r.length; idx++) {
+            r[idx] = new LinearDissipator(PhysicalDomain.ELECTRICAL);
+            r[idx].setName("R" + idx);
+        }
+
+        r[0].setResistanceParameter(10.0);
+        r[1].setBridgedConnection();
+        r[2].setResistanceParameter(300.0);
+        r[3].setResistanceParameter(1400.0);
+        r[4].setOpenConnection();
+        r[5].setOpenConnection();
+        r[6].setOpenConnection();
+        r[7].setName("R7_bridged");
+        r[7].setBridgedConnection();
+        r[8].setResistanceParameter(28.0);
+        r[9].setResistanceParameter(28.0);
+        r[10].setOpenConnection();
+        r[11].setOpenConnection();
+        r[12].setBridgedConnection();
+        r[13].setBridgedConnection();
+        r[14].setBridgedConnection();
+        r[15].setName("R15_bridged");
+        r[15].setBridgedConnection();
+        r[16].setName("R16_bridged");
+        r[16].setBridgedConnection();
+        r[17].setName("R17_bridged");
+        r[17].setBridgedConnection();
+        r[18].setBridgedConnection();
+        r[19].setResistanceParameter(10.0);
+        r[20].setResistanceParameter(10.0);
+        r[21].setBridgedConnection();
+        r[22].setBridgedConnection();
+        r[23].setBridgedConnection();
+        r[24].setBridgedConnection();
+        r[25].setBridgedConnection();
+        r[26].setBridgedConnection();
+        r[27].setBridgedConnection();
+        r[28].setResistanceParameter(7.6);
+
+        EffortSource u = new EffortSource(PhysicalDomain.ELECTRICAL);
+        u.setEffort(-1200000.0);
+        u.setName("U");
+
+        ClosedOrigin zero = new ClosedOrigin(PhysicalDomain.ELECTRICAL);
+        zero.setName("GND");
+
+        // --- Connections ---
+        r[0].registerNode(node[0]);
+        node[0].registerElement(r[0]);
+        r[0].registerNode(node[1]);
+        node[1].registerElement(r[0]);
+        r[1].registerNode(node[0]);
+        node[0].registerElement(r[1]);
+        r[1].registerNode(node[2]);
+        node[2].registerElement(r[1]);
+        r[2].registerNode(node[3]);
+        node[3].registerElement(r[2]);
+        r[2].registerNode(node[1]);
+        node[1].registerElement(r[2]);
+        zero.connectTo(node[2]);
+        r[3].registerNode(node[4]);
+        node[4].registerElement(r[3]);
+        r[3].registerNode(node[3]);
+        node[3].registerElement(r[3]);
+        r[4].registerNode(node[3]);
+        node[3].registerElement(r[4]);
+        r[4].registerNode(node[5]);
+        node[5].registerElement(r[4]);
+        r[5].registerNode(node[3]);
+        node[3].registerElement(r[5]);
+        r[5].registerNode(node[6]);
+        node[6].registerElement(r[5]);
+        r[6].registerNode(node[3]);
+        node[3].registerElement(r[6]);
+        r[6].registerNode(node[7]);
+        node[7].registerElement(r[6]);
+        r[7].registerNode(node[4]);
+        node[4].registerElement(r[7]);
+        r[7].registerNode(node[2]);
+        node[2].registerElement(r[7]);
+        r[8].registerNode(node[8]);
+        node[8].registerElement(r[8]);
+        r[8].registerNode(node[5]);
+        node[5].registerElement(r[8]);
+        r[9].registerNode(node[9]);
+        node[9].registerElement(r[9]);
+        r[9].registerNode(node[5]);
+        node[5].registerElement(r[9]);
+        r[10].registerNode(node[10]);
+        node[10].registerElement(r[10]);
+        r[10].registerNode(node[5]);
+        node[5].registerElement(r[10]);
+        r[11].registerNode(node[11]);
+        node[11].registerElement(r[11]);
+        r[11].registerNode(node[5]);
+        node[5].registerElement(r[11]);
+        r[12].registerNode(node[5]);
+        node[5].registerElement(r[12]);
+        r[12].registerNode(node[12]);
+        node[12].registerElement(r[12]);
+        r[13].registerNode(node[13]);
+        node[13].registerElement(r[13]);
+        r[13].registerNode(node[6]);
+        node[6].registerElement(r[13]);
+        r[14].registerNode(node[14]);
+        node[14].registerElement(r[14]);
+        r[14].registerNode(node[7]);
+        node[7].registerElement(r[14]);
+        r[15].registerNode(node[8]);
+        node[8].registerElement(r[15]);
+        r[15].registerNode(node[2]);
+        node[2].registerElement(r[15]);
+        u.registerNode(node[9]);
+        node[9].registerElement(u);
+        u.registerNode(node[2]);
+        node[2].registerElement(u);
+        r[16].registerNode(node[10]);
+        node[10].registerElement(r[16]);
+        r[16].registerNode(node[2]);
+        node[2].registerElement(r[16]);
+        r[17].registerNode(node[11]);
+        node[11].registerElement(r[17]);
+        r[17].registerNode(node[2]);
+        node[2].registerElement(r[17]);
+        r[18].registerNode(node[12]);
+        node[12].registerElement(r[18]);
+        r[18].registerNode(node[15]);
+        node[15].registerElement(r[18]);
+        r[19].registerNode(node[13]);
+        node[13].registerElement(r[19]);
+        r[19].registerNode(node[16]);
+        node[16].registerElement(r[19]);
+        r[20].registerNode(node[14]);
+        node[14].registerElement(r[20]);
+        r[20].registerNode(node[17]);
+        node[17].registerElement(r[20]);
+        r[21].registerNode(node[15]);
+        node[15].registerElement(r[21]);
+        r[21].registerNode(node[18]);
+        node[18].registerElement(r[21]);
+        r[22].registerNode(node[16]);
+        node[16].registerElement(r[22]);
+        r[22].registerNode(node[2]);
+        node[2].registerElement(r[22]);
+        r[23].registerNode(node[17]);
+        node[17].registerElement(r[23]);
+        r[23].registerNode(node[2]);
+        node[2].registerElement(r[23]);
+        r[24].registerNode(node[18]);
+        node[18].registerElement(r[24]);
+        r[24].registerNode(node[19]);
+        node[19].registerElement(r[24]);
+        r[25].registerNode(node[19]);
+        node[19].registerElement(r[25]);
+        r[25].registerNode(node[20]);
+        node[20].registerElement(r[25]);
+        r[26].registerNode(node[21]);
+        node[21].registerElement(r[26]);
+        r[26].registerNode(node[20]);
+        node[20].registerElement(r[26]);
+        r[27].registerNode(node[21]);
+        node[21].registerElement(r[27]);
+        r[27].registerNode(node[22]);
+        node[22].registerElement(r[27]);
+        r[28].registerNode(node[22]);
+        node[22].registerElement(r[28]);
+        r[28].registerNode(node[2]);
+        node[2].registerElement(r[28]);
+
+        for (GeneralNode n : node) {
+            instance.registerNode(n);
+        }
+        instance.registerElement(r[0], false, false);
+        instance.registerElement(r[1], false, false);
+        instance.registerElement(r[2], false, false);
+        instance.registerElement(zero, false, false);
+        instance.registerElement(r[3], false, false);
+        instance.registerElement(r[4], false, false);
+        instance.registerElement(r[5], false, false);
+        instance.registerElement(r[6], false, false);
+        instance.registerElement(r[7], false, true);
+        instance.registerElement(r[8], false, false);
+        instance.registerElement(r[9], false, false);
+        instance.registerElement(r[10], false, false);
+        instance.registerElement(r[11], false, false);
+        instance.registerElement(r[12], false, false);
+        instance.registerElement(r[13], false, false);
+        instance.registerElement(r[14], false, false);
+        instance.registerElement(r[15], false, true);
+        instance.registerElement(u, false, false);
+        instance.registerElement(r[16], false, true);
+        instance.registerElement(r[17], false, true);
+        instance.registerElement(r[18], false, false);
+        instance.registerElement(r[19], false, false);
+        instance.registerElement(r[20], false, false);
+        instance.registerElement(r[21], false, false);
+        instance.registerElement(r[22], false, false);
+        instance.registerElement(r[23], false, false);
+        instance.registerElement(r[24], false, false);
+        instance.registerElement(r[25], false, false);
+        instance.registerElement(r[26], false, false);
+        instance.registerElement(r[27], false, false);
+        instance.registerElement(r[28], false, false);
+
+        instance.overlaySetup(); // fails with exception if not working
+
+        instance.prepareCalculation();
+        instance.doCalculation();
+
+        assertTrue(instance.isCalculationFinished(), 
+                "Calculation did not finish.");
+        
+        // There's a warning which invalidates the result of the overlay. As 
+        // the overlay itself does only provide flows and no efforts to the 
+        // superposition solver that would call this, it does (hopefully) not
+        // affect the result. But there is some error that has to be fixed.
+        assertEquals(Math.abs(node[2].getEffort() - node[8].getEffort()),
+                0.0, 1.0e-4);
+    }
 }
