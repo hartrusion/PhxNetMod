@@ -73,7 +73,7 @@ public class Overlay extends ChildNetwork {
 
     /**
      * Marks the element on [index] of elements list which was an effort source
-     * and is no longer a source in this network. It was replaced with a 
+     * and is no longer a source in this network. It was replaced with a
      * shortcut in parent network and this overlay will try to optimize this.
      */
     private boolean[] wasEffortSource;
@@ -406,8 +406,8 @@ public class Overlay extends ChildNetwork {
      * including the underlaying solvers needed to provide a solution back to
      * those added elements.
      * <p>
-     * This method just calls the individual steps, they are grouped like this to
-     * keep this class a little more organized.
+     * This method just calls the individual steps, they are grouped like this
+     * to keep this class a little more organized.
      */
     public void overlaySetup() {
         checkMergeableNodes();
@@ -480,9 +480,38 @@ public class Overlay extends ChildNetwork {
             if (wasEffortSource[idx]) {
                 // merge node 1 to node 0. This is random, could also be done
                 // the other way.
-                jdx = nodes.indexOf(elements.get(idx).getNode(1));
+                /*   jdx = nodes.indexOf(elements.get(idx).getNode(1));
                 nodeMergedWith[jdx]
                         = nodes.indexOf(elements.get(idx).getNode(0));
+                 */
+
+                // Fix: Having multiple effort sources on one node 
+                int n0 = nodes.indexOf(elements.get(idx).getNode(0));
+                int n1 = nodes.indexOf(elements.get(idx).getNode(1));
+
+                // Find roots of both nodes to avoid overwriting existing 
+                // merges. This is some complex shit here and did only happen
+                // in more advanced models.
+                int root0 = n0;
+                while (nodeMergedWith[root0] >= 0) {
+                    root0 = nodeMergedWith[root0];
+                }
+                int root1 = n1;
+                while (nodeMergedWith[root1] >= 0) {
+                    root1 = nodeMergedWith[root1];
+                }
+
+                // Only merge nodes if they are not in same chain already.
+                if (root0 != root1) {
+                    // Never ever merge the ground node somewhere, in that case,
+                    // merge the other way round to keep groundNode available.
+                    if (root1 == groundNodeIdx) {
+                        nodeMergedWith[root0] = root1; // merge root0 to gnd
+                    } else {
+                        nodeMergedWith[root1] = root0; // default
+                    }
+                }
+
             }
             elementChecked[idx] = true; // unneccessary but usefull for debug
         }

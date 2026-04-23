@@ -551,5 +551,10 @@ public class OverlayTest {
         // affect the result. But there is some error that has to be fixed.
         assertEquals(Math.abs(node[2].getEffort() - node[8].getEffort()),
                 0.0, 1.0e-4);
+        
+        // Fixed: Reason was mergin nodes in some kind of circle so some 
+        // information on the fact that a merge happened was actually lost,
+        // making the iteration using 0.0 flow to set the effort same for 
+        // 2 nodes. Fixed in checkMergeableNodes second loop.
     }
 }
