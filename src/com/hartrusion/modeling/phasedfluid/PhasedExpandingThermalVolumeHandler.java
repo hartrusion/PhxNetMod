@@ -170,10 +170,10 @@ public class PhasedExpandingThermalVolumeHandler
     @Override
     public void preparePhasedCalculation() {
         if (heatEnergyPrepared) {
-            if (nextInnerHeatMass <= 0.0) {
-                throw new ModelErrorException("Evaporator element empty, "
-                        + "calculation impossible. Make sure there is always "
-                        + "mass inside the element!");
+            if (nextInnerHeatMass < -1e-12) {
+                throw new ModelErrorException("Evaporator element gets "
+                        + "a negative mass value assigne by calculation, "
+                        + "this is impossible.");
             }
             innerHeatMass = nextInnerHeatMass;
             delayedInHeatEnergy = nextDelayedInHeatEnergy;
@@ -359,7 +359,8 @@ public class PhasedExpandingThermalVolumeHandler
                 nextDelayedInHeatEnergy = delayedInHeatEnergy; // keep
             } else {
                 nextDelayedInHeatEnergy = delayedInHeatEnergy + stepTime
-                        * firstUpdatedNode.getFlow(aElement) / innerHeatMass
+                        * firstUpdatedNode.getFlow(aElement) 
+                        / (innerHeatMass + staticMass)
                         * (firstUpdatedNode.getHeatEnergy()
                         - delayedInHeatEnergy);
             }
@@ -411,6 +412,18 @@ public class PhasedExpandingThermalVolumeHandler
                 // negative mass quantity. Remove any leftover negative mass.
                 outMassQuantity = massOut - negativeMass;
                 negativeMass = 0.0;
+
+                // Limit outMassQuantity to the mass available in the element.
+                // (current mass + in flow in this time step)
+                double availableMass = innerHeatMass;
+                if (!firstUpdatedNode.noHeatEnergy(aElement) 
+                        && firstUpdatedNode.getFlow(aElement) != 0.0) {
+                    availableMass += firstUpdatedNode.getFlow(aElement) * stepTime;
+                }
+                if (outMassQuantity > availableMass) {
+                    outMassQuantity = availableMass;
+                }
+
                 // Get the only non-updated port and write the result flow
                 if (!otherNode.flowUpdated(aElement)
                         && !otherNode.heatEnergyUpdated(aElement)) {
@@ -597,7 +610,7 @@ public class PhasedExpandingThermalVolumeHandler
     public void setVolume(double volume) {
         this.volume = volume;
     }
-    
+
     public void setStaticMass(double mass) {
         this.staticMass = mass;
     }
