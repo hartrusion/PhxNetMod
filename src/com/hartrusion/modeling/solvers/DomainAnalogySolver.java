@@ -695,6 +695,18 @@ public class DomainAnalogySolver {
     }
 
     public boolean doCalculation() {
+        // Hard-assign all flows to 0.0 on elements which are of OPEN type. 
+        // This eliminates numerical issues and ensures an exact 0.0 value when
+        // adding flows in superposition.
+        /*
+        for (int idx = 0; idx < modelNodes.size(); idx++) {
+            for (int jdx = 0; jdx < modelNodes.get(idx).getNumberOfElements(); jdx++) {
+                if (modelNodes.get(idx).getElement(jdx).getElementType() == ElementType.OPEN) {
+                    modelNodes.get(idx).setFlow(0.0, modelNodes.get(idx).getElement(jdx), false);
+                }
+            }
+        } */
+        
         for (TransferSubnet ts : subnets) {
             ts.doCalculation();
         }
@@ -822,7 +834,11 @@ public class DomainAnalogySolver {
                 }
             } else {
                 // Fallback, z.B. bei einem Ring ohne Lösung (Circular Dependency)
-                LOGGER.log(Level.WARNING, "Circular dependency detected. All unsolved elements depend on other unsolved elements.");
+                // In this case, some thermal delays have to be added. When having parallel pumps, there might be an issue with
+                // some pumps having nonequal characteristics, this will force a reverse flow through pumps. It is not supported
+                // to have a circle of flows which does mix something, this would require some additional solver that is
+                // not available.
+                LOGGER.log(Level.SEVERE, "Circular dependency detected. All unsolved elements depend on other unsolved elements.");
                 for (AbstractElement e : unsolvedElements) {
                     LOGGER.log(Level.WARNING, "Unsolved element in cycle: " + e.toString());
                 }
