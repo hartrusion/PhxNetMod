@@ -134,6 +134,8 @@ public class DomainAnalogySolver {
      */
     private final SimpleIterator lastIterator = new SimpleIterator();
 
+    private final List<AbstractElement> unsolvedElements = new ArrayList<>();
+
     /**
      * Holds a reference to a thread pool that can will be used for
      * superPosition solver for parallelization of solving process. If null, no
@@ -675,6 +677,8 @@ public class DomainAnalogySolver {
     }
 
     public void prepareCalculation() {
+        unsolvedElements.clear();
+        
         lastIterator.prepareCalculation();
         for (AbstractElement e : selfSolvingDissipatorElements) {
             e.prepareCalculation();
@@ -742,10 +746,86 @@ public class DomainAnalogySolver {
                         "Missing flow on node " + n.toString());
             }
         }
-        for (AbstractElement e : modelElements) {
+        /* for (AbstractElement e : modelElements) {
             if (!e.isCalculationFinished()) {
                 LOGGER.log(Level.WARNING,
                         "No full solution for element " + e.toString());
+            }
+        } */
+
+        // Check for missing solutions. In case something is missing, there will
+        // be a more detailed output that does not hold errors that are due to
+        for (AbstractElement e : modelElements) {
+            if (!e.isCalculationFinished()) {
+                unsolvedElements.add(e);
+            }
+        }
+
+        if (!unsolvedElements.isEmpty()) {
+            List<AbstractElement> rootCauses = new ArrayList<>();
+
+            for (AbstractElement e : unsolvedElements) {
+                boolean hasUnsolvedUpstream = false;
+
+                // Prüfe alle Knoten des Elements
+                for (int i = 0; i < e.getNumberOfNodes(); i++) {
+                    GeneralNode node = e.getNode(i);
+
+                    // Annahme: Flow > 0 bedeutet, dass Fluid vom Knoten IN das Element fließt.
+                    // (Falls deine Konvention andersherum ist, also Flow < 0 für Zufluss, 
+                    // musst du die Bedingung unten auf < 0.0 ändern).
+                    double flowIntoElement = node.getFlow(e);
+
+                    if (flowIntoElement > 1e-18) { // Nur echte Zuflüsse betrachten
+                        // Welches Element bringt diesen Fluss in den Knoten?
+                        for (int j = 0; j < node.getNumberOfElements(); j++) {
+                            AbstractElement upstreamElement = node.getElement(j);
+
+                            if (upstreamElement == e) {
+                                continue; // Sich selbst ignorieren
+                            }
+                            // Wenn das Element in den Knoten fördert (Flow in den Knoten hinein)
+                            // und dieses Element selbst nicht vollständig gelöst ist:
+                            double flowOutOfUpstream = -node.getFlow(upstreamElement);
+
+                            if (flowOutOfUpstream > 1e-9 && unsolvedElements.contains(upstreamElement)) {
+                                hasUnsolvedUpstream = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (hasUnsolvedUpstream) {
+                        break;
+                    }
+                }
+                
+                if (!hasUnsolvedUpstream && e.getCoupledElement() != null) {
+                    if (unsolvedElements.contains(e.getCoupledElement())) {
+                        hasUnsolvedUpstream = true;
+                        // Optional für mehr Details:
+                        LOGGER.info(e.toString() + " is waiting for its coupled element: " + e.getCoupledElement().toString());
+                    }
+                }
+
+                // Wenn es kein ungelöstes Upstream-Element gibt, ist dieses Element
+                // vermutlich der Auslöser der Kettenreaktion.
+                if (!hasUnsolvedUpstream) {
+                    rootCauses.add(e);
+                }
+            }
+
+            // Ausgabe
+            if (!rootCauses.isEmpty()) {
+                for (AbstractElement rootCause : rootCauses) {
+                    LOGGER.log(Level.SEVERE, "ROOT CAUSE: No full solution for element " + rootCause.toString()
+                            + ". Upstream elements seem to be solved or there is no upstream.");
+                }
+            } else {
+                // Fallback, z.B. bei einem Ring ohne Lösung (Circular Dependency)
+                LOGGER.log(Level.WARNING, "Circular dependency detected. All unsolved elements depend on other unsolved elements.");
+                for (AbstractElement e : unsolvedElements) {
+                    LOGGER.log(Level.WARNING, "Unsolved element in cycle: " + e.toString());
+                }
             }
         }
         return true;
