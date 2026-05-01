@@ -1273,5 +1273,13 @@ public class RecursiveSimplifierTest {
         instance.prepareRecursiveCalculation();
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished(), "Calculation did not finish.");
+        
+        /* for (int idx = 0; idx < node.length; idx++) {
+            System.out.println("node[" + idx + "].getEffort() = " + node[idx].getEffort());
+        }
+
+        for (int idx = 0; idx < r.length; idx++) {
+            System.out.println("r[" + idx + "].getFlow() = " + r[idx].getFlow());
+        } */
     }
 }
