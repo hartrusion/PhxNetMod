@@ -1096,7 +1096,7 @@ public class RecursiveSimplifier extends ChildNetwork {
                                 + "set effort value failed, diff: " + 
                                 Math.abs((childNodes.get(idx).getEffort()
                         - nodes.get(nodeOfChildNode[idx]).getEffort())));
-                    }
+                        }
                     validationErrorOccured[idx] = true;
                 } else {
                     validationErrorOccured[idx] = false;

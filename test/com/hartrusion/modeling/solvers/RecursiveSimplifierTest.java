@@ -1116,8 +1116,8 @@ public class RecursiveSimplifierTest {
 
     /**
      * Effort value validation fails here, problem: This triggers the reactor
-     * protection, found when doing first startup with Maha as supervisor. It 
-     * has to be further investigated why this exactly fails. It triggers 4 
+     * protection, found when doing first startup with Maha as supervisor. It
+     * has to be further investigated why this exactly fails. It triggers 4
      * warning messages.
      */
     @Test
@@ -1273,7 +1273,7 @@ public class RecursiveSimplifierTest {
         instance.prepareRecursiveCalculation();
         instance.doRecursiveCalculation();
         assertTrue(instance.isCalculationFinished(), "Calculation did not finish.");
-        
+
         /* for (int idx = 0; idx < node.length; idx++) {
             System.out.println("node[" + idx + "].getEffort() = " + node[idx].getEffort());
         }
@@ -1281,5 +1281,188 @@ public class RecursiveSimplifierTest {
         for (int idx = 0; idx < r.length; idx++) {
             System.out.println("r[" + idx + "].getFlow() = " + r[idx].getFlow());
         } */
+    }
+
+    /**
+     * This triggered a failure in solving when starsquare is not available and 
+     * star polygon is used. However, it also seems to trigger a mission 
+     * solution with the starsquare enabled, has to be investigated.
+     */
+    @Test
+    public void testExport3() {
+        RecursiveSimplifier instance = new RecursiveSimplifier();
+
+        // --- Nodes (8) ---
+        GeneralNode[] node = new GeneralNode[8];
+        for (int idx = 0; idx < node.length; idx++) {
+            node[idx] = new GeneralNode(PhysicalDomain.ELECTRICAL);
+            node[idx].setName("node" + idx);
+        }
+
+        // --- Dissipators (22) ---
+        LinearDissipator[] r = new LinearDissipator[22];
+        for (int idx = 0; idx < r.length; idx++) {
+            r[idx] = new LinearDissipator(PhysicalDomain.ELECTRICAL);
+            r[idx].setName("R" + idx);
+        }
+
+        r[0].setResistanceParameter(222.22222222222223);
+        r[1].setOpenConnection();
+        r[2].setOpenConnection();
+        r[3].setOpenConnection();
+        r[4].setOpenConnection();
+        r[5].setResistanceParameter(932.2222222222222);
+        r[6].setOpenConnection();
+        r[7].setOpenConnection();
+        r[8].setOpenConnection();
+        r[9].setOpenConnection();
+        r[10].setOpenConnection();
+        r[11].setResistanceParameter(51169.272729389864);
+        r[12].setBridgedConnection();
+        r[13].setResistanceParameter(2900.0);
+        r[14].setResistanceParameter(2900.0);
+        r[15].setResistanceParameter(2501.731884660272);
+        r[16].setResistanceParameter(2501.731884660272);
+        r[17].setOpenConnection();
+        r[18].setBridgedConnection();
+        r[19].setBridgedConnection();
+        r[20].setOpenConnection();
+        r[21].setOpenConnection();
+
+        EffortSource u = new EffortSource(PhysicalDomain.ELECTRICAL);
+        u.setEffort(1600000.0);
+        u.setName("U");
+
+        ClosedOrigin zero = new ClosedOrigin(PhysicalDomain.ELECTRICAL);
+        zero.setName("z");
+
+// --- Connections ---
+        zero.connectTo(node[7]);
+        u.registerNode(node[7]);
+        node[7].registerElement(u);
+        u.registerNode(node[0]);
+        node[0].registerElement(u);
+        r[0].registerNode(node[7]);
+        node[7].registerElement(r[0]);
+        r[0].registerNode(node[6]);
+        node[6].registerElement(r[0]);
+        r[1].registerNode(node[0]);
+        node[0].registerElement(r[1]);
+        r[1].registerNode(node[1]);
+        node[1].registerElement(r[1]);
+        r[2].registerNode(node[0]);
+        node[0].registerElement(r[2]);
+        r[2].registerNode(node[2]);
+        node[2].registerElement(r[2]);
+        r[3].registerNode(node[0]);
+        node[0].registerElement(r[3]);
+        r[3].registerNode(node[3]);
+        node[3].registerElement(r[3]);
+        r[4].registerNode(node[0]);
+        node[0].registerElement(r[4]);
+        r[4].registerNode(node[4]);
+        node[4].registerElement(r[4]);
+        r[5].registerNode(node[0]);
+        node[0].registerElement(r[5]);
+        r[5].registerNode(node[5]);
+        node[5].registerElement(r[5]);
+        r[6].registerNode(node[6]);
+        node[6].registerElement(r[6]);
+        r[6].registerNode(node[0]);
+        node[0].registerElement(r[6]);
+        r[7].registerNode(node[5]);
+        node[5].registerElement(r[7]);
+        r[7].registerNode(node[6]);
+        node[6].registerElement(r[7]);
+        r[8].registerNode(node[5]);
+        node[5].registerElement(r[8]);
+        r[8].registerNode(node[2]);
+        node[2].registerElement(r[8]);
+        r[9].registerNode(node[6]);
+        node[6].registerElement(r[9]);
+        r[9].registerNode(node[2]);
+        node[2].registerElement(r[9]);
+        r[10].registerNode(node[5]);
+        node[5].registerElement(r[10]);
+        r[10].registerNode(node[3]);
+        node[3].registerElement(r[10]);
+        r[11].registerNode(node[6]);
+        node[6].registerElement(r[11]);
+        r[11].registerNode(node[3]);
+        node[3].registerElement(r[11]);
+        r[12].registerNode(node[1]);
+        node[1].registerElement(r[12]);
+        r[12].registerNode(node[4]);
+        node[4].registerElement(r[12]);
+        r[13].registerNode(node[5]);
+        node[5].registerElement(r[13]);
+        r[13].registerNode(node[4]);
+        node[4].registerElement(r[13]);
+        r[14].registerNode(node[5]);
+        node[5].registerElement(r[14]);
+        r[14].registerNode(node[1]);
+        node[1].registerElement(r[14]);
+        r[15].registerNode(node[6]);
+        node[6].registerElement(r[15]);
+        r[15].registerNode(node[4]);
+        node[4].registerElement(r[15]);
+        r[16].registerNode(node[6]);
+        node[6].registerElement(r[16]);
+        r[16].registerNode(node[1]);
+        node[1].registerElement(r[16]);
+        r[17].registerNode(node[2]);
+        node[2].registerElement(r[17]);
+        r[17].registerNode(node[1]);
+        node[1].registerElement(r[17]);
+        r[18].registerNode(node[1]);
+        node[1].registerElement(r[18]);
+        r[18].registerNode(node[3]);
+        node[3].registerElement(r[18]);
+        r[19].registerNode(node[4]);
+        node[4].registerElement(r[19]);
+        r[19].registerNode(node[3]);
+        node[3].registerElement(r[19]);
+        r[20].registerNode(node[2]);
+        node[2].registerElement(r[20]);
+        r[20].registerNode(node[4]);
+        node[4].registerElement(r[20]);
+        r[21].registerNode(node[3]);
+        node[3].registerElement(r[21]);
+        r[21].registerNode(node[2]);
+        node[2].registerElement(r[21]);
+
+// --- Register with solver ---
+        for (GeneralNode n : node) {
+            instance.registerNode(n);
+        }
+        instance.registerElement(zero);
+        instance.registerElement(u);
+        instance.registerElement(r[0]);
+        instance.registerElement(r[1]);
+        instance.registerElement(r[2]);
+        instance.registerElement(r[3]);
+        instance.registerElement(r[4]);
+        instance.registerElement(r[5]);
+        instance.registerElement(r[6]);
+        instance.registerElement(r[7]);
+        instance.registerElement(r[8]);
+        instance.registerElement(r[9]);
+        instance.registerElement(r[10]);
+        instance.registerElement(r[11]);
+        instance.registerElement(r[12]);
+        instance.registerElement(r[13]);
+        instance.registerElement(r[14]);
+        instance.registerElement(r[15]);
+        instance.registerElement(r[16]);
+        instance.registerElement(r[17]);
+        instance.registerElement(r[18]);
+        instance.registerElement(r[19]);
+        instance.registerElement(r[20]);
+        instance.registerElement(r[21]);
+
+        instance.recursiveSimplificationSetup(0);
+        instance.prepareRecursiveCalculation();
+        instance.doRecursiveCalculation();
+        assertTrue(instance.isCalculationFinished(), "Calculation did not finish.");
     }
 }

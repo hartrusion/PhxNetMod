@@ -335,7 +335,7 @@ public class StarPolygonTransform {
             // one of both elements is bridged (we checked both other 
             // possibilities above. The remaining resistor will be calculated
             // by a formula which is based on the way the polygon looks if 
-            // drawn with bridges. If 2 elements are brdiged, there will be two
+            // drawn with bridges. If 2 elements are bridged, there will be two
             // of the nodes bridged. Two resistors will be attached to both 
             // sides of the bridge, this is the resistor from the star split 
             // into equal resistors. 
@@ -423,9 +423,11 @@ public class StarPolygonTransform {
             }
             double effortToCompare = outerNode.getEffort();
             for (LinearDissipator r : parentStarElements) {
+                if (r.getElementType() != ElementType.BRIDGED) {
+                    continue;
+                }
                 try {
-                    outerNode = parentStarElements[bridgedConnectionIdx]
-                            .getOnlyOtherNode(starNode);
+                    outerNode = r.getOnlyOtherNode(starNode);
                 } catch (NoFlowThroughException ex) {
                     throw new ModelErrorException("Unexpected non-flowthrough");
                 }
