@@ -1114,4 +1114,164 @@ public class RecursiveSimplifierTest {
         assertTrue(instance.isCalculationFinished(), "Calculation did not finish.");
     }
 
+    /**
+     * Effort value validation fails here, problem: This triggers the reactor
+     * protection, found when doing first startup with Maha as supervisor. It 
+     * has to be further investigated why this exactly fails. It triggers 4 
+     * warning messages.
+     */
+    @Test
+    public void testExport2() {
+        RecursiveSimplifier instance = new RecursiveSimplifier();
+
+        GeneralNode[] node = new GeneralNode[9];
+        for (int idx = 0; idx < node.length; idx++) {
+            node[idx] = new GeneralNode(PhysicalDomain.ELECTRICAL);
+            node[idx].setName("node" + idx);
+        }
+
+        node[0].setName("p-Square-0");
+        node[1].setName("p-Square-1");
+        node[2].setName("p-Square-2");
+        node[3].setName("p-Square-3");
+        node[4].setName("p-Delta-1");
+        node[5].setName("p-Delta-2");
+        node[6].setName("p-Delta-1");
+        node[7].setName("unnamed1");
+        node[8].setName("unnamed2");
+
+        LinearDissipator[] r = new LinearDissipator[17];
+        for (int idx = 0; idx < r.length; idx++) {
+            r[idx] = new LinearDissipator(PhysicalDomain.ELECTRICAL);
+            r[idx].setName("R" + idx);
+        }
+
+        r[0].setResistanceParameter(3865.979381443299);
+        r[1].setResistanceParameter(3865.979381443299);
+        r[2].setOpenConnection();
+        r[3].setOpenConnection();
+        r[4].setResistanceParameter(2.409710169512098E8);
+        r[5].setResistanceParameter(1010.0);
+        r[6].setOpenConnection();
+        r[7].setOpenConnection();
+        r[8].setOpenConnection();
+        r[9].setBridgedConnection();
+        r[10].setOpenConnection();
+        r[11].setOpenConnection();
+        r[12].setOpenConnection();
+        r[13].setOpenConnection();
+        r[14].setOpenConnection();
+        r[15].setBridgedConnection();
+        r[16].setBridgedConnection();
+
+        EffortSource u = new EffortSource(PhysicalDomain.ELECTRICAL);
+        u.setEffort(9500000.0);
+        u.setName("U");
+
+        ClosedOrigin zero = new ClosedOrigin(PhysicalDomain.ELECTRICAL);
+        zero.setName("ClosedOrigin");
+
+        zero.connectTo(node[8]);
+        r[0].registerNode(node[7]);
+        node[7].registerElement(r[0]);
+        r[0].registerNode(node[0]);
+        node[0].registerElement(r[0]);
+        u.registerNode(node[8]);
+        node[8].registerElement(u);
+        u.registerNode(node[7]);
+        node[7].registerElement(u);
+        r[1].registerNode(node[8]);
+        node[8].registerElement(r[1]);
+        r[1].registerNode(node[3]);
+        node[3].registerElement(r[1]);
+        r[2].registerNode(node[6]);
+        node[6].registerElement(r[2]);
+        r[2].registerNode(node[2]);
+        node[2].registerElement(r[2]);
+        r[3].registerNode(node[6]);
+        node[6].registerElement(r[3]);
+        r[3].registerNode(node[5]);
+        node[5].registerElement(r[3]);
+        r[4].registerNode(node[0]);
+        node[0].registerElement(r[4]);
+        r[4].registerNode(node[5]);
+        node[5].registerElement(r[4]);
+        r[5].registerNode(node[6]);
+        node[6].registerElement(r[5]);
+        r[5].registerNode(node[4]);
+        node[4].registerElement(r[5]);
+        r[6].registerNode(node[6]);
+        node[6].registerElement(r[6]);
+        r[6].registerNode(node[1]);
+        node[1].registerElement(r[6]);
+        r[7].registerNode(node[4]);
+        node[4].registerElement(r[7]);
+        r[7].registerNode(node[2]);
+        node[2].registerElement(r[7]);
+        r[8].registerNode(node[4]);
+        node[4].registerElement(r[8]);
+        r[8].registerNode(node[5]);
+        node[5].registerElement(r[8]);
+        r[9].registerNode(node[1]);
+        node[1].registerElement(r[9]);
+        r[9].registerNode(node[5]);
+        node[5].registerElement(r[9]);
+        r[10].registerNode(node[1]);
+        node[1].registerElement(r[10]);
+        r[10].registerNode(node[4]);
+        node[4].registerElement(r[10]);
+        r[11].registerNode(node[0]);
+        node[0].registerElement(r[11]);
+        r[11].registerNode(node[1]);
+        node[1].registerElement(r[11]);
+        r[12].registerNode(node[0]);
+        node[0].registerElement(r[12]);
+        r[12].registerNode(node[2]);
+        node[2].registerElement(r[12]);
+        r[13].registerNode(node[3]);
+        node[3].registerElement(r[13]);
+        r[13].registerNode(node[0]);
+        node[0].registerElement(r[13]);
+        r[14].registerNode(node[2]);
+        node[2].registerElement(r[14]);
+        r[14].registerNode(node[3]);
+        node[3].registerElement(r[14]);
+        r[15].registerNode(node[1]);
+        node[1].registerElement(r[15]);
+        r[15].registerNode(node[3]);
+        node[3].registerElement(r[15]);
+        r[16].registerNode(node[1]);
+        node[1].registerElement(r[16]);
+        r[16].registerNode(node[2]);
+        node[2].registerElement(r[16]);
+
+        for (GeneralNode n : node) {
+            instance.registerNode(n);
+        }
+        instance.registerElement(zero);
+        instance.registerElement(r[0]);
+        instance.registerElement(u);
+        instance.registerElement(r[1]);
+        instance.registerElement(r[2]);
+        instance.registerElement(r[3]);
+        instance.registerElement(r[4]);
+        instance.registerElement(r[5]);
+        instance.registerElement(r[6]);
+        instance.registerElement(r[7]);
+        instance.registerElement(r[8]);
+        instance.registerElement(r[9]);
+        instance.registerElement(r[10]);
+        instance.registerElement(r[11]);
+        instance.registerElement(r[12]);
+        instance.registerElement(r[13]);
+        instance.registerElement(r[14]);
+        instance.registerElement(r[15]);
+        instance.registerElement(r[16]);
+
+        // run
+        instance.recursiveSimplificationSetup(0);
+        instance.prepareRecursiveCalculation();
+        instance.doRecursiveCalculation();
+        assertTrue(instance.isCalculationFinished(), "Calculation did not finish.");
+    }
 }
