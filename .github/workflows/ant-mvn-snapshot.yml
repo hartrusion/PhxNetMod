@@ -19,7 +19,7 @@ permissions:
   packages: write
 
 env:
-  ARTIFACT_ID: PhxNetMod
+  ARTIFACT_ID: phxnetmod
   VERSION: 0.0.1-SNAPSHOT
 
 jobs:
