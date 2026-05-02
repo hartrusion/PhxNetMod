@@ -88,22 +88,35 @@ jobs:
           ant -buildfile .github/build.xml jar \
             -Djar.name=${{ env.ARTIFACT_ID }}-${{ env.VERSION }}.jar
 
-      - name: Delete snapshot if already existing
+      - name: Delete existing SNAPSHOT version (clean redeploy)
         run: |
-          version_id=$(curl -s \
+          PACKAGE_NAME="com.hartrusion.${{ env.ARTIFACT_ID }}"
+          
+          # Alle Versionen zählen
+          versions=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/user/packages/maven/com.hartrusion.${{ env.ARTIFACT_ID }}/versions" \
-            | jq -r '.[] | select(.name == "${{ env.VERSION }}") | .id')
-          if [ -n "$version_id" ]; then
-            echo "Deleting existing ${{ env.VERSION }} (id=$version_id)..."
+            "https://api.github.com/user/packages/maven/${PACKAGE_NAME}/versions")
+          
+          total=$(echo "$versions" | jq '. | length')
+          version_id=$(echo "$versions" | jq -r '.[] | select(.name == "${{ env.VERSION }}") | .id')
+          
+          if [ -z "$version_id" ]; then
+            echo "No existing ${{ env.VERSION }} found, nothing to delete."
+          elif [ "$total" -le 1 ]; then
+            echo "Only one version exists — deleting entire package..."
             curl -s -X DELETE \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/user/packages/maven/com.hartrusion.${{ env.ARTIFACT_ID }}/versions/$version_id"
-            echo "Deleted."
+              "https://api.github.com/user/packages/maven/${PACKAGE_NAME}"
+            echo "Package deleted."
           else
-            echo "No existing ${{ env.VERSION }} found."
+            echo "Multiple versions exist — deleting only ${{ env.VERSION }} (id=$version_id)..."
+            curl -s -X DELETE \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/user/packages/maven/${PACKAGE_NAME}/versions/$version_id"
+            echo "Version deleted."
           fi
 
       - name: Publish to GitHub Packages
