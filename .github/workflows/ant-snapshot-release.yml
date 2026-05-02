@@ -1,11 +1,11 @@
 # This workflow will build a Java project with Ant and upload the JAR artifact.
 # After a successful run it will delete older artifacts with the same artifact name,
 # so only the newest "Package" artifact remains.
-name: Java CI
+name: Ant Snapshot Release
 
 on:
-  push:
-    branches: [ "main" ]
+  # push:
+  #  branches: [ "main" ]
   workflow_dispatch:
 
 # Allow this workflow to delete older artifacts via the GITHUB_TOKEN
