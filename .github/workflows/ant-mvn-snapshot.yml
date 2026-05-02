@@ -106,6 +106,6 @@ jobs:
       - name: Delete old SNAPSHOT versions (keep only latest)
         uses: actions/delete-package-versions@v5
         with:
-          package-name: 'phxnetmod'
+          package-name: 'com.hartrusion.phxnetmod'
           package-type: 'maven'
           min-versions-to-keep: 1
