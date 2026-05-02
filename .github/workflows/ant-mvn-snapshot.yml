@@ -88,6 +88,24 @@ jobs:
           ant -buildfile .github/build.xml jar \
             -Djar.name=${{ env.ARTIFACT_ID }}-${{ env.VERSION }}.jar
 
+      - name: Delete snapshot if already existing
+        run: |
+          version_id=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/user/packages/maven/com.hartrusion.${{ env.ARTIFACT_ID }}/versions" \
+            | jq -r '.[] | select(.name == "${{ env.VERSION }}") | .id')
+          if [ -n "$version_id" ]; then
+            echo "Deleting existing ${{ env.VERSION }} (id=$version_id)..."
+            curl -s -X DELETE \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/user/packages/maven/com.hartrusion.${{ env.ARTIFACT_ID }}/versions/$version_id"
+            echo "Deleted."
+          else
+            echo "No existing ${{ env.VERSION }} found."
+          fi
+
       - name: Publish to GitHub Packages
         run: |
           mvn deploy:deploy-file \
@@ -102,10 +120,3 @@ jobs:
             -DupdateReleaseInfo=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete old SNAPSHOT versions (keep only latest)
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: 'com.hartrusion.phxnetmod'
-          package-type: 'maven'
-          min-versions-to-keep: 1
