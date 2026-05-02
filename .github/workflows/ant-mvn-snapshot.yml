@@ -71,12 +71,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Write ephemeral pom for dependency submission
+        run: cp /tmp/deps-pom.xml pom.xml
+
       - name: Submit dependencies to GitHub Dependency Graph
         uses: advanced-security/maven-dependency-submission-action@v4
-        with:
-          maven-args: -f /tmp/deps-pom.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove ephemeral pom
+        if: always()
+        run: rm -f pom.xml
 
       - name: Build JAR with Ant
         run: |
@@ -97,3 +102,10 @@ jobs:
             -DupdateReleaseInfo=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old SNAPSHOT versions (keep only latest)
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'phxnetmod'
+          package-type: 'maven'
+          min-versions-to-keep: 1
