@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 env:
@@ -68,6 +68,13 @@ jobs:
           mvn -f /tmp/deps-pom.xml dependency:copy-dependencies \
             -DoutputDirectory=$GITHUB_WORKSPACE/lib \
             -DincludeScope=compile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Submit dependencies to GitHub Dependency Graph
+        uses: advanced-security/maven-dependency-submission-action@v4
+        with:
+          maven-args: -f /tmp/deps-pom.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
