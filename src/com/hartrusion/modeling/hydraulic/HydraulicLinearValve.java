@@ -50,6 +50,13 @@ public class HydraulicLinearValve extends LinearDissipator {
     private double otherResistance, overallEffort, fullFlow;
 
     private double cfM, cfB;
+    
+    /**
+     * Valve is set as closed below this value. This is important for numeric 
+     * stability when using continuous controllers, if they open the valve for
+     * about 1e-9, the solver will have issues getting a proper solution
+     */
+    private static final double CLOSED_BELOW = 0.15;
 
     public HydraulicLinearValve() {
         super(PhysicalDomain.HYDRAULIC);
@@ -122,7 +129,7 @@ public class HydraulicLinearValve extends LinearDissipator {
             resistance = resistanceFullOpen;
             // when using advancedCharacteristic, the proper value is 
             // initialized for resistanceFullOpen also.
-        } else if (o <= 0.01) {
+        } else if (o <= CLOSED_BELOW) {
             opening = 0.0;
             elementType = ElementType.OPEN;
             resistance = Double.POSITIVE_INFINITY;
@@ -159,7 +166,7 @@ public class HydraulicLinearValve extends LinearDissipator {
         boolean didSomething = false;
         // resistance = resistanceFullOpen * 100 / opening;
 
-        if (opening <= 0.0 && elementType == ElementType.OPEN) {
+        if (opening <= CLOSED_BELOW && elementType == ElementType.OPEN) {
             // valve closed. no matter what effort is set to the valve,
             // all flows will be zero.
             for (GeneralNode p : nodes) {
