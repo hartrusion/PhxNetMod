@@ -1,0 +1,135 @@
+# Builds PhxNetMod with Ant and publishes the JAR as a rolling SNAPSHOT to GitHub Packages.
+# Dependencies are resolved from GitHub Packages at build time into lib/ (not stored in repo).
+# No pom.xml is stored in this repository - all Maven coordinates are declared inline.
+name: Github Packages Snapshot
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.yml'
+      - '**/*.png'
+      - '**/*.svg'
+      - '**/*.xml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  ARTIFACT_ID: phxnetmod
+  VERSION: 0.0.1-SNAPSHOT
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Resolve dependencies into lib/
+        run: |
+          mkdir -p lib
+          cat > /tmp/deps-pom.xml << 'EOF'
+          <project xmlns="http://maven.apache.org/POM/4.0.0"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>com.hartrusion</groupId>
+            <artifactId>phxnetmod-build-helper</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <repositories>
+              <repository>
+                <id>github</id>
+                <url>https://maven.pkg.github.com/hartrusion/utils</url>
+              </repository>
+            </repositories>
+            <dependencies>
+              <dependency>
+                <groupId>com.hartrusion</groupId>
+                <artifactId>utils</artifactId>
+                <version>0.0.1-SNAPSHOT</version>
+              </dependency>
+            </dependencies>
+          </project>
+          EOF
+          mvn -f /tmp/deps-pom.xml dependency:copy-dependencies \
+            -DoutputDirectory=$GITHUB_WORKSPACE/lib \
+            -DincludeScope=compile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write ephemeral pom for dependency submission
+        run: cp /tmp/deps-pom.xml pom.xml
+
+      - name: Submit dependencies to GitHub Dependency Graph
+        uses: advanced-security/maven-dependency-submission-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove ephemeral pom
+        if: always()
+        run: rm -f pom.xml
+
+      - name: Build JAR with Ant
+        run: |
+          ant -buildfile .github/build.xml jar \
+            -Djar.name=${{ env.ARTIFACT_ID }}-${{ env.VERSION }}.jar
+
+      - name: Delete existing SNAPSHOT version (clean redeploy)
+        run: |
+          PACKAGE_NAME="com.hartrusion.${{ env.ARTIFACT_ID }}"
+          
+          # Alle Versionen zählen
+          versions=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/user/packages/maven/${PACKAGE_NAME}/versions")
+          
+          total=$(echo "$versions" | jq '. | length')
+          version_id=$(echo "$versions" | jq -r '.[] | select(.name == "${{ env.VERSION }}") | .id')
+          
+          if [ -z "$version_id" ]; then
+            echo "No existing ${{ env.VERSION }} found, nothing to delete."
+          elif [ "$total" -le 1 ]; then
+            echo "Only one version exists — deleting entire package..."
+            curl -s -X DELETE \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/user/packages/maven/${PACKAGE_NAME}"
+            echo "Package deleted."
+          else
+            echo "Multiple versions exist — deleting only ${{ env.VERSION }} (id=$version_id)..."
+            curl -s -X DELETE \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/user/packages/maven/${PACKAGE_NAME}/versions/$version_id"
+            echo "Version deleted."
+          fi
+
+      - name: Publish to GitHub Packages
+        run: |
+          mvn deploy:deploy-file \
+            -Dfile=build/jar/${{ env.ARTIFACT_ID }}-${{ env.VERSION }}.jar \
+            -DgroupId=com.hartrusion \
+            -DartifactId=${{ env.ARTIFACT_ID }} \
+            -Dversion=${{ env.VERSION }} \
+            -Dpackaging=jar \
+            -DrepositoryId=github \
+            -Durl=https://maven.pkg.github.com/${{ github.repository_owner }}/${{ env.ARTIFACT_ID }} \
+            -DgeneratePom=true \
+            -DupdateReleaseInfo=false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
