@@ -46,6 +46,7 @@ public class PhasedLimitSimpleHandler implements PhasedHandler {
     private final PhasedElement element;
 
     private double vaporFraction = 1.0;
+    private double pressureDifference = 1e5;
     private double excessEnergy;
 
     PhasedLimitSimpleHandler(PhasedElement parent) {
@@ -194,8 +195,10 @@ public class PhasedLimitSimpleHandler implements PhasedHandler {
                 "Simple phased handler does not support heat volume.");
     }
 
-    public void setOutVaporFraction(double vaporFraction) {
+    public void setOutVaporFractionWithDiff(
+            double vaporFraction, double pressureDifference) {
         this.vaporFraction = vaporFraction;
+        this.pressureDifference = pressureDifference;
     }
     
     public double getExcessEnergy() {

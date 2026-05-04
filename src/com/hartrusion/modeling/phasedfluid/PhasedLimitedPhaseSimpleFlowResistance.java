@@ -25,7 +25,10 @@ package com.hartrusion.modeling.phasedfluid;
 
 /**
  * A flow resistance that limits the energy on the out node using a given vapor
- * fraction. The vanished energy value can be obtained with a method afterwards.
+ * fraction combined with a pressure difference. On that pressure difference,
+ * the given energy will be removed from the phased fluid in that cycle. If the
+ * pressure difference is 0, the energy will also be 0. The vanished energy
+ * value can be obtained with a method afterwards.
  * <p>
  * This element is used for a very simple turbine model, by forcing a certain
  * vapor fraction at the end of the turbine or its output, the energy which was
@@ -49,9 +52,21 @@ public class PhasedLimitedPhaseSimpleFlowResistance
         return fluidProperties;
     }
 
-    public void setOutVaporFraction(double vaporFraction) {
+    /**
+     * Sets the main characteristic for energy transfer out of the phased fluid
+     * on this element.
+     *
+     * @param vaporFraction Out vapor fraction (can be more than 1 for still
+     * superheated steam, this refers to the temperature then)
+     * @param pressureDifference Pressure difference in flow direction that is
+     * designed for this energy transfer. The removed heat will be less if that
+     * pressure difference is not there. This allows modeling of the heatup of
+     * the turbine before steam flows through it.
+     */
+    public void setOutVaporFractionWithDiff(
+            double vaporFraction, double pressureDifference) {
         ((PhasedLimitSimpleHandler) phasedHandler)
-                .setOutVaporFraction(vaporFraction);
+                .setOutVaporFractionWithDiff(vaporFraction, pressureDifference);
     }
 
     /**
