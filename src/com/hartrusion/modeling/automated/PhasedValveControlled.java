@@ -26,6 +26,7 @@ package com.hartrusion.modeling.automated;
 import com.hartrusion.control.AbstractController;
 import com.hartrusion.control.ControlCommand;
 import com.hartrusion.control.PIControl;
+import com.hartrusion.control.PIDControl;
 import com.hartrusion.control.TwoPointControl;
 import com.hartrusion.modeling.initial.AbstractAC;
 import com.hartrusion.modeling.initial.ValveControlled;
@@ -181,11 +182,15 @@ public class PhasedValveControlled extends PhasedValve {
         if (controller instanceof PIControl) {
             PIControl pic = (PIControl) controller;
             pic.acSetCondition(
-                vc.getControllerInput(), vc.getControllerOutput());
+                    vc.getControllerInput(), vc.getControllerOutput());
+        } else if (controller instanceof PIDControl) {
+            PIDControl pidc = (PIDControl) controller;
+            pidc.acSetCondition(
+                    vc.getControllerInput(), vc.getControllerOutput());
         } else if (controller instanceof TwoPointControl) {
             TwoPointControl tpc = (TwoPointControl) controller;
             tpc.acSetCondition(
-                vc.getControllerInput(), vc.getControllerOutput());
+                    vc.getControllerInput(), vc.getControllerOutput());
         }
     }
 }
