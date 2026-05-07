@@ -32,26 +32,108 @@ import java.util.List;
  *
  * @author Viktor Alexander Hartung
  */
-public class PhasedLimitSimpleHandler implements PhasedHandler {
+public class PhasedIsentropicExpansionHandler implements PhasedHandler {
 
     /**
      * Holds a list of all nodes connected to the element where this phased
      * handler is assigned.
      */
-    private final List<PhasedNode> phasedNodes;
+    private final List<PhasedNode> phasedNodes = new ArrayList<>();
 
     /**
      * Reference to the element which is using this phased handler instance.
      */
-    private final PhasedElement element;
+    private final PhasedTurbineStage element;
+    private double factor = 0.85; // Standardwert für isentropen Wirkungsgrad
+    private double excessEnergy = 0.0;
 
-    private double vaporFraction = 1.0;
-    private double pressureDifference = 1e5;
-    private double excessEnergy;
+    public PhasedIsentropicExpansionHandler(PhasedTurbineStage element) {
+        this.element = element;
+    }
 
-    PhasedLimitSimpleHandler(PhasedElement parent) {
-        phasedNodes = new ArrayList<>();
-        element = parent;
+    public void setIsentropicFactor(double k) {
+        this.factor = k;
+    }
+
+    public double getExcessEnergy() {
+        return excessEnergy;
+    }
+
+    /**
+     * Calculates the out heat energy for given in heat energy and both
+     * pressures.
+     *
+     * @param heatEnergyIn Energy set on in node
+     * @param pressureIn Pressure on in node (Pa)
+     * @param pressureOut Pressure on out node (Pa)
+     * @return Out energy
+     */
+    public double getOutHeatEnergy(double heatEnergyIn,
+            double pressureIn, double pressureOut) {
+        // Entropy at inlet (not normalized to 0°C)
+        double entropyIn = calculateEntropy(heatEnergyIn, pressureIn);
+
+        // ideal isentropic energy that would leave the element
+        double isentropicEnergyOut = calculateIsentropicEnergy(
+                entropyIn, pressureOut);
+
+        // Use factor to obtain the real energy value
+        // h_out = h_in - eta_is * (h_in - h_out_is)
+        return heatEnergyIn - factor * (heatEnergyIn - isentropicEnergyOut);
+
+    }
+
+    private double calculateEntropy(
+            double heatEnergy, double pressure) {
+        double tSat = element.getPhasedFluidProperties()
+                .getSaturationTemperature(pressure);
+        double cp = element.getPhasedFluidProperties()
+                .getSpecificHeatCapacity();
+        double hVap = element.getPhasedFluidProperties()
+                .getVaporizationHeatEnergy();
+        double hLiquid = element.getPhasedFluidProperties()
+                .getLiquidHeatCapacity(pressure);
+
+        double sFluid = cp * Math.log(tSat);
+        double sEvap = hVap / tSat;
+
+        if (heatEnergy <= hLiquid) { // liquid, noone knows why that ever
+            double t = heatEnergy / cp;
+            return cp * Math.log(t);
+        } else if (heatEnergy >= hLiquid + hVap) { // superheated
+            double t = (heatEnergy - hVap) / cp;
+            return sFluid + sEvap + cp * Math.log(t / tSat);
+        } else { // saturated steam
+            double x = element.getPhasedFluidProperties()
+                    .getVapourFraction(heatEnergy, pressure);
+            return sFluid + x * sEvap;
+        }
+    }
+
+    private double calculateIsentropicEnergy(double entropy, double pressure) {
+        double tSat = element.getPhasedFluidProperties()
+                .getSaturationTemperature(pressure);
+        double cp = element.getPhasedFluidProperties()
+                .getSpecificHeatCapacity();
+        double hVap = element.getPhasedFluidProperties()
+                .getVaporizationHeatEnergy();
+        double hLiquid = element.getPhasedFluidProperties()
+                .getLiquidHeatCapacity(pressure);
+
+        double sFluid = cp * Math.log(tSat);
+        double sEvap = hVap / tSat;
+        double sGas = sFluid + sEvap;
+
+        if (entropy <= sFluid) { // liquid
+            double t = Math.exp(entropy / cp);
+            return t * cp;
+        } else if (entropy >= sGas) { // superheated
+            double t = tSat * Math.exp((entropy - sGas) / cp);
+            return t * cp + hVap;
+        } else { // saturated
+            double x = (entropy - sFluid) / sEvap;
+            return hLiquid + x * hVap;
+        }
     }
 
     @Override
@@ -74,7 +156,7 @@ public class PhasedLimitSimpleHandler implements PhasedHandler {
         double flow;
         boolean allFlowsZero = true;
         PhasedNode inNode = null, outNode = null;
-        double inHeatEnergy;
+        double inHeatEnergy, outHeatEnergy;
 
         if (allFlowsUpdated()) {
             // First of all, if there is no flow at all (valves closed etc),
@@ -88,6 +170,7 @@ public class PhasedLimitSimpleHandler implements PhasedHandler {
                 for (PhasedNode pn : phasedNodes) { // all nodes connected
                     if (!pn.heatEnergyUpdated((AbstractElement) element)) {
                         pn.setNoHeatEnergy((AbstractElement) element);
+                        excessEnergy = 0.0;
                         didSomething = true;
                     }
                 }
@@ -115,37 +198,23 @@ public class PhasedLimitSimpleHandler implements PhasedHandler {
             if (!inNode.heatEnergyUpdated((AbstractElement) element)) {
                 return didSomething; // nothing to do if this is unknown yet
             }
-            
+
             if (inNode.noHeatEnergy((AbstractElement) element)) {
                 // Problem: There might be no heat energy set even with a set 
                 // flow direction, this is a result of numeric calculation 
                 // errors and a failure to detect them. In this case, we just
                 // propagate the no-energy state to keep the model running.
                 outNode.setNoHeatEnergy((AbstractElement) element);
+                excessEnergy = 0.0;
                 return true;
             }
-                  
+
             inHeatEnergy = inNode.getHeatEnergy((AbstractElement) element);
 
-            // Calculate the heat energy for the out node for a given 
-            // vapor fraction, this value will be compared to the energy that
-            // could be available from the inNode.
-            double referenceHeatEnergy = element.getPhasedFluidProperties()
-                    .getLiquidHeatCapacity(outNode.getEffort())
-                    + element.getPhasedFluidProperties()
-                            .getVaporizationHeatEnergy() * vaporFraction;
+            outHeatEnergy = getOutHeatEnergy(inHeatEnergy, inNode.getEffort(), outNode.getEffort());
 
-            // Limit the energy to the given reference value and provide this
-            // as excess energy value.
-            if (inHeatEnergy > referenceHeatEnergy) {
-                excessEnergy = inHeatEnergy - referenceHeatEnergy;
-                outNode.setHeatEnergy(referenceHeatEnergy,
-                        (AbstractElement) element);
-            } else {
-                excessEnergy = 0;
-                outNode.setHeatEnergy(inHeatEnergy,
-                        (AbstractElement) element);
-            }
+            outNode.setHeatEnergy(outHeatEnergy, (AbstractElement) element);
+            excessEnergy = inHeatEnergy - outHeatEnergy;
             didSomething = true;
         }
         return didSomething;
@@ -193,15 +262,5 @@ public class PhasedLimitSimpleHandler implements PhasedHandler {
     public void setInnerHeatedMass(double heatedMass) {
         throw new NonexistingStateVariableException(
                 "Simple phased handler does not support heat volume.");
-    }
-
-    public void setOutVaporFractionWithDiff(
-            double vaporFraction, double pressureDifference) {
-        this.vaporFraction = vaporFraction;
-        this.pressureDifference = pressureDifference;
-    }
-    
-    public double getExcessEnergy() {
-        return excessEnergy;
     }
 }
