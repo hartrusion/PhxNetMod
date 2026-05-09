@@ -178,6 +178,7 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
      */
     public void setThermalDimension(double totalVolume, double staticMass) {
         phasedHandler.setVolume(totalVolume);
+        phasedHandler.setStaticMass(staticMass);
     }
 
     /**
