@@ -95,6 +95,8 @@ public class PhasedVolumeSeparationHandler
             if (flowPresent) {
                 nextHeatEnergy = (innerHeatMass * heatEnergy
                         + heatedVolumeFlowIn) / (innerHeatMass + flowIn);
+            } else {
+                nextHeatEnergy = heatEnergy;
             }
 
             heatEnergyPrepared = true;
