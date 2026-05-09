@@ -190,6 +190,36 @@ public class PhasedExpandingThermalExchangerTest {
             assertEquals(nodeOut.getHeatEnergy(), specHeatEnergy, 1e-2);
         }
     }
+    
+    @Test
+    public void testHeatupAndFlowthrough() {
+        double temperature = 298.15; // 25 °C
+        double specHeatEnergy =
+                fluidProperties.getSpecificHeatCapacity() * temperature;
+        origin.setOriginHeatEnergy(specHeatEnergy); // default value
+        flowSource.setFlow(10.0); // 10 kg/s in flow
+        thForceFlow.setFlow(1e6); // 1 MW heatup
+        effortSource.setEffort(1e5); // ambient pressure
+        instance.setThermalDimension(0.1, 0.0);
+        
+        // Calculate the expected out temperature: Flow in with 10 kg/s and 
+        // (298.15 * 4200) J/kg is 12,522,300 J/s.
+        // Add Heatup with 1 MW to  1,000,000 J/s so total out is 13,522,300 J/s
+        // divide by 10 kg/s is 1,352,230 J/kg. Div by 4200 is 321.96 K which
+        // is 48.8 °C - this is fine wiht ambient pressure of 1 bar.
+        
+        instance.setInitialState(1e5, 298.15, 321.96);
+
+        // do a lot of steps here to have some longer time simulated
+        for (int steps = 0; steps <= 10000; steps++) {
+            run();
+            // Expect a minimum of 10 kg/s out of the element
+            assertTrue(nodeOut.getFlow(instance) <= -9.999);
+            // Heat energy must always stay above the manually calculated value,
+            // minus a very very tiny number here.
+            assertTrue(nodeOut.getHeatEnergy() >= 1352229);
+        }
+    }
 
     /**
      * Tests the behaviour of heating up below the point where the evaporation
@@ -225,7 +255,7 @@ public class PhasedExpandingThermalExchangerTest {
      * to evaporate. This will result in some flow out of the element.
      */
     @Test
-    public void testEvaporatingHeatUp() {
+    public void testEvaporatingNoFlowHeatUp() {
         double pressure = 1e5;
         double temperature = fluidProperties.getSaturationTemperature(pressure);
         double saturatedEnergy =
