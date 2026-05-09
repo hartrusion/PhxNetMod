@@ -27,8 +27,8 @@ import com.hartrusion.modeling.general.AbstractElement;
 
 /**
  * Splits the phased fluid according to the set kind of node, either steam or
- * liquid. The assumption is that the stored fluid has no energy stored in
- * steam phase.
+ * liquid. The assumption is that the stored fluid has no energy stored in steam
+ * phase, it is a liquid.
  *
  * @author Viktor Alexander Hartung
  */
@@ -58,7 +58,7 @@ public class PhasedVolumeSeparationHandler
                     // negative: flow is leaving this element
                     if (isSteamOutput[phasedNodes.indexOf(pn)]) {
                         pn.setHeatEnergy(
-                                heatEnergy 
+                                heatEnergy
                                 + fluidProperties.getVaporizationHeatEnergy(),
                                 (AbstractElement) element);
                     } else {
@@ -78,9 +78,6 @@ public class PhasedVolumeSeparationHandler
             // sum up thermal energy going into element
             for (PhasedNode pn : phasedNodes) {
                 flow = pn.getFlow((AbstractElement) element);
-                if (flow <= 0.0) {
-                    continue; // only consider flows into element.
-                }
                 // It is possible that a flow exists in terms of double
                 // precision issues but the heat energy is in a non-present
                 // state. Simply skip these values and accept
@@ -88,15 +85,14 @@ public class PhasedVolumeSeparationHandler
                 if (pn.noHeatEnergy((AbstractElement) element)) {
                     continue;
                 }
-                flowIn = flowIn + flow * stepTime; // sum up
+                flowIn = flowIn + flow * stepTime; // sum up flows
+                // and energ, in both directions
                 heatedVolumeFlowIn = heatedVolumeFlowIn + flow * stepTime
                         * (pn.getHeatEnergy((AbstractElement) element));
             }
-            if (flowIn > 0.0) {
+            if (flowIn != 0.0) {
                 nextHeatEnergy = (innerHeatMass * heatEnergy
                         + heatedVolumeFlowIn) / (innerHeatMass + flowIn);
-            } else {
-                nextHeatEnergy = heatEnergy;
             }
 
             heatEnergyPrepared = true;
