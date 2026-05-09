@@ -44,6 +44,7 @@ public class PhasedVolumeSeparationHandler
     public boolean doPhasedCalculation() {
         double flow, heatedVolumeFlowIn, flowIn;
         boolean didSomething = super.doPhasedCalculation();
+        boolean flowPresent = false;
 
         // all flows leaving will get the heat energy assigned.
         for (PhasedNode pn : phasedNodes) { // all nodes connected to element
@@ -89,8 +90,9 @@ public class PhasedVolumeSeparationHandler
                 // and energ, in both directions
                 heatedVolumeFlowIn = heatedVolumeFlowIn + flow * stepTime
                         * (pn.getHeatEnergy((AbstractElement) element));
+                flowPresent = true;
             }
-            if (flowIn != 0.0) {
+            if (flowPresent) {
                 nextHeatEnergy = (innerHeatMass * heatEnergy
                         + heatedVolumeFlowIn) / (innerHeatMass + flowIn);
             }
