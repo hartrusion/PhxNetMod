@@ -26,6 +26,7 @@ package com.hartrusion.modeling.phasedfluid;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
+import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.initial.PhasedExpandingExchangerIC;
 //import java.util.logging.Level;
 //import java.util.logging.Logger;
@@ -95,13 +96,19 @@ import com.hartrusion.modeling.initial.PhasedExpandingExchangerIC;
 public class PhasedExpandingThermalVolumeHandler
         extends PhasedAbstractVolumizedHandler {
 
-//    private static final Logger LOGGER = Logger.getLogger(
-//            PhasedExpandingThermalVolumeHandler.class.getName());
     /**
      * Reference to the effort source representing the temperature for the
      * thermal flow.
      */
-    EffortSource thermalSource;
+    private EffortSource thermalSource;
+
+    /**
+     * Reference to a thermal resistance that is to be manipulated by this
+     * class. If set, the resistance will be increased when there's less mass
+     * inside the element, representing lower heat conductance towards steam
+     * compared to water.
+     */
+    private LinearDissipator thermalResistance;
 
     PhasedExpandingThermalVolumeHandler(
             PhasedFluidProperties fluidProperties,
@@ -121,6 +128,8 @@ public class PhasedExpandingThermalVolumeHandler
      * but helps to stabilize the model if the mass is getting too low or empty.
      */
     private double staticMass = 100;
+
+    private double fullConductance, fullMass, emptyConductance, emptyMass;
 
     /**
      * Calculates a voiding based on a reference effort value, the voiding will
@@ -182,12 +191,30 @@ public class PhasedExpandingThermalVolumeHandler
             outMassQuantity = 0.0;
             waitForReverseOutProperties = false;
             reverseFlowRequest = false;
+
+            // Calculate the thermal resistance according to the mass inside
+            // of ze element.
+            calculateThermalConductance();
         }
         super.preparePhasedCalculation(); // sets heatEnergyPrepared to false
         // Set the temperature as effort on the temperature source, making the 
         // connection between the two domains.
         thermalSource.setEffort(
                 fluidProperties.getTemperature(heatEnergy, previousPressure));
+    }
+
+    private void calculateThermalConductance() {
+        if (innerHeatMass >= fullMass) {
+            thermalResistance.setConductanceParameter(fullConductance);
+        } else if (innerHeatMass <= emptyMass) {
+            thermalResistance.setConductanceParameter(emptyConductance);
+        } else {
+            // Linear interpolation with resistance
+            double m = (1/fullConductance - 1/emptyConductance)
+                    / (fullMass - emptyMass);
+            thermalResistance.setResistanceParameter(
+                     m * (innerHeatMass - emptyMass) + 1/emptyConductance);
+        }
     }
 
     @Override
@@ -359,7 +386,7 @@ public class PhasedExpandingThermalVolumeHandler
                 nextDelayedInHeatEnergy = delayedInHeatEnergy; // keep
             } else {
                 nextDelayedInHeatEnergy = delayedInHeatEnergy + stepTime
-                        * firstUpdatedNode.getFlow(aElement) 
+                        * firstUpdatedNode.getFlow(aElement)
                         / (innerHeatMass + staticMass)
                         * (firstUpdatedNode.getHeatEnergy()
                         - delayedInHeatEnergy);
@@ -416,7 +443,7 @@ public class PhasedExpandingThermalVolumeHandler
                 // Limit outMassQuantity to the mass available in the element.
                 // (current mass + in flow in this time step)
                 double availableMass = innerHeatMass;
-                if (!firstUpdatedNode.noHeatEnergy(aElement) 
+                if (!firstUpdatedNode.noHeatEnergy(aElement)
                         && firstUpdatedNode.getFlow(aElement) != 0.0) {
                     availableMass += firstUpdatedNode.getFlow(aElement) * stepTime;
                 }
@@ -598,6 +625,18 @@ public class PhasedExpandingThermalVolumeHandler
         thermalSource = element;
     }
 
+    /**
+     * Makes the thermal source element, which acts as a connection to the
+     * thermal domain, known to this handler. If used, the resistance will be
+     * increased when there's less mass inside the element, representing lower
+     * heat conductance towards steam compared to water.
+     *
+     * @param element
+     */
+    public void setThermalResistanceElement(LinearDissipator element) {
+        thermalResistance = element;
+    }
+
     public void setInitialInHeatEnergy(double heatEnergyIn) {
         delayedInHeatEnergy = heatEnergyIn;
         nextDelayedInHeatEnergy = delayedInHeatEnergy;
@@ -613,6 +652,26 @@ public class PhasedExpandingThermalVolumeHandler
 
     public void setStaticMass(double mass) {
         this.staticMass = mass;
+    }
+
+    /**
+     * Sets parameters for thermal resistance. The thermal resistance will be
+     * set according to the current mass of the element, this represents a
+     * better heat transfer if more dens material is inside the element.
+     *
+     * @param fullConductance Thermal conductance value if the inner mass is
+     * greater or equals the given fullMass
+     * @param fullMass Mass on which the element is considered to be full
+     * @param emptyConductance Thermal conductance when element is empty. This
+     * should not happen as the model gets horribly inaccurate in that case but
+     * is used as a point to describe the behavior.
+     */
+    public void setConductances(double fullConductance, double fullMass,
+            double emptyConductance, double emptyMass) {
+        this.fullConductance = fullConductance;
+        this.fullMass = fullMass;
+        this.emptyConductance = emptyConductance;
+        this.emptyMass = emptyMass;
     }
 
     /**
@@ -661,5 +720,20 @@ public class PhasedExpandingThermalVolumeHandler
     public double getTemperature() {
         return fluidProperties.getTemperature(heatEnergy,
                 phasedNodes.get(0).getEffort());
+    }
+
+    /**
+     * Returns the current amount of mass inside the element.
+     *
+     * @return mass in kg
+     */
+    public double getInnerHeatedMass() {
+        return innerHeatMass;
+    }
+
+    @Override
+    public void setInnerHeatedMass(double heatedMass) {
+        super.setInnerHeatedMass(heatedMass);
+        calculateThermalConductance();
     }
 }

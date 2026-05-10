@@ -29,6 +29,7 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
+import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.OpenOrigin;
 import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.InitialConditions;
@@ -55,6 +56,12 @@ import com.hartrusion.modeling.initial.TemperatureIC;
  * results, however, it is still providing a solution. The reverse flow was
  * intended to have means to drain the reservoir or keep the model stable during
  * accident simulations.
+ * <p>
+ * To represent the varying heat transfer, a thermal network part is included in
+ * the element which contains a variable thermal resistance. The resistance will
+ * get its conductance modified depending on the actual mass in the element,
+ * this can be parameterized. Less liquid inside will lead to less thermal
+ * conductance.
  *
  * @author Viktor Alexander Hartung
  */
@@ -63,6 +70,8 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
 
     private OpenOrigin thermalOrigin;
     private EffortSource thermalEffortSource;
+    private GeneralNode thermalGroundNode;
+    private LinearDissipator thermalResistance;
     private GeneralNode thermalNode;
 
     private final PhasedExpandingThermalVolumeHandler phasedHandler;
@@ -75,12 +84,14 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     }
 
     /**
-     * Creates a minimum set of elements with a thermal effort source. It will
-     * create and connect:
+     * Creates a minimum set of elements with a thermal effort source and a
+     * resistance element. It will create and connect:
      * <ul>
      * <li>Thermal open Origin</li>
      * <li>General Port</li>
      * <li>Thermal Effort Source</li>
+     * <li>General Port</li>
+     * <li>Thermal Resistance</li>
      * </ul>
      * <p>
      * The thermal effort source will be used as a connection to a thermal
@@ -91,9 +102,11 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
      * build yourself and use the setInnerThermalEffortSource instead.
      */
     public void initComponent() {
-        // Create thermal elements
+        // Create thermal elements. This is a fixed structure inside 
         thermalOrigin = new OpenOrigin(PhysicalDomain.THERMAL);
         thermalEffortSource = new EffortSource(PhysicalDomain.THERMAL);
+        thermalGroundNode = new GeneralNode(PhysicalDomain.THERMAL);
+        thermalResistance = new LinearDissipator(PhysicalDomain.THERMAL);
         thermalNode = new GeneralNode(PhysicalDomain.THERMAL);
 
         setCoupledElement(thermalEffortSource);
@@ -102,13 +115,13 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
         }
 
         // connect thermal elements
-        thermalNode.registerElement(thermalOrigin);
-        thermalOrigin.registerNode(thermalNode);
-        thermalNode.registerElement(thermalEffortSource);
-        thermalEffortSource.registerNode(thermalNode);
+        thermalOrigin.connectTo(thermalGroundNode);
+        thermalEffortSource.connectBetween(thermalGroundNode, thermalNode);
+        thermalResistance.connectTo(thermalNode);
 
         // make source known to the thermal handler
         phasedHandler.setThermalEffortSource(thermalEffortSource);
+        phasedHandler.setThermalResistanceElement(thermalResistance);
     }
 
     @Override
@@ -171,14 +184,26 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     }
 
     /**
-     * Sets the volume and mass of the element.
+     * Sets the parameters of the element. To disable the adaptive thermal
+     * conductance, set fullMass to 0.0 or less, this will always make the
+     * fullConductance value being used.
      *
      * @param totalVolume Volume of the element
      * @param staticMass additional mass that is passive but counts to dynamics
+     * @param fullConductance Thermal resistance value if the inner mass is
+     * greater or equals the given fullMass
+     * @param fullMass Mass on which the element is considered to be full
+     * @param emptyConductance Thermal resistance when element is empty. This
+     * should not happen as the model gets horribly inaccurate in that case but
+     * is used as a point to describe the behavior.
+     * @param emptyMass Mass on which the element is considered to be empty
      */
-    public void setThermalDimension(double totalVolume, double staticMass) {
+    public void setThermalDimension(double totalVolume, double staticMass,
+            double fullConductance, double fullMass,
+            double emptyConductance, double emptyMass) {
         phasedHandler.setVolume(totalVolume);
         phasedHandler.setStaticMass(staticMass);
+        phasedHandler.setConductances(fullConductance, fullMass, emptyConductance, emptyMass);
     }
 
     /**
@@ -207,14 +232,23 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
 
     /**
      * Returns a reference to the instance of the used thermal effort source
-     * element. This element serves as a connection to a thermal network. For
-     * setting up the heat exchanger, connect this to a port in the thermal
-     * domain.
+     * element.
      *
      * @return
      */
     public EffortSource getInnerThermalEffortSource() {
         return thermalEffortSource;
+    }
+
+    /**
+     * This element serves as a connection to a thermal network. For setting up
+     * the heat exchanger, connect this to a port in the thermal domain.
+     *
+     * @return LinearDissipator the thermal resistance of this element where
+     * heat can flow into.
+     */
+    public LinearDissipator getInnerThermalResistanceElement() {
+        return thermalResistance;
     }
 
     public GeneralNode getInnerThermalNode() {
@@ -228,6 +262,10 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
     public void setInnerThermalEffortSource(EffortSource s) {
         thermalEffortSource = s;
         setCoupledElement(s);
+    }
+
+    public void setThermalResistanceElement(LinearDissipator r) {
+        phasedHandler.setThermalResistanceElement(r);
     }
 
     @Override
@@ -317,5 +355,14 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
      */
     public double getTemperature() {
         return phasedHandler.getTemperature();
+    }
+
+    /**
+     * Returns the current amount of mass inside the element.
+     *
+     * @return mass in kg
+     */
+    public double getMass() {
+        return phasedHandler.getInnerHeatedMass();
     }
 }

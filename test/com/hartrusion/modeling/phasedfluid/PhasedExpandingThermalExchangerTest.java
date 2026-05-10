@@ -107,13 +107,14 @@ public class PhasedExpandingThermalExchangerTest {
         thForceFlow.connectTo(thNodeInstance);
 
         instance.initComponent();
-        instance.getInnerThermalEffortSource().connectTo(thNodeInstance);
+        instance.getInnerThermalResistanceElement().connectTo(thNodeInstance);
 
         // Use a simple iterator to solve the thermal part
         thSolver = new SimpleIterator();
         thSolver.addElement(instance.getInnerThermalOrigin());
         thSolver.addElement(thOrigin);
         thSolver.addElement(instance.getInnerThermalEffortSource());
+        thSolver.addElement(instance.getInnerThermalResistanceElement());
         thSolver.addElement(thForceFlow);
     }
 
@@ -149,7 +150,7 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(0.0); // no fluid flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setThermalDimension(1.0, 0.0);
+        instance.setThermalDimension(1.0, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         instance.setInitialState(1e5, temperature, temperature);
 
         for (int steps = 0; steps <= 10; steps++) {
@@ -178,7 +179,7 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(10.0); // 10 kg/s in flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setThermalDimension(1.0, 0.0);
+        instance.setThermalDimension(1.0, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         instance.setInitialState(1e5, 298.15, 298.15);
 
         for (int steps = 0; steps <= 10; steps++) {
@@ -200,7 +201,7 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(10.0); // 10 kg/s in flow
         thForceFlow.setFlow(1e6); // 1 MW heatup
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setThermalDimension(0.1, 0.0);
+        instance.setThermalDimension(0.1, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         
         // Calculate the expected out temperature: Flow in with 10 kg/s and 
         // (298.15 * 4200) J/kg is 12,522,300 J/s.
@@ -233,7 +234,7 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(0.0); // zero kg/s in flow
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setThermalDimension(1.0, 0.0);
+        instance.setThermalDimension(1.0, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         instance.setInitialState(1e5, 298.15, 298.15);
 
         for (int steps = 0; steps <= 10; steps++) {
@@ -264,7 +265,7 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(0.0); // zero kg/s in flow
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
         effortSource.setEffort(pressure); // ambient pressure
-        instance.setThermalDimension(1.0, 0.0);
+        instance.setThermalDimension(1.0, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         instance.setInitialState(pressure, temperature, temperature);
 
         for (int steps = 0; steps <= 10; steps++) {
@@ -293,7 +294,7 @@ public class PhasedExpandingThermalExchangerTest {
         flowSource.setFlow(-10.0); // 10 kg/s reverse flow
         thForceFlow.setFlow(0.0); // no thermal flow
         effortSource.setEffort(1e5); // ambient pressure
-        instance.setThermalDimension(1.0, 0.0);
+        instance.setThermalDimension(1.0, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         instance.setInitialState(1e5, 298.15, 298.15);
 
         for (int steps = 0; steps <= 10; steps++) {
@@ -321,7 +322,7 @@ public class PhasedExpandingThermalExchangerTest {
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
         double heatFlow = 1e5;
         effortSource.setEffort(heatFlow); // ambient pressure
-        instance.setThermalDimension(1.0, 0.0);
+        instance.setThermalDimension(1.0, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         instance.setInitialState(pressure, temperature, temperature);
 
         for (int steps = 0; steps <= 100; steps++) {

@@ -28,7 +28,6 @@ import com.hartrusion.modeling.general.FlowSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.OpenOrigin;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
-import com.hartrusion.modeling.solvers.SimpleIterator;
 import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterMethod;
@@ -96,7 +95,8 @@ public class PhasedClosedSteamedReservoirTest {
         
         // Thermal system: Forced flow source
         thermalOrigin.connectToVia(thermalFlowSource, thermalOriginNode);
-        thermalFlowSource.connectToVia(heater.getInnerThermalEffortSource(),
+        thermalFlowSource.connectToVia(
+                heater.getInnerThermalResistanceElement(),
                 thermalTemperatureNode);
         thermalFlowSource.setFlow(0.0); // initialize with 0.0
         
@@ -130,7 +130,7 @@ public class PhasedClosedSteamedReservoirTest {
                 = temperature * fluidProperties.getSpecificHeatCapacity();
         
         reservoir.setInitialState(100, temperature);
-        heater.setThermalDimension(0.1, 0.0);
+        heater.setThermalDimension(0.1, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         heater.setInitialState(1e5, temperature, temperature);
         
         for (int idx = 0; idx < 10; idx++) {
@@ -155,7 +155,7 @@ public class PhasedClosedSteamedReservoirTest {
                 = temperature * fluidProperties.getSpecificHeatCapacity();
         
         reservoir.setInitialState(100, temperature);
-        heater.setThermalDimension(0.1, 0.0);
+        heater.setThermalDimension(0.1, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         heater.setInitialState(1e5, temperature, temperature);
         
         flowSource.setFlow(10.0); // 10 kg/s with 100 kg in reservoir and heater
