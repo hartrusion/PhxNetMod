@@ -177,6 +177,8 @@ public class HeatFluidTank extends SelfCapacitance implements HeatElement {
         checkInitialConditionName(ic);
         stateValue
                 = ((HeatedEnerergyStorageIC) ic).getStateValue();
+        stateValuePrepared = false;
+        deltaCalculated = false;
         heatHandler.setInitialTemperature(((HeatedEnerergyStorageIC) ic).getTemperature());
     }
 
