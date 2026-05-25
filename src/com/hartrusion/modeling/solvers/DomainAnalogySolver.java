@@ -318,8 +318,9 @@ public class DomainAnalogySolver {
         // wanted.
         for (GeneralNode n : modelNodes) {
             if (n.getNumberOfElements() <= 1) {
-                LOGGER.log(Level.WARNING, "Floating node found, check "
-                        + "provided network for errors.");
+                LOGGER.log(Level.WARNING, "Suspicious connection: Element " 
+                        + n.getElement(0).toString() + " connected to floating "
+                        + "node " + n.toString());
             }
         }
 
