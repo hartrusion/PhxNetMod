@@ -53,8 +53,8 @@ import java.util.function.BooleanSupplier;
 public class HeatFluidPump implements Runnable, PropertyChangeProvider,
         AutomatedConditions {
 
-    private final HeatLinearValve suctionValve = new HeatLinearValve();
-    private final HeatLinearValve dischargeValve = new HeatLinearValve();
+    private final HeatLinearValve suctionValve = new HeatLinearValve(false);
+    private final HeatLinearValve dischargeValve = new HeatLinearValve(false);
     protected final HeatEffortSource pump = new HeatEffortSource();
     private final HeatNode suctionNode = new HeatNode();
     private final HeatNode dischargeNode = new HeatNode();

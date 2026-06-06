@@ -37,11 +37,30 @@ import com.hartrusion.modeling.hydraulic.HydraulicLinearValve;
  */
 public class HeatLinearValve extends HydraulicLinearValve implements HeatElement {
 
-    private final HeatSimpleHandler heatHandler;
+    private final HeatHandler heatHandler;
 
-    public HeatLinearValve() {
-        this.heatHandler = new HeatSimpleHandler(this);
+    public HeatLinearValve(boolean frictionHeatup) {
+        if (frictionHeatup) {
+            this.heatHandler = new HeatFrictionedHandler(this);
+        } else {
+            this.heatHandler = new HeatSimpleHandler(this);
+        }
         physicalDomain = PhysicalDomain.HEATFLUID; // overwrite
+    }
+
+    /**
+     * Sets the fluid parameters used for the temperature increase by the
+     * friction of the fluid (which is represented by the pressure drop.
+     * Requires the valve to be created as a valve that supports heat up by
+     * friction.
+     *
+     * @param density - default for water: 1000 kg/m³
+     * @param specHeatCap - default for water: 4200 J/kg/K
+     */
+    public void setFrictionHeatupParameters(
+            double density, double specHeatCap) {
+        ((HeatFrictionedHandler) heatHandler).
+                setVolHeatCap(density * specHeatCap);
     }
 
     @Override

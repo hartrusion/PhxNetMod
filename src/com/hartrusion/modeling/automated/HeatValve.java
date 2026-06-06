@@ -34,10 +34,11 @@ import com.hartrusion.modeling.initial.ValveManual;
  * @author Viktor Alexander Hartung
  */
 public class HeatValve extends BaseAutomatedValve implements Runnable {
+    
     /**
      * The valve element of the model itself.
      */
-    protected final HeatLinearValve valve = new HeatLinearValve();
+    protected final HeatLinearValve valve = new HeatLinearValve(true);
 
     @Override
     public void initName(String name) {
