@@ -72,10 +72,26 @@ public class TwoPointControl extends AbstractController {
         }
     }
     
+    /**
+     * Gets the hysteresis of the controller. The hysteresis is the distance 
+     * between the two points where the output changes. The controller will set 
+     * the output to maxOutput if the input is bigger than hysteresis/2 and 
+     * to minOutput if the input is less than -hysteresis/2.
+     * 
+     * @return the hysteresis of the controller
+     */
     public double getHysteresis() {
         return hysteresis * 2.0;
     }
 
+    /** 
+     * Sets the hysteresis of the controller. The hysteresis is the distance 
+     * between the two points where the output changes. The controller will set 
+     * the output to maxOutput if the input is bigger than hysteresis/2 and 
+     * to minOutput if the input is less than -hysteresis/2.
+     *
+     * @param hysteresis the hysteresis of the controller
+     */
     public void setHysteresis(double hysteresis) {
         this.hysteresis = hysteresis / 2.0;
     }
