@@ -26,7 +26,7 @@ package com.hartrusion.modeling.assemblies;
 import com.hartrusion.modeling.phasedfluid.PhasedFlowSource;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
-import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
+import com.hartrusion.modeling.phasedfluid.Water;
 import com.hartrusion.modeling.phasedfluid.PhasedSimpleFlowResistance;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
@@ -74,8 +74,6 @@ public class PhasedSuperheaterTest {
 
     private PhasedSuperheater instance;
 
-    private PhasedPropertiesWater water = new PhasedPropertiesWater();
-
     private PhasedFlowSource priInFlowSource, priCondensateOutFlowSource;
     private PhasedNode priSourceNode, priDrainNode;
     private PhasedOrigin priOrigSource, priOrigCondensateDrain;
@@ -98,7 +96,7 @@ public class PhasedSuperheaterTest {
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
-        instance = new PhasedSuperheater(water);
+        instance = new PhasedSuperheater(Water.INSTANCE);
         // Use build in methods to set up the components
         instance.initGenerateNodes();
         instance.initName("TestCondenserInstance");
@@ -181,7 +179,8 @@ public class PhasedSuperheaterTest {
     public void testZeroFlow() {
         double temperature = 300;
         // 300 * c = 1.260.000
-        double heatEnergy = temperature * water.getSpecificHeatCapacity();
+        double heatEnergy = temperature * 
+                Water.INSTANCE.getSpecificHeatCapacity();
 
         priOrigSource.setOriginHeatEnergy(heatEnergy);
         priOrigCondensateDrain.setOriginHeatEnergy(heatEnergy);
@@ -238,7 +237,7 @@ public class PhasedSuperheaterTest {
 
         // Initial conditions: A temperature for saturation is usually given
         // but here a pressure is used, so we calculate saturation temp:
-        instance.initConditions(water.getSaturationTemperature(812387),
+        instance.initConditions(Water.INSTANCE.getSaturationTemperature(812387),
                 2989426, 0.6, 2989426);
 
         // Primary in flow (the pressure is obtained from the saturated steam)
@@ -260,12 +259,12 @@ public class PhasedSuperheaterTest {
             solver.prepareCalculation();
             solver.doCalculation();
 
-            double primaryInTemperature = water.getTemperature(
+            double primaryInTemperature = Water.INSTANCE.getTemperature(
                     instance.getPhasedNode(PhasedSuperheater.PRIMARY_IN)
                             .getHeatEnergy(),
                     instance.getPhasedNode(PhasedSuperheater.PRIMARY_IN)
                             .getEffort()) - 273.15;
-            double secondaryOutTemperature = water.getTemperature(
+            double secondaryOutTemperature = Water.INSTANCE.getTemperature(
                     instance.getPhasedNode(PhasedSuperheater.SECONDARY_OUT)
                             .getHeatEnergy(),
                     instance.getPhasedNode(PhasedSuperheater.SECONDARY_OUT)

@@ -29,7 +29,7 @@ import com.hartrusion.modeling.heatfluid.HeatOrigin;
 import com.hartrusion.modeling.phasedfluid.PhasedFlowSource;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
-import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
+import com.hartrusion.modeling.phasedfluid.Water;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
@@ -45,8 +45,6 @@ import org.testng.annotations.Test;
 public class PhasedCondenserNoMassTest {
 
     private PhasedCondenserNoMass instance;
-
-    private PhasedPropertiesWater water = new PhasedPropertiesWater();
 
     private PhasedFlowSource flowIn, flowOut;
     private PhasedNode pn1, pn2;
@@ -69,7 +67,7 @@ public class PhasedCondenserNoMassTest {
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
-        instance = new PhasedCondenserNoMass(water);
+        instance = new PhasedCondenserNoMass(Water.INSTANCE);
         // Use build in methods to set up the components
         instance.initGenerateNodes();
         instance.initName("TestCondenserInstance");
@@ -144,7 +142,7 @@ public class PhasedCondenserNoMassTest {
     public void testZeroFlow() {
         double temperature = 300;
         // 300 * c = 1.260.000
-        double heatEnergy = temperature * water.getSpecificHeatCapacity();
+        double heatEnergy = temperature * Water.INSTANCE.getSpecificHeatCapacity();
 
         pz1.setOriginHeatEnergy(heatEnergy);
         pz2.setOriginHeatEnergy(heatEnergy);
@@ -180,7 +178,7 @@ public class PhasedCondenserNoMassTest {
 
         double temperaturePrimary = 273.15 + 140; // 413.5 - 140 °C
         double temperatureSecondary = 293.15; // 20 °C
-        double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity() + water.getVaporizationHeatEnergy();
+        double heatEnergy = temperaturePrimary * Water.INSTANCE.getSpecificHeatCapacity() + Water.INSTANCE.getVaporizationHeatEnergy();
 
         pz1.setOriginHeatEnergy(heatEnergy);
         pz2.setOriginHeatEnergy(heatEnergy); // optional, this is the out-origin
@@ -200,7 +198,7 @@ public class PhasedCondenserNoMassTest {
                     + ", Res Temp: "
                     + String.format("%.2f", instance.getPrimarySideReservoir().getTemperature() - 273.15)
                     + ", Mid-Node: "
-                    + String.format("%.2f", instance.getPhasedNode(PhasedCondenserNoMass.PRIMARY_INNER).getHeatEnergy() / water.getSpecificHeatCapacity() - 273.15)
+                    + String.format("%.2f", instance.getPhasedNode(PhasedCondenserNoMass.PRIMARY_INNER).getHeatEnergy() / Water.INSTANCE.getSpecificHeatCapacity() - 273.15)
                     + ", 2nd: Res-Loop "
                     + String.format("%.2f", instance.getSecondarySideReservoir().getHeatHandler().getTemperature() - 273.15)
                     + ", Mid-Node: "

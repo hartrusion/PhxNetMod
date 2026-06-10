@@ -29,7 +29,7 @@ import com.hartrusion.modeling.heatfluid.HeatOrigin;
 import com.hartrusion.modeling.phasedfluid.PhasedFlowSource;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
-import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
+import com.hartrusion.modeling.phasedfluid.Water;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
@@ -74,8 +74,6 @@ public class PhasedCondenserTest {
      */
     private PhasedCondenser instance;
 
-    private PhasedPropertiesWater water = new PhasedPropertiesWater();
-
     private PhasedFlowSource flowIn, flowOut;
     private PhasedNode pn1, pn2;
     private PhasedOrigin pz1, pz2;
@@ -97,12 +95,12 @@ public class PhasedCondenserTest {
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
-        instance = new PhasedCondenser(water);
+        instance = new PhasedCondenser(Water.INSTANCE);
         // Use build in methods to set up the components
         instance.initGenerateNodes();
         instance.initName("TestCondenserInstance");
         // 1 m² base area, 20 kg steam in condensing area,
-        // 200 kg water in heat exchanger side, 
+        // 200 kg Water.INSTANCE in heat exchanger side, 
         // kTimesA is k: 4000 W/m^2/K, A: 5 m² == 2e4 W/K
         // 0.5 m level for low, 1.5 m level for high.
         instance.initCharacteristic(1.0, 20, 200, 2e4, 0.5, 1.5, 1e5);
@@ -175,7 +173,7 @@ public class PhasedCondenserTest {
     public void testZeroFlow() {
         double temperature = 300;
         // 300 * c = 1.260.000
-        double heatEnergy = temperature * water.getSpecificHeatCapacity();
+        double heatEnergy = temperature * Water.INSTANCE.getSpecificHeatCapacity();
 
         pz1.setOriginHeatEnergy(heatEnergy);
         pz2.setOriginHeatEnergy(heatEnergy);
@@ -216,7 +214,7 @@ public class PhasedCondenserTest {
     public void testNoFlowTemperatureEqualizing() {
         double temperaturePrimary = 350; // 75 °C
         double temperatureSecondary = 293.15; // 20 °C
-        double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity();
+        double heatEnergy = temperaturePrimary * Water.INSTANCE.getSpecificHeatCapacity();
 
         pz1.setOriginHeatEnergy(heatEnergy);
         pz2.setOriginHeatEnergy(heatEnergy);
@@ -234,7 +232,7 @@ public class PhasedCondenserTest {
 //            System.out.println("Primary Res Temp: "
 //                    + instance.getPrimarySideReservoir().getTemperature()
 //                    + "Primary Hex Temp: "
-//                    + instance.getPrimarySideCondenser().getPhasedHandler().getHeatEnergy() / water.getSpecificHeatCapacity()
+//                    + instance.getPrimarySideCondenser().getPhasedHandler().getHeatEnergy() / Water.INSTANCE.getSpecificHeatCapacity()
 //                    + ", Scondary Temp: "
 //                    + instance.getSecondarySide().getHeatHandler().getTemperature());
         }
@@ -247,7 +245,7 @@ public class PhasedCondenserTest {
         
         double temperaturePrimary = 450; // 75 °C
         double temperatureSecondary = 293.15; // 20 °C
-        double heatEnergy = temperaturePrimary * water.getSpecificHeatCapacity();
+        double heatEnergy = temperaturePrimary * Water.INSTANCE.getSpecificHeatCapacity();
 
         pz1.setOriginHeatEnergy(heatEnergy);
         pz2.setOriginHeatEnergy(heatEnergy); // optional
@@ -265,7 +263,7 @@ public class PhasedCondenserTest {
             System.out.println("Temps Reservoir: "
                     + String.format("%.2f", instance.getPrimarySideReservoir().getTemperature())
                     + ", HeatExch: "
-                    + String.format("%.2f", instance.getPrimarySideCondenser().getPhasedHandler().getHeatEnergy() / water.getSpecificHeatCapacity())
+                    + String.format("%.2f", instance.getPrimarySideCondenser().getPhasedHandler().getHeatEnergy() / Water.INSTANCE.getSpecificHeatCapacity())
                     + ", 2nd: "
                     + String.format("%.2f", instance.getSecondarySide().getHeatHandler().getTemperature()));
         }

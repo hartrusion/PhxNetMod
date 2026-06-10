@@ -54,7 +54,6 @@ public class PhasedClosedSteamedReservoirTest {
         SimpleLogOut.configureLoggingWarningsOnly();
     }
 
-    PhasedPropertiesWater fluidProperties;
     PhasedClosedSteamedReservoir reservoir;
     PhasedExpandingThermalExchanger heater;
     PhasedNode inNode;
@@ -69,10 +68,8 @@ public class PhasedClosedSteamedReservoirTest {
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
-        fluidProperties = new PhasedPropertiesWater();
-
-        reservoir = new PhasedClosedSteamedReservoir(fluidProperties);
-        heater = new PhasedExpandingThermalExchanger(fluidProperties);
+        reservoir = new PhasedClosedSteamedReservoir(Water.INSTANCE);
+        heater = new PhasedExpandingThermalExchanger(Water.INSTANCE);
         inNode = new PhasedNode();
         outNode = new PhasedNode();
         srcNode = new PhasedNode();
@@ -107,7 +104,6 @@ public class PhasedClosedSteamedReservoirTest {
 
     @AfterMethod
     public void tearDownMethod() throws Exception {
-        fluidProperties = null;
         reservoir = null;
         heater = null;
         inNode = null;
@@ -127,7 +123,7 @@ public class PhasedClosedSteamedReservoirTest {
     public void testValidateEnergyNoFlow() {
         double temperature = 280;
         double specificHeatEnergy 
-                = temperature * fluidProperties.getSpecificHeatCapacity();
+                = temperature * Water.INSTANCE.getSpecificHeatCapacity();
         
         reservoir.setInitialState(100, temperature);
         heater.setThermalDimension(0.1, 0.0, 1e5, 0.0, Double.NaN, 0.0);
@@ -152,7 +148,7 @@ public class PhasedClosedSteamedReservoirTest {
     public void testValidateEnergyCirculation() {
         double temperature = 280;
         double specificHeatEnergy 
-                = temperature * fluidProperties.getSpecificHeatCapacity();
+                = temperature * Water.INSTANCE.getSpecificHeatCapacity();
         
         reservoir.setInitialState(100, temperature);
         heater.setThermalDimension(0.1, 0.0, 1e5, 0.0, Double.NaN, 0.0);

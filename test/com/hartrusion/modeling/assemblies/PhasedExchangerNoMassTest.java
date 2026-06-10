@@ -27,7 +27,7 @@ import com.hartrusion.modeling.phasedfluid.PhasedFlowSource;
 import com.hartrusion.modeling.phasedfluid.PhasedNoMassExchangerElement;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
-import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
+import com.hartrusion.modeling.phasedfluid.Water;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
@@ -69,7 +69,6 @@ public class PhasedExchangerNoMassTest {
     *           _|_ priSrc            _|_ secSrc
      */
     private PhasedExchangerNoMass instance;
-    private PhasedPropertiesWater water = new PhasedPropertiesWater();
 
     private PhasedOrigin priSrc, secSrc, priSink, secSink;
     private PhasedNode priSrcNode, secSrcNode;
@@ -86,7 +85,7 @@ public class PhasedExchangerNoMassTest {
     @BeforeMethod
     public void setUpMethod() throws Exception {
         // Set up the network as displayed on the comment and set up a solver.
-        instance = new PhasedExchangerNoMass(water);
+        instance = new PhasedExchangerNoMass(Water.INSTANCE);
         priSrc = new PhasedOrigin();
         secSrc = new PhasedOrigin();
         priSink = new PhasedOrigin();
@@ -165,7 +164,7 @@ public class PhasedExchangerNoMassTest {
      */
     @Test
     public void equalFlowsAndTemperatures() {
-        double heatEnergy = 300 * water.getSpecificHeatCapacity();
+        double heatEnergy = 300 * Water.INSTANCE.getSpecificHeatCapacity();
         priFlow.setFlow(20.0);
         priSrc.setOriginHeatEnergy(heatEnergy);
         secFlow.setFlow(20.0);
@@ -199,7 +198,7 @@ public class PhasedExchangerNoMassTest {
      */
     @Test
     public void differentFlowsAndEqualTemperatures() {
-        double heatEnergy = 300 * water.getSpecificHeatCapacity();
+        double heatEnergy = 300 * Water.INSTANCE.getSpecificHeatCapacity();
         priFlow.setFlow(20.0);
         priSrc.setOriginHeatEnergy(heatEnergy);
         secFlow.setFlow(50.0);
@@ -228,8 +227,8 @@ public class PhasedExchangerNoMassTest {
      */
     @Test
     public void equalFlowsAndDifferentTemperatures() {
-        double heatEnergyLow = 300 * water.getSpecificHeatCapacity();
-        double heatEnergyHigh = 400 * water.getSpecificHeatCapacity();
+        double heatEnergyLow = 300 * Water.INSTANCE.getSpecificHeatCapacity();
+        double heatEnergyHigh = 400 * Water.INSTANCE.getSpecificHeatCapacity();
         for (int idx = 4; idx < 500; idx = idx + 4) {
             priFlow.setFlow((double) idx);
             priSrc.setOriginHeatEnergy(heatEnergyHigh);

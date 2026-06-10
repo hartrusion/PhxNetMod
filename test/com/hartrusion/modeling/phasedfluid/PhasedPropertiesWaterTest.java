@@ -24,8 +24,6 @@
 package com.hartrusion.modeling.phasedfluid;
 
 import static org.testng.Assert.*;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
@@ -33,20 +31,7 @@ import org.testng.annotations.Test;
  * @author Viktor Alexander Hartung
  */
 public class PhasedPropertiesWaterTest {
-
-    PhasedPropertiesWater instance;
-
     public PhasedPropertiesWaterTest() {
-    }
-
-    @BeforeClass
-    public void setUpClass() throws Exception {
-        instance = new PhasedPropertiesWater();
-    }
-
-    @AfterClass
-    public void tearDownClass() throws Exception {
-        instance = null;
     }
 
     /**
@@ -55,11 +40,11 @@ public class PhasedPropertiesWaterTest {
     @Test
     public void testGetSaturationEffort() {
         // 0 degree Celsius = 0 Pa
-        assertEquals(instance.getSaturationEffort(273.15), 0.0, 1.0);
+        assertEquals(Water.INSTANCE.getSaturationEffort(273.15), 0.0, 1.0);
         // 100 degree Celsius = 1e5 Pa with some error
-        assertEquals(instance.getSaturationEffort(373.15), 1e5, 2e4);
+        assertEquals(Water.INSTANCE.getSaturationEffort(373.15), 1e5, 2e4);
         // 275.5 degree Celsius = 60e5 Pa with some error
-        assertEquals(instance.getSaturationEffort(549.0), 60e5, 5e5);
+        assertEquals(Water.INSTANCE.getSaturationEffort(549.0), 60e5, 5e5);
     }
 
     /**
@@ -68,9 +53,9 @@ public class PhasedPropertiesWaterTest {
     @Test
     public void testGetSaturationTemperature() {
         // 1 bar must be 100 Degree Celsius
-        assertEquals(instance.getSaturationTemperature(1e5), 373.15, 5.0);
+        assertEquals(Water.INSTANCE.getSaturationTemperature(1e5), 373.15, 5.0);
         // 60 bar must be around 275.5 degree Celsius
-        assertEquals(instance.getSaturationTemperature(60e5), 549.0, 5.0);
+        assertEquals(Water.INSTANCE.getSaturationTemperature(60e5), 549.0, 5.0);
     }
 
     /**
@@ -80,24 +65,24 @@ public class PhasedPropertiesWaterTest {
     public void testGetVapourFraction() {
         // Heat energy for 95 Deg Celsius without evaporation
         double liquidHeatEnergy = (273.5 + 95)
-                * instance.getSpecificHeatCapacity();
+                * Water.INSTANCE.getSpecificHeatCapacity();
         // 95 degrees Celsius with 1 bar ambient pressure:
-        assertEquals(instance.getVapourFraction(liquidHeatEnergy, 1e5),
+        assertEquals(Water.INSTANCE.getVapourFraction(liquidHeatEnergy, 1e5),
                 0.0, 0.0);
         // Add the vaporization energy at 100 deg Celsius, expect X = 1.0
         liquidHeatEnergy = (273.5 + 100.5)
-                * instance.getSpecificHeatCapacity()
-                + instance.getVaporizationHeatEnergy();
-        assertEquals(instance.getVapourFraction(liquidHeatEnergy, 1e5),
+                * Water.INSTANCE.getSpecificHeatCapacity()
+                + Water.INSTANCE.getVaporizationHeatEnergy();
+        assertEquals(Water.INSTANCE.getVapourFraction(liquidHeatEnergy, 1e5),
                 1.0, 0.0);
         // Half the vapour energy should be X = 0.5
         liquidHeatEnergy = (273.5 + 100)
-                * instance.getSpecificHeatCapacity()
-                + instance.getVaporizationHeatEnergy() / 2;
-        assertEquals(instance.getVapourFraction(liquidHeatEnergy, 1e5),
+                * Water.INSTANCE.getSpecificHeatCapacity()
+                + Water.INSTANCE.getVaporizationHeatEnergy() / 2;
+        assertEquals(Water.INSTANCE.getVapourFraction(liquidHeatEnergy, 1e5),
                 0.50, 0.01);
         // Increase pressure for same energy, X will be less
-        assertEquals(instance.getVapourFraction(liquidHeatEnergy, 5e5),
+        assertEquals(Water.INSTANCE.getVapourFraction(liquidHeatEnergy, 5e5),
                 0.40, 0.02);
 
     }
@@ -109,18 +94,18 @@ public class PhasedPropertiesWaterTest {
     public void testGetDensity() {
         // Heat energy for 20 Deg Celsius without evaporation
         double liquidHeatEnergy = (273.5 + 20)
-                * instance.getSpecificHeatCapacity();
+                * Water.INSTANCE.getSpecificHeatCapacity();
         // Water with 20 deg and 1 bar, must be around 1000 kg per m^3
-        assertEquals(instance.getDensity(liquidHeatEnergy, 1e5),
+        assertEquals(Water.INSTANCE.getDensity(liquidHeatEnergy, 1e5),
                 970, 50);
         // Fully evaporate: Expect something between 0 and 2
         liquidHeatEnergy = (273.5 + 100.5)
-                * instance.getSpecificHeatCapacity()
-                + instance.getVaporizationHeatEnergy();
-        assertEquals(instance.getDensity(liquidHeatEnergy, 1e5),
+                * Water.INSTANCE.getSpecificHeatCapacity()
+                + Water.INSTANCE.getVaporizationHeatEnergy();
+        assertEquals(Water.INSTANCE.getDensity(liquidHeatEnergy, 1e5),
                 1.0, 1.0);
         // Increase pressure to 5 bar, result will be around 100
-        assertEquals(instance.getDensity(liquidHeatEnergy, 5e5),
+        assertEquals(Water.INSTANCE.getDensity(liquidHeatEnergy, 5e5),
                 100.0, 10.0);
     }
 
@@ -131,22 +116,22 @@ public class PhasedPropertiesWaterTest {
     public void testGetAvgDensity() {
         // Room temperature
         double heatEnergyRoom = (273.5 + 20)
-                * instance.getSpecificHeatCapacity();
+                * Water.INSTANCE.getSpecificHeatCapacity();
 
         // With vaporization energy at 100 deg Celsius for X=0.7 at 1 bar
         double heatEnergyPartialSteam = (273.5 + 100.5)
-                * instance.getSpecificHeatCapacity()
-                + instance.getVaporizationHeatEnergy() * 0.7;
+                * Water.INSTANCE.getSpecificHeatCapacity()
+                + Water.INSTANCE.getVaporizationHeatEnergy() * 0.7;
         
         // Before evaporation
         double heatEnergyBoilingStarts = (273.5 + 97)
-                * instance.getSpecificHeatCapacity();
+                * Water.INSTANCE.getSpecificHeatCapacity();
         
-        assertEquals(instance.getAvgDensity(
+        assertEquals(Water.INSTANCE.getAvgDensity(
                 heatEnergyRoom, heatEnergyBoilingStarts, 1e5),
                 950.0, 50.0); // 921.287
         
-        assertEquals(instance.getAvgDensity(
+        assertEquals(Water.INSTANCE.getAvgDensity(
                 heatEnergyBoilingStarts, heatEnergyPartialSteam, 1e5),
                 600.0, 100.0); // 625.69
     }

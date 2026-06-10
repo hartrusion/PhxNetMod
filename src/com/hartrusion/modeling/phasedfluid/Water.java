@@ -23,8 +23,6 @@
  */
 package com.hartrusion.modeling.phasedfluid;
 
-import com.hartrusion.modeling.steam.SteamTable;
-
 /**
  * Very limited steam properties class that can be used instead of the real
  * steam table if only saturated pressure and temperature is used. Will use a
@@ -36,8 +34,19 @@ import com.hartrusion.modeling.steam.SteamTable;
  *
  * @author Viktor Alexander Hartung
  */
-public class PhasedPropertiesWater implements
-        PhasedFluidProperties, SteamTable {
+public class Water implements PhasedFluidProperties {
+
+    /**
+     * There is only one type of water so a singleton is used.
+     */
+    public static final Water INSTANCE 
+            = new Water();
+
+    /**
+     * Prevent external instantiation.
+     */
+    private Water() {
+    }
 
     @Override
     public double getSpecificHeatCapacity() {
@@ -134,7 +143,6 @@ public class PhasedPropertiesWater implements
         // Calculate the integral by simply adding surface areas. The integral
         // goes from heatEnergyStart to heatEnergyEnd. We will simply add the 
         // parts which are below the lines depending on start and end.
-        
         // Left part with constant fluid density - this is only needed if start
         // value is less than heSatFluid. Add iff necessary.
         if (heatEnergyStart < heatEnergySaturatedFluid) {
@@ -167,10 +175,10 @@ public class PhasedPropertiesWater implements
                 x2 = heatEnergyEnd;
                 y2 = getDensity(heatEnergyEnd, effortValue);
             }
-            integral = integral + 
-                    (x2-x1) * y2 // square below 
-                    + (x2-x1) * (y1-y2) * 0.5; // triangle part
-                    
+            integral = integral
+                    + (x2 - x1) * y2 // square below 
+                    + (x2 - x1) * (y1 - y2) * 0.5; // triangle part
+
         }
         // Vapor part at the right side
         if (heatEnergyEnd > heatEnergySaturatedGas) {
@@ -184,7 +192,7 @@ public class PhasedPropertiesWater implements
                         * getDensityVapor(effortValue);
             }
         }
-                
+
         // calculate average
         return integral / (heatEnergyEnd - heatEnergyStart);
     }
@@ -227,40 +235,39 @@ public class PhasedPropertiesWater implements
         return 5.54159701208284e-6 * pressure + 0.0361512223362946;
     }
 
-    // Also provide those properties poorly for steam property:
-    @Override
-    public double get(String function, double arg) {
-        switch (function) {
-            case "pSat_T" -> {
-                return getSaturationEffort(arg);
-            }
-            case "TSat_p" -> {
-                return getSaturationTemperature(arg);
-            }
-        }
-        throw new UnsupportedOperationException("Unknown function");
-    }
-
-    @Override
-    public double get(String function, double arg1, double arg2) {
-        switch (function) {
-            case "rho_Tx" -> {
-                // use saturation pressure and next case.
-                return get("rho_px", getSaturationEffort(arg1), arg2);
-            }
-            case "rho_px" -> {
-                if (arg2 <= 0.0) {
-                    return getDensityLiquid(arg1);
-                }
-                if (arg2 >= 1.0) {
-                    return getDensityVapor(arg1);
-                }
-                // interpolate between X=0 and X=1
-                return (1.0 - arg2) * getDensityLiquid(arg1) + arg2 * getDensityVapor(arg1);
-            }
-
-
-        }
-        throw new UnsupportedOperationException("Unknown function");
-    }
+//    // Also provide those properties poorly for steam property:
+//    @Override
+//    public double get(String function, double arg) {
+//        switch (function) {
+//            case "pSat_T" -> {
+//                return getSaturationEffort(arg);
+//            }
+//            case "TSat_p" -> {
+//                return getSaturationTemperature(arg);
+//            }
+//        }
+//        throw new UnsupportedOperationException("Unknown function");
+//    }
+//
+//    @Override
+//    public double get(String function, double arg1, double arg2) {
+//        switch (function) {
+//            case "rho_Tx" -> {
+//                // use saturation pressure and next case.
+//                return get("rho_px", getSaturationEffort(arg1), arg2);
+//            }
+//            case "rho_px" -> {
+//                if (arg2 <= 0.0) {
+//                    return getDensityLiquid(arg1);
+//                }
+//                if (arg2 >= 1.0) {
+//                    return getDensityVapor(arg1);
+//                }
+//                // interpolate between X=0 and X=1
+//                return (1.0 - arg2) * getDensityLiquid(arg1) + arg2 * getDensityVapor(arg1);
+//            }
+//
+//        }
+//        throw new UnsupportedOperationException("Unknown function");
+//    }
 }

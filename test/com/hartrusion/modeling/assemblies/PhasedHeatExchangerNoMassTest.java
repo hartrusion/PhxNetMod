@@ -30,7 +30,7 @@ import com.hartrusion.modeling.heatfluid.HeatOrigin;
 import com.hartrusion.modeling.phasedfluid.PhasedFlowSource;
 import com.hartrusion.modeling.phasedfluid.PhasedNode;
 import com.hartrusion.modeling.phasedfluid.PhasedOrigin;
-import com.hartrusion.modeling.phasedfluid.PhasedPropertiesWater;
+import com.hartrusion.modeling.phasedfluid.Water;
 import com.hartrusion.modeling.phasedfluid.PhasedSimpleFlowResistance;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
@@ -82,8 +82,6 @@ public class PhasedHeatExchangerNoMassTest {
     private PhasedOrigin phSrcOrig, phDrainOrig;
     private HeatOrigin heSrcOrig, heDrainOrig;
 
-    private final PhasedPropertiesWater water = new PhasedPropertiesWater();
-
     private DomainAnalogySolver solver;
 
     public PhasedHeatExchangerNoMassTest() {
@@ -118,7 +116,7 @@ public class PhasedHeatExchangerNoMassTest {
         heDrainOrig = new HeatOrigin();
         heDrainOrig.setName("heDrainOrig");
 
-        instance = new PhasedHeatExchangerNoMass(water);
+        instance = new PhasedHeatExchangerNoMass(Water.INSTANCE);
         instance.initName("instance");
 
         // Build the model
@@ -177,7 +175,7 @@ public class PhasedHeatExchangerNoMassTest {
         phR.setResistanceParameter(phasedPressure / phasedMassFlow);
         phFlow.setFlow(phasedMassFlow);
         phSrcOrig.setOriginHeatEnergy( // 1,235,850
-                phasedInTemp * water.getSpecificHeatCapacity());
+                phasedInTemp * Water.INSTANCE.getSpecificHeatCapacity());
         heFlow.setFlow(heatMassFlow);
         heSrcOrig.setOriginTemperature(heatInTemp);
 
@@ -190,7 +188,7 @@ public class PhasedHeatExchangerNoMassTest {
                 instance.getPhasedNode(PhasedHeatExchangerNoMass.PRIMARY_OUT)
                         .getHeatEnergy();
 
-        double phasedOutTemp = water.getTemperature(phasedOutEnergy,
+        double phasedOutTemp = Water.INSTANCE.getTemperature(phasedOutEnergy,
                 instance.getPhasedNode(PhasedHeatExchangerNoMass.PRIMARY_OUT)
                         .getEffort());
         

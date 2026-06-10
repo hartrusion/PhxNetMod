@@ -49,7 +49,6 @@ import org.testng.annotations.Test;
  */
 public class PhasedExpandingThermalExchangerTest {
 
-    PhasedPropertiesWater fluidProperties;
     PhasedExpandingThermalExchanger instance;
     PhasedOrigin origin, sink;
     PhasedFlowSource flowSource;
@@ -72,8 +71,7 @@ public class PhasedExpandingThermalExchangerTest {
 
     @BeforeMethod
     public void setUpMethod() throws Exception {
-        fluidProperties = new PhasedPropertiesWater();
-        instance = new PhasedExpandingThermalExchanger(fluidProperties);
+        instance = new PhasedExpandingThermalExchanger(Water.INSTANCE);
 
         nodeOrigin = new PhasedNode();
         nodeIn = new PhasedNode();
@@ -120,7 +118,6 @@ public class PhasedExpandingThermalExchangerTest {
 
     @AfterMethod
     public void tearDownMethod() throws Exception {
-        fluidProperties = null;
         instance = null;
         nodeOrigin = null;
         nodeIn = null;
@@ -145,7 +142,7 @@ public class PhasedExpandingThermalExchangerTest {
     public void testNoFlow() {
         double temperature = 298.15;
         double specHeatEnergy =
-                fluidProperties.getSpecificHeatCapacity() * temperature;
+                Water.INSTANCE.getSpecificHeatCapacity() * temperature;
         origin.setOriginHeatEnergy(specHeatEnergy); // default value
         flowSource.setFlow(0.0); // no fluid flow
         thForceFlow.setFlow(0.0); // no thermal flow
@@ -174,7 +171,7 @@ public class PhasedExpandingThermalExchangerTest {
     public void testNoHeatupFlushThrough() {
         double temperature = 298.15;
         double specHeatEnergy =
-                fluidProperties.getSpecificHeatCapacity() * temperature;
+                Water.INSTANCE.getSpecificHeatCapacity() * temperature;
         origin.setOriginHeatEnergy(specHeatEnergy); // default value
         flowSource.setFlow(10.0); // 10 kg/s in flow
         thForceFlow.setFlow(0.0); // no thermal flow
@@ -196,7 +193,7 @@ public class PhasedExpandingThermalExchangerTest {
     public void testHeatupAndFlowthrough() {
         double temperature = 298.15; // 25 °C
         double specHeatEnergy =
-                fluidProperties.getSpecificHeatCapacity() * temperature;
+                Water.INSTANCE.getSpecificHeatCapacity() * temperature;
         origin.setOriginHeatEnergy(specHeatEnergy); // default value
         flowSource.setFlow(10.0); // 10 kg/s in flow
         thForceFlow.setFlow(1e6); // 1 MW heatup
@@ -258,9 +255,9 @@ public class PhasedExpandingThermalExchangerTest {
     @Test
     public void testEvaporatingNoFlowHeatUp() {
         double pressure = 1e5;
-        double temperature = fluidProperties.getSaturationTemperature(pressure);
+        double temperature = Water.INSTANCE.getSaturationTemperature(pressure);
         double saturatedEnergy =
-                fluidProperties.getLiquidHeatCapacity(pressure);
+                Water.INSTANCE.getLiquidHeatCapacity(pressure);
         origin.setOriginHeatEnergy(saturatedEnergy);
         flowSource.setFlow(0.0); // zero kg/s in flow
         thForceFlow.setFlow(10e3); // heat it up with 10 kW power
@@ -289,7 +286,7 @@ public class PhasedExpandingThermalExchangerTest {
     public void testNoHeatupReverseFlushThrough() {
         double temperature = 298.15;
         double specHeatEnergy =
-                fluidProperties.getSpecificHeatCapacity() * temperature;
+                Water.INSTANCE.getSpecificHeatCapacity() * temperature;
         origin.setOriginHeatEnergy(specHeatEnergy); // default value
         flowSource.setFlow(-10.0); // 10 kg/s reverse flow
         thForceFlow.setFlow(0.0); // no thermal flow
@@ -313,9 +310,9 @@ public class PhasedExpandingThermalExchangerTest {
     @Test
     public void testReverseEvaporatingHeatUp() {
         double pressure = 1e5;
-        double temperature = fluidProperties.getSaturationTemperature(pressure);
+        double temperature = Water.INSTANCE.getSaturationTemperature(pressure);
         double saturatedEnergy =
-                fluidProperties.getLiquidHeatCapacity(pressure);
+                Water.INSTANCE.getLiquidHeatCapacity(pressure);
         origin.setOriginHeatEnergy(saturatedEnergy);
         sink.setOriginHeatEnergy(saturatedEnergy);
         flowSource.setFlow(-10.0); // zero kg/s in flow
