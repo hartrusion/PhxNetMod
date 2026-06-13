@@ -47,7 +47,7 @@ public class TransferSubnetTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
         // Keep Log out clean during test run
-        SimpleLogOut.configureLoggingWarningsOnly();
+        // SimpleLogOut.configureLoggingWarningsOnly();
     }
 
     public TransferSubnetTest() {
