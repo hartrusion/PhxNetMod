@@ -23,12 +23,6 @@
  */
 package com.hartrusion.modeling.solvers;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
@@ -39,20 +33,17 @@ import com.hartrusion.modeling.PhysicalDomain;
 /**
  * Solves a network using superposition method. This is used for networks
  * containing multiple sources, like mixing fluids from multiple tanks together.
- *
  * <p>
  * The network will be copied to n layer networks for n sources. Each network
  * will then be solved individually using the simplification solver, providing a
  * flow value for each element. The flow value of the network here is then
  * calculated by adding all currents of each linear network together.
- *
  * <p>
  * As the number of elements will be the same for each layer and the layers
  * match the base network, everything is organized in two-dimensional array
  * instead of lists as it will be quite static and predictable. Each layer is a
  * network extended to simplification class to provide solving methods for each
  * layer.
- *
  * <p>
  * Earlier revision of this solver added all elements to a recursive
  * simplification solver, however it turned out that this will result in issues
@@ -128,22 +119,6 @@ public class SuperPosition extends LinearNetwork {
     private int[] soleSource;
 
     private boolean[] zeroValue;
-
-    /**
-     * All layers can be calculated parallel in multiple threads. If set to
-     * false, all layers will be calulated using a single thread for loop. As
-     * creating threads is costly, single thread seems to be faster at the time
-     * of writing.
-     */
-    private final boolean useMultithreading = true;
-
-    /**
-     * Holds the runnable object which is given to a thread to perform
-     * calculation when using multithreading.
-     */
-    private List<Callable<Void>> layerCalculationCallables;
-
-    private static ExecutorService threadPool;
 
     int numberOfSources = 0;
 
@@ -244,40 +219,20 @@ public class SuperPosition extends LinearNetwork {
             }
             // save here, will be used for assignment later
             zeroValue[idx] = value == 0.0;
-            if (zeroValue[idx]) {
-                ((LayerCalculationCall) layerCalculationCallables
-                        .get(idx)).setSkip(true);
-            }
         }
 
-        if (threadPool != null && layerCalculationCallables.size() > 0) {
-            List<Future<Void>> futures;
-            try {
-                futures = threadPool.invokeAll(layerCalculationCallables);
-                for (Future<Void> f : futures) {
-                    f.get(); // Exceptions abfangen
+        if (USE_OVERLAY) {
+            for (idx = 0; idx < numberOfSources; idx++) {
+                if (!zeroValue[idx]) {
+                    layerOverlay[idx].doCalculation();
                 }
-            } catch (InterruptedException ex) {
-                LOGGER.log(Level.SEVERE, (String) null, ex);
-            } catch (ExecutionException ex) {
-                LOGGER.log(Level.SEVERE, (String) null, ex);
             }
-
         } else {
-            if (USE_OVERLAY) {
-                for (idx = 0; idx < numberOfSources; idx++) {
-                    if (!zeroValue[idx]) {
-                        layerOverlay[idx].doCalculation();
-                    }
-                }
-            } else {
-                for (idx = 0; idx < numberOfSources; idx++) {
-                    if (!zeroValue[idx]) {
-                        layerRecursive[idx].doRecursiveCalculation();
-                    }
+            for (idx = 0; idx < numberOfSources; idx++) {
+                if (!zeroValue[idx]) {
+                    layerRecursive[idx].doRecursiveCalculation();
                 }
             }
-
         }
 
         for (idx = 0; idx < numberOfSources; idx++) {
@@ -431,7 +386,6 @@ public class SuperPosition extends LinearNetwork {
         layer = new LinearNetwork[numberOfSources];
 
         soleSource = new int[numberOfSources];
-        layerCalculationCallables = new ArrayList<>(numberOfSources);
         zeroValue = new boolean[numberOfSources];
         deviationErrorOccured = new boolean[nodes.size()];
 
@@ -580,49 +534,10 @@ public class SuperPosition extends LinearNetwork {
         LOGGER.log(Level.INFO, "... SuperPosition set up with "
                 + numberOfSources + " layers.");
 
-        // Generate optinal callables for mutltithreading as list
-        for (idx = 0; idx < numberOfSources; idx++) {
-            layerCalculationCallables.add(new LayerCalculationCall<Void>(idx));
-        }
-
         return numberOfSources;
     }
 
     public boolean containsElement(AbstractElement element) {
         return elements.contains(element);
-    }
-
-    /**
-     * All layers can be calculated parallel in multiple threads if a thread
-     * pool is provided. If not set, all layers will be calculated using a
-     * single call for loop.
-     *
-     * @param pool SingleThreadExecutor pool.
-     */
-    public static void setThreadPool(ExecutorService pool) {
-        threadPool = pool;
-    }
-
-    class LayerCalculationCall<Void> implements Callable {
-
-        int idx;
-        boolean skip;
-
-        public LayerCalculationCall(int idx) {
-            this.idx = idx;
-        }
-
-        public void setSkip(boolean skip) {
-            this.skip = skip;
-        }
-
-        @Override
-        public Object call() throws Exception {
-            if (!skip) {
-                layer[idx].doCalculation();
-            }
-            skip = false;
-            return null;
-        }
     }
 }
