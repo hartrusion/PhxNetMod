@@ -56,6 +56,15 @@ public class GeneralNode {
     private final List<FlowProperties> flowToElements = new ArrayList<>();
 
     /**
+     * Optional monitor the node synchronizes its flow access on. It is supplied
+     * from the outside (by the solver) when the surrounding network is solved
+     * by several threads at once, so that concurrent flow contributions to a
+     * shared node stay consistent. While it is {@code null} (the normal case)
+     * no synchronization happens at all and the node stays plain logic.
+     */
+    private Object lock;
+
+    /**
      * true, if there are only two elements connected to this node. This is not
      * needed here but classes extending this one are using that information.
      */
@@ -149,6 +158,18 @@ public class GeneralNode {
     }
 
     /**
+     * Assigns the monitor this node uses to guard concurrent flow access, or
+     * {@code null} to switch synchronization off. The monitor is owned and
+     * handed in by the solver; the node itself neither creates nor manages it
+     * and stays free of any threading logic beyond honoring the given lock.
+     *
+     * @param lock Shared monitor for concurrent solving, or null for none.
+     */
+    public void setLock(Object lock) {
+        this.lock = lock;
+    }
+
+    /**
      * Set effort value for this node and connected elements. Calling this
      * method will mark the effort as updated. Effort will be the same value on
      * each connected element.
@@ -224,6 +245,17 @@ public class GeneralNode {
      * transfer values without triggering any update process.
      */
     public void setFlow(double flow, AbstractElement source, boolean update) {
+        if (lock == null) {
+            setFlowInternal(flow, source, update);
+        } else {
+            synchronized (lock) {
+                setFlowInternal(flow, source, update);
+            }
+        }
+    }
+
+    private void setFlowInternal(double flow, AbstractElement source,
+            boolean update) {
         if (!Double.isFinite(flow)) {
             throw new CalculationException(
                     "Non-finite flow value (NaN or inf) set to node.");
@@ -306,11 +338,6 @@ public class GeneralNode {
             throw new IllegalArgumentException("Given element is not known "
                     + "to this node.");
         }
-        if (!flowToElements.get(connectedElements.indexOf(e))
-                .isFlowUpdated()) {
-            throw new ModelErrorException("Tried to get "
-                    + "non-updated flow value.");
-        }
         return getFlow(connectedElements.indexOf(e));
     }
 
@@ -323,6 +350,15 @@ public class GeneralNode {
      * @return flow
      */
     public double getFlow(int idx) {
+        if (lock == null) {
+            return readFlow(idx);
+        }
+        synchronized (lock) {
+            return readFlow(idx);
+        }
+    }
+
+    private double readFlow(int idx) {
         if (!flowToElements.get(idx).isFlowUpdated()) {
             throw new ModelErrorException("Tried to get "
                     + "non-updated flow value.");
@@ -355,7 +391,13 @@ public class GeneralNode {
             throw new IllegalArgumentException(
                     "Provided element not registered with node.");
         }
-        return flowToElements.get(connectedElements.indexOf(e)).isFlowUpdated();
+        int idx = connectedElements.indexOf(e);
+        if (lock == null) {
+            return flowToElements.get(idx).isFlowUpdated();
+        }
+        synchronized (lock) {
+            return flowToElements.get(idx).isFlowUpdated();
+        }
     }
 
     /**
@@ -368,6 +410,15 @@ public class GeneralNode {
      * @return true, if flow was set.
      */
     public boolean allFlowsUpdated() {
+        if (lock == null) {
+            return allFlowsKnown();
+        }
+        synchronized (lock) {
+            return allFlowsKnown();
+        }
+    }
+
+    private boolean allFlowsKnown() {
         boolean allFlowsUpdated = true;
         for (FlowProperties fp : flowToElements) {
             allFlowsUpdated = allFlowsUpdated && fp.isFlowUpdated();

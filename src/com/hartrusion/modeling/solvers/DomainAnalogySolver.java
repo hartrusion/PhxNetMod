@@ -28,7 +28,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
@@ -137,14 +140,137 @@ public class DomainAnalogySolver {
     private final List<AbstractElement> unsolvedElements = new ArrayList<>();
 
     /**
-     * Holds a reference to a thread pool that can will be used for
-     * superPosition solver for parallelization of solving process. If null, no
-     * parallel computing will be used.
+     * Holds a reference to a thread pool that will be used to solve the
+     * detected networks in parallel. If null, no parallel computing will be
+     * used. It is static so it can be configured once during application
+     * startup via {@link #setThreadPool(ExecutorService)} and is then shared by
+     * all solver instances, exactly like in {@link SuperPosition}.
      */
-    private ExecutorService threadPool;
+    private static ExecutorService threadPool;
+
+    /**
+     * Cached parallel work packages, built once from the detected networks. The
+     * first batch holds all transfer subnets, the second batch holds all super
+     * position and non-linear networks. Splitting them into two batches keeps
+     * the original calculation order (effort forcing and self solving
+     * dissipators run in between).
+     */
+    private List<Callable<Void>> subnetTasks;
+
+    private List<Callable<Void>> postForcingTasks;
+
+    /**
+     * Monitor handed to the shared model nodes while parallel solving is
+     * active. The independent sub networks only ever meet on the forced-effort
+     * boundary nodes, where they contribute flows concurrently; this single
+     * re-entrant lock serializes exactly those flow contributions and is owned
+     * here in the solver instead of inside the node.
+     */
+    private final Object parallelLock = new Object();
 
     public void setString(String name) {
         this.name = name;
+    }
+
+    /**
+     * Configures the thread pool used to solve the detected networks in
+     * parallel. The transfer subnets are solved as one parallel batch, then the
+     * super position and non-linear networks are solved as a second batch,
+     * preserving the original calculation order.
+     * <p>
+     * The pool is stored statically and shared by all solver instances, so it
+     * only needs to be set once during application startup. It must be set
+     * <b>before</b> {@link #addNetwork(GeneralNode)} is called, so that the
+     * model nodes can be prepared for concurrent access.
+     * <p>
+     * The pool must be a <b>separate</b> pool, not the single threaded executor
+     * that drives the cyclic {@code doCalculation} call, otherwise the blocking
+     * wait inside this solver would dead-lock. Sizing it to the number of
+     * available CPU cores is a sensible default. Pass {@code null} to disable
+     * parallel solving.
+     *
+     * @param pool Executor used for parallel solving, or null to disable it.
+     */
+    public static void setThreadPool(ExecutorService pool) {
+        threadPool = pool;
+    }
+
+    /**
+     * Prepares this instance for parallel solving: hands the shared lock to the
+     * real model nodes and caches the parallel work packages. The copy networks
+     * used internally by the solvers keep no lock and stay lock-free. Safe to
+     * call more than once; the work is only done on the first call.
+     */
+    private void prepareParallelSolving() {
+        if (subnetTasks != null) {
+            return; // already prepared
+        }
+        for (GeneralNode n : modelNodes) {
+            n.setLock(parallelLock);
+        }
+        buildParallelTasks();
+    }
+
+    /**
+     * (Re)builds the cached parallel work packages from the currently detected
+     * networks.
+     */
+    private void buildParallelTasks() {
+        subnetTasks = new ArrayList<>(subnets.size());
+        for (final TransferSubnet ts : subnets) {
+            subnetTasks.add(() -> {
+                ts.doCalculation();
+                return null;
+            });
+        }
+        postForcingTasks = new ArrayList<>(
+                superPosNets.size() + nonLinearNets.size());
+        for (final SuperPosition sp : superPosNets) {
+            postForcingTasks.add(() -> {
+                sp.doCalculation();
+                return null;
+            });
+        }
+        for (final SimpleIterator si : nonLinearNets) {
+            postForcingTasks.add(() -> {
+                si.doCalculation();
+                return null;
+            });
+        }
+    }
+
+    /**
+     * Submits a batch of solver tasks to the thread pool and blocks until all
+     * of them are finished. Any exception raised inside a worker is
+     * re-thrown on the calling thread so that calculation errors are not
+     * silently swallowed.
+     *
+     * @param tasks Work packages to run in parallel.
+     */
+    private void runParallel(List<Callable<Void>> tasks) {
+        if (tasks == null || tasks.isEmpty()) {
+            return;
+        }
+        try {
+            List<Future<Void>> futures = threadPool.invokeAll(tasks);
+            for (Future<Void> f : futures) {
+                f.get(); // re-throws anything that happened in a worker
+            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new ModelErrorException(
+                    "Parallel calculation was interrupted.");
+        } catch (ExecutionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            }
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            }
+            throw new ModelErrorException(
+                    "Parallel calculation failed: " + cause);
+        }
     }
 
     @Override
@@ -352,6 +478,13 @@ public class DomainAnalogySolver {
         // is needed at the end to calculate the thermal distribution.
         for (AbstractElement e : modelElements) {
             lastIterator.addElement(e);
+        }
+
+        // If a thread pool was configured (statically, during startup), prepare
+        // this instance for parallel solving now that all nodes and networks
+        // are known.
+        if (threadPool != null) {
+            prepareParallelSolving();
         }
 
         LOGGER.log(Level.INFO, "...setup finished. "
@@ -708,20 +841,43 @@ public class DomainAnalogySolver {
             }
         } */
         
-        for (TransferSubnet ts : subnets) {
-            ts.doCalculation();
-        }
+        // Resolve all forced efforts first. Origins and self capacitances push
+        // their effort onto the boundary nodes, so every node shared between
+        // independent sub networks already carries its effort before parallel
+        // solving begins. The sub networks then only read those efforts and
+        // contribute flows, which confines the concurrent work to flow values
+        // and means a boundary node never resolves a flow into a neighbouring
+        // sub network (its absorbing element is already fixed).
         for (AbstractElement e : effortForcingElements) {
             e.doCalculation();
         }
+        if (threadPool != null) {
+            if (subnetTasks == null) {
+                // Safety net if the pool was configured after addNetwork ran.
+                prepareParallelSolving();
+            }
+            // First batch: all transfer subnets solve concurrently.
+            runParallel(subnetTasks);
+        } else {
+            for (TransferSubnet ts : subnets) {
+                ts.doCalculation();
+            }
+        }
+        // Dissipators sitting directly between two forced-effort nodes can be
+        // resolved on their own now that the efforts and subnets are in place.
         for (AbstractElement e : selfSolvingDissipatorElements) {
             e.doCalculation();
         }
-        for (SuperPosition sp : superPosNets) {
-            sp.doCalculation();
-        }
-        for (SimpleIterator si : nonLinearNets) {
-            si.doCalculation();
+        if (threadPool != null) {
+            // Second batch: super position and non-linear networks together.
+            runParallel(postForcingTasks);
+        } else {
+            for (SuperPosition sp : superPosNets) {
+                sp.doCalculation();
+            }
+            for (SimpleIterator si : nonLinearNets) {
+                si.doCalculation();
+            }
         }
         // Dead-End-Nodes may not have a solution as there is nothing so far
         // that would provide a solution at all, they might not even be 
