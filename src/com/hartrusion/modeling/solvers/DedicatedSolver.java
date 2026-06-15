@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2025 Viktor Alexander Hartung.
+ * Copyright 2026 Viktor Alexander Hartung.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,22 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.hartrusion.modeling.exceptions;
+package com.hartrusion.modeling.solvers;
 
 /**
- * Unchecked exception that gets thrown if a calculation fails. This can be a
- * division by zero, resulting in NaN values or the usage of infinity for
- * calculations.
- * <p>
- * Also used for calculation checks, sometimes there are multiple ways to get to
- * a specific result, if a second calculation way leads to the same target value
- * it will be checked that the results are somehow equal.
+ * A solver that was designed to solve a very specific network constellation. A
+ * call on such a dedicated solver is the fastest way to solve such a network as
+ * it has the analytic way of solving wired in.
  *
  * @author Viktor Alexander Hartung
  */
-public class CalculationException extends RuntimeException {
-
-    public CalculationException(String message) {
-        super(message);
-    }
+public interface DedicatedSolver {
+    /**
+     * Fully calculates the network in one step.
+     */
+    public void solveNetwork();
 }

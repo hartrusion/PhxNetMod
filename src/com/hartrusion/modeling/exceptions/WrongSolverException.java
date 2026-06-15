@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2025 Viktor Alexander Hartung.
+ * Copyright 2026 viktor.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,19 @@
 package com.hartrusion.modeling.exceptions;
 
 /**
- * Unchecked exception that gets thrown if a calculation fails. This can be a
- * division by zero, resulting in NaN values or the usage of infinity for
- * calculations.
- * <p>
- * Also used for calculation checks, sometimes there are multiple ways to get to
- * a specific result, if a second calculation way leads to the same target value
- * it will be checked that the results are somehow equal.
- *
+ * Gets thrown when trying to construct a solver that can not handle the given
+ * network.
+ * 
  * @author Viktor Alexander Hartung
  */
-public class CalculationException extends RuntimeException {
+public class WrongSolverException extends Exception {
 
-    public CalculationException(String message) {
+    public WrongSolverException(String message) {
         super(message);
     }
+    
+    public WrongSolverException() {
+        super("Solver not suitable for given problem.");
+    }
+
 }
