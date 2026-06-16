@@ -128,6 +128,36 @@ public class DirectedFlowSolver {
     private final IntArrayDeque queue = new IntArrayDeque();
 
     /**
+     * Records, during a full worklist solve, the indices of every element
+     * invocation that actually made progress, in execution order. This is the
+     * "calculation order" that successfully propagated the whole network. Grows
+     * as needed and is reused across cycles.
+     */
+    private int[] recordBuffer = new int[0];
+
+    /**
+     * Number of valid entries in {@link #recordBuffer} for the solve in
+     * progress.
+     */
+    private int recordSize = 0;
+
+    /**
+     * The last successfully learned calculation order: the flat sequence of
+     * productive element invocations that solved the network on the previous
+     * full solve. As long as the flow directions do not change (no valve fully
+     * closed, no reversal) replaying this order reaches the fixed point without
+     * any of the worklist's neighbour-search bookkeeping. Empty when no order is
+     * known yet.
+     */
+    private int[] cachedOrder = new int[0];
+
+    /**
+     * Number of valid entries in {@link #cachedOrder}. Zero means no learned
+     * order is available and the full algorithm must run.
+     */
+    private int cachedOrderSize = 0;
+
+    /**
      * Adds an element to be solved. Origins and sources are prioritised exactly
      * like in {@link SimpleIterator} so the worklist seed and the enforcer-only
      * pass start from the boundaries.
@@ -200,6 +230,19 @@ public class DirectedFlowSolver {
      * remaining input was filled in silently by a node auto-completing its last
      * unknown flow is still finished. The reached fixed point is therefore the
      * same as the blind loop's.
+     * <p>
+     * <b>Learned order fast path.</b> The flow path through the network only
+     * changes when a flow actually reverses (typically a valve closing fully),
+     * which is rare. So the first thing this method does is try to replay the
+     * calculation order learned on the previous full solve: a flat list of the
+     * element invocations that made progress, in the exact order they did. If
+     * replaying that order leaves the network at its fixed point - confirmed by
+     * a single verification sweep that finds nothing left to do, i.e. exactly
+     * {@link SimpleIterator}'s termination condition - the result is correct and
+     * was reached without any of the worklist's queue and neighbour-search
+     * bookkeeping. Only when that verification sweep still finds work (the path
+     * changed, or no order is known yet) does the full worklist algorithm run
+     * and learn a fresh order.
      */
     public void doCalculation() {
         final int n = elements.size();
@@ -207,6 +250,18 @@ public class DirectedFlowSolver {
             return;
         }
         ensureGraph();
+
+        // Fast path: replay the previously learned calculation order. A single
+        // clean verification sweep guarantees the same fixed point as the full
+        // algorithm, so this can never return a wrong result - at worst it falls
+        // back below.
+        if (cachedOrderSize > 0 && replayCachedOrder(n)) {
+            return;
+        }
+
+        // Slow path: solve from scratch with the worklist while recording the
+        // order of productive invocations so the next cycle can replay it.
+        recordSize = 0;
 
         if (inQueue.length < n) {
             inQueue = new boolean[n];
@@ -234,6 +289,65 @@ public class DirectedFlowSolver {
                 throw new UnsupportedOperationException("Endless iterations?");
             }
         } while (sweepProgressed);
+
+        commitRecordedOrder();
+    }
+
+    /**
+     * Replays the previously learned calculation order and then verifies the
+     * result with a single {@link SimpleIterator}-style sweep.
+     * <p>
+     * The cached order only dictates which element is evaluated when; every
+     * element still computes from the node values read fresh this cycle, so a
+     * replay can never invent values for a changed network - it can only fail to
+     * finish, which the verification sweep then detects. If the sweep makes no
+     * progress the network is at the unique fixed point and the cached order was
+     * a hit. If it does make progress the path has changed; the partial state is
+     * left in place and the caller completes it with the full worklist.
+     *
+     * @param n Number of managed elements.
+     * @return true if the cached order solved the network (verified), false if
+     *         it is stale and the full algorithm must run.
+     */
+    private boolean replayCachedOrder(int n) {
+        for (int k = 0; k < cachedOrderSize; k++) {
+            elements.get(cachedOrder[k]).doCalculation();
+        }
+        for (int i = 0; i < n; i++) {
+            if (elements.get(i).doCalculation()) {
+                // Not at the fixed point: the learned path no longer applies.
+                cachedOrderSize = 0;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Appends an element index to the order being recorded during a full solve,
+     * growing the buffer as needed.
+     *
+     * @param i Index of the element that just made progress.
+     */
+    private void recordProgress(int i) {
+        if (recordSize == recordBuffer.length) {
+            final int grown = recordBuffer.length == 0
+                    ? 64 : recordBuffer.length * 2;
+            recordBuffer = Arrays.copyOf(recordBuffer, grown);
+        }
+        recordBuffer[recordSize++] = i;
+    }
+
+    /**
+     * Promotes the order just recorded by a successful full solve to the cached
+     * order replayed on the next cycle.
+     */
+    private void commitRecordedOrder() {
+        if (cachedOrder.length < recordSize) {
+            cachedOrder = new int[recordSize];
+        }
+        System.arraycopy(recordBuffer, 0, cachedOrder, 0, recordSize);
+        cachedOrderSize = recordSize;
     }
 
     /**
@@ -249,6 +363,7 @@ public class DirectedFlowSolver {
             final int i = queue.pollFirst();
             inQueue[i] = false;
             if (elements.get(i).doCalculation()) {
+                recordProgress(i);
                 wakeNeighbours(i);
             }
             if (++invocations > maxInvocations) {
@@ -270,6 +385,7 @@ public class DirectedFlowSolver {
         for (int i = 0; i < n; i++) {
             if (elements.get(i).doCalculation()) {
                 progressed = true;
+                recordProgress(i);
                 wakeNeighbours(i);
             }
         }
@@ -353,6 +469,8 @@ public class DirectedFlowSolver {
             indexOf.put(elements.get(i), i);
         }
         builtForSize = n;
+        // The element set changed: any learned order no longer matches.
+        cachedOrderSize = 0;
     }
 
     /**

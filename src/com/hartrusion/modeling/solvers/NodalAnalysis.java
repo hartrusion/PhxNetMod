@@ -465,6 +465,10 @@ public class NodalAnalysis extends LinearNetwork {
 
         // Step 1: only known, supported element types are allowed.
         for (AbstractElement e : elements) {
+            if (e.getNumberOfNodes() <= 0) {
+                // Skip orphaned nodes, those will not be an issue.
+                continue;
+            }
             switch (e.getElementType()) {
                 case ORIGIN:
                     numberOfOrigins++;
@@ -1263,7 +1267,7 @@ public class NodalAnalysis extends LinearNetwork {
         // call with solveLinearSystemCholesky() (dense L D L^T) or
         // solveLinearSystem() (Gaussian elimination).
         solveLinearSystemSparseCholesky();
-
+        
         // 2) reference offset: the matrix potentials are relative to the
         // reference node, whose absolute effort is fixed by the origin.
         double referenceEffort = originElement.getEffort();

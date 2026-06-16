@@ -66,9 +66,29 @@ public class DomainAnalogySolver {
     private static final Logger LOGGER = Logger.getLogger(
             DomainAnalogySolver.class.getName());
 
+    /**
+     * Globally enables the per-cycle diagnostic scans (missing-flow warnings,
+     * unsolved-element detection and the root-cause analysis). These only
+     * produce log output and never influence the simulation result, so they are
+     * disabled by default to keep the cyclic calculation as cheap as possible on
+     * low-end hardware. Set to {@code true} once during startup to get the
+     * detailed model-setup diagnostics back. It is static so debugging can be
+     * toggled globally for all solver instances at once.
+     */
+    public static boolean diagnosticsEnabled = false;
+
     private final List<GeneralNode> modelNodes = new ArrayList<>();
 
     private final List<AbstractElement> modelElements = new ArrayList<>();
+
+    /**
+     * Pre-computed list of dead-end nodes (nodes connected to one element or
+     * none). The network topology is fixed once setup is finished, so this set
+     * never changes and is built once instead of being rediscovered by scanning
+     * every model node on every cycle. These are the only nodes the dead-end
+     * handling in {@link #doCalculation()} ever acts on.
+     */
+    private final List<GeneralNode> deadEndNodes = new ArrayList<>();
 
     private String name;
 
@@ -133,9 +153,12 @@ public class DomainAnalogySolver {
     /**
      * An iterative solver that will be called at the end of the calculation
      * run, it contains all elements and will ensure that the temperature and
-     * properties distribution along the calculated flow is calculated.
+     * properties distribution along the calculated flow is calculated. Uses a
+     * {@link DirectedFlowSolver} so this final propagation over the whole model
+     * follows the flow direction instead of re-scanning every element on every
+     * pass.
      */
-    private final SimpleIterator lastIterator = new SimpleIterator();
+    private final DirectedFlowSolver lastIterator = new DirectedFlowSolver();
 
     private final List<AbstractElement> unsolvedElements = new ArrayList<>();
 
@@ -149,15 +172,31 @@ public class DomainAnalogySolver {
     private static ExecutorService threadPool;
 
     /**
-     * Cached parallel work packages, built once from the detected networks. The
-     * first batch holds all transfer subnets, the second batch holds all super
-     * position and non-linear networks. Splitting them into two batches keeps
-     * the original calculation order (effort forcing and self solving
-     * dissipators run in between).
+     * The transfer subnets that need a complex (and therefore expensive)
+     * solver, i.e. those where {@link TransferSubnet#usesDedicatedSolver()}
+     * returns false. Only these are worth solving on separate threads.
      */
-    private List<Callable<Void>> subnetTasks;
+    private List<TransferSubnet> heavySubnets;
 
-    private List<Callable<Void>> postForcingTasks;
+    /**
+     * The transfer subnets that are solved by a fast dedicated solver in a
+     * single, cheap call. These are calculated in series together with the
+     * other light networks and never get their own thread.
+     */
+    private List<TransferSubnet> lightSubnets;
+
+    /**
+     * Cached parallel work packages wrapping the {@link #heavySubnets}. Built
+     * once after the networks are detected. These are the only tasks ever
+     * handed to the thread pool.
+     */
+    private List<Callable<Void>> heavyTasks;
+
+    /**
+     * True once the shared lock has been handed to the model nodes, so the
+     * injection is only ever done once.
+     */
+    private boolean locksInjected;
 
     /**
      * Monitor handed to the shared model nodes while parallel solving is
@@ -173,10 +212,12 @@ public class DomainAnalogySolver {
     }
 
     /**
-     * Configures the thread pool used to solve the detected networks in
-     * parallel. The transfer subnets are solved as one parallel batch, then the
-     * super position and non-linear networks are solved as a second batch,
-     * preserving the original calculation order.
+     * Configures the thread pool used to solve the heavy networks in parallel.
+     * Only the transfer subnets that need a complex solver
+     * ({@link TransferSubnet#usesDedicatedSolver()} returns false) are handed
+     * to the pool. All light networks (dedicated-solver subnets, self solving
+     * dissipators, super positions and non-linear nets) are solved in series in
+     * the calling thread, overlapping with the heavy work for free.
      * <p>
      * The pool is stored statically and shared by all solver instances, so it
      * only needs to be set once during application startup. It must be set
@@ -196,63 +237,94 @@ public class DomainAnalogySolver {
     }
 
     /**
-     * Prepares this instance for parallel solving: hands the shared lock to the
-     * real model nodes and caches the parallel work packages. The copy networks
-     * used internally by the solvers keep no lock and stay lock-free. Safe to
-     * call more than once; the work is only done on the first call.
+     * Splits the detected transfer subnets into the heavy ones (worth a
+     * separate thread) and the light ones (dedicated solver) and builds the
+     * cached parallel work packages from the heavy ones. This classification is
+     * stable after setup and independent of whether a thread pool is used.
      */
-    private void prepareParallelSolving() {
-        if (subnetTasks != null) {
-            return; // already prepared
+    private void buildSolverBatches() {
+        heavySubnets = new ArrayList<>();
+        lightSubnets = new ArrayList<>();
+        for (TransferSubnet ts : subnets) {
+            if (ts.usesDedicatedSolver()) {
+                lightSubnets.add(ts);
+            } else {
+                heavySubnets.add(ts);
+            }
         }
-        for (GeneralNode n : modelNodes) {
-            n.setLock(parallelLock);
-        }
-        buildParallelTasks();
-    }
-
-    /**
-     * (Re)builds the cached parallel work packages from the currently detected
-     * networks.
-     */
-    private void buildParallelTasks() {
-        subnetTasks = new ArrayList<>(subnets.size());
-        for (final TransferSubnet ts : subnets) {
-            subnetTasks.add(() -> {
+        heavyTasks = new ArrayList<>(heavySubnets.size() + superPosNets.size());
+        for (final TransferSubnet ts : heavySubnets) {
+            heavyTasks.add(() -> {
                 ts.doCalculation();
                 return null;
             });
         }
-        postForcingTasks = new ArrayList<>(
-                superPosNets.size() + nonLinearNets.size());
+        // Standalone super position closed circuits are independent of every
+        // other network, so they join the parallel batch too.
         for (final SuperPosition sp : superPosNets) {
-            postForcingTasks.add(() -> {
+            heavyTasks.add(() -> {
                 sp.doCalculation();
-                return null;
-            });
-        }
-        for (final SimpleIterator si : nonLinearNets) {
-            postForcingTasks.add(() -> {
-                si.doCalculation();
                 return null;
             });
         }
     }
 
     /**
-     * Submits a batch of solver tasks to the thread pool and blocks until all
-     * of them are finished. Any exception raised inside a worker is
-     * re-thrown on the calling thread so that calculation errors are not
-     * silently swallowed.
-     *
-     * @param tasks Work packages to run in parallel.
+     * Hands the shared lock to the real model nodes so several threads may
+     * safely contribute flows to the boundary nodes. Only the forced-effort
+     * boundary nodes are ever touched by more than one solver thread: by design
+     * the independent sub networks are partitioned by exactly these nodes and
+     * only meet there. Every other node belongs to a single sub network and is
+     * therefore written by a single thread, so it stays lock-free. Leaving the
+     * interior nodes unlocked keeps the expensive iterative back-solve of the
+     * big subnets (thousands of synchronized flow accesses per cycle) free of
+     * monitor overhead. The copy networks used internally by the solvers keep
+     * no lock either. Safe to call more than once; the work is only done on the
+     * first call.
      */
-    private void runParallel(List<Callable<Void>> tasks) {
-        if (tasks == null || tasks.isEmpty()) {
+    private void injectNodeLock() {
+        if (locksInjected) {
             return;
         }
+        for (int i = 0; i < modelNodes.size(); i++) {
+            if (hasForcedEffort[i]) {
+                modelNodes.get(i).setLock(parallelLock);
+            }
+        }
+        locksInjected = true;
+    }
+
+    /**
+     * Solves all light networks in series in the calling thread. These are
+     * cheap enough that the scheduling overhead of a separate thread would cost
+     * more than the calculation itself. They are independent of each other and
+     * of the heavy subnets (all separated by forced-effort boundary nodes), so
+     * this may safely overlap with the heavy subnets running on the pool.
+     */
+    private void solveLightNetworks() {
+        // Transfer subnets solved by a fast dedicated solver in one call.
+        for (TransferSubnet ts : lightSubnets) {
+            ts.doCalculation();
+        }
+        // Dissipators sitting directly between two forced-effort nodes.
+        for (AbstractElement e : selfSolvingDissipatorElements) {
+            e.doCalculation();
+        }
+        // Non-linear iterative networks.
+        for (SimpleIterator si : nonLinearNets) {
+            si.doCalculation();
+        }
+    }
+
+    /**
+     * Blocks until all given futures are finished. Any exception raised inside
+     * a worker is re-thrown on the calling thread so that calculation errors
+     * are not silently swallowed.
+     *
+     * @param futures Submitted heavy-subnet tasks to wait for.
+     */
+    private void awaitAll(List<Future<Void>> futures) {
         try {
-            List<Future<Void>> futures = threadPool.invokeAll(tasks);
             for (Future<Void> f : futures) {
                 f.get(); // re-throws anything that happened in a worker
             }
@@ -444,7 +516,7 @@ public class DomainAnalogySolver {
         // wanted.
         for (GeneralNode n : modelNodes) {
             if (n.getNumberOfElements() <= 1) {
-                LOGGER.log(Level.WARNING, "Suspicious connection: Element " 
+                LOGGER.log(Level.WARNING, "Suspicious connection: Element "
                         + n.getElement(0).toString() + " connected to floating "
                         + "node " + n.toString());
             }
@@ -480,11 +552,23 @@ public class DomainAnalogySolver {
             lastIterator.addElement(e);
         }
 
-        // If a thread pool was configured (statically, during startup), prepare
-        // this instance for parallel solving now that all nodes and networks
-        // are known.
+        // Classify the detected subnets into heavy (own thread) and light
+        // (series) once, now that all nodes and networks are known. If a thread
+        // pool was configured (statically, during startup), also hand the
+        // shared lock to the model nodes for safe concurrent access.
+        buildSolverBatches();
         if (threadPool != null) {
-            prepareParallelSolving();
+            injectNodeLock();
+        }
+
+        // Pre-compute the dead-end nodes (one or zero connected elements). The
+        // topology is fixed from here on, so this set never changes and the
+        // dead-end handling no longer has to scan every node on every cycle.
+        deadEndNodes.clear();
+        for (GeneralNode n : modelNodes) {
+            if (n.getNumberOfElements() <= 1) {
+                deadEndNodes.add(n);
+            }
         }
 
         LOGGER.log(Level.INFO, "...setup finished. "
@@ -812,7 +896,7 @@ public class DomainAnalogySolver {
 
     public void prepareCalculation() {
         unsolvedElements.clear();
-        
+
         lastIterator.prepareCalculation();
         for (AbstractElement e : selfSolvingDissipatorElements) {
             e.prepareCalculation();
@@ -840,7 +924,7 @@ public class DomainAnalogySolver {
                 }
             }
         } */
-        
+
         // Resolve all forced efforts first. Origins and self capacitances push
         // their effort onto the boundary nodes, so every node shared between
         // independent sub networks already carries its effort before parallel
@@ -851,42 +935,44 @@ public class DomainAnalogySolver {
         for (AbstractElement e : effortForcingElements) {
             e.doCalculation();
         }
-        if (threadPool != null) {
-            if (subnetTasks == null) {
-                // Safety net if the pool was configured after addNetwork ran.
-                prepareParallelSolving();
+        if (threadPool != null && heavyTasks != null
+                && !heavyTasks.isEmpty()) {
+            injectNodeLock(); // safety net if pool was set after addNetwork
+            // Submit the heavy work (complex subnets + standalone super
+            // positions) to the pool and immediately solve all the cheap
+            // networks in this thread, so the light series work overlaps with
+            // the heavy parallel work for free. The futures are always joined
+            // (even on error) so no task leaks into the next cycle.
+            List<Future<Void>> heavyFutures
+                    = new ArrayList<>(heavyTasks.size());
+            for (Callable<Void> task : heavyTasks) {
+                heavyFutures.add(threadPool.submit(task));
             }
-            // First batch: all transfer subnets solve concurrently.
-            runParallel(subnetTasks);
+            try {
+                solveLightNetworks();
+            } finally {
+                awaitAll(heavyFutures);
+            }
         } else {
-            for (TransferSubnet ts : subnets) {
+            // Fully sequential: heavy work first, then all light networks.
+            for (TransferSubnet ts : heavySubnets) {
                 ts.doCalculation();
             }
-        }
-        // Dissipators sitting directly between two forced-effort nodes can be
-        // resolved on their own now that the efforts and subnets are in place.
-        for (AbstractElement e : selfSolvingDissipatorElements) {
-            e.doCalculation();
-        }
-        if (threadPool != null) {
-            // Second batch: super position and non-linear networks together.
-            runParallel(postForcingTasks);
-        } else {
             for (SuperPosition sp : superPosNets) {
                 sp.doCalculation();
             }
-            for (SimpleIterator si : nonLinearNets) {
-                si.doCalculation();
-            }
+            solveLightNetworks();
         }
         // Dead-End-Nodes may not have a solution as there is nothing so far
         // that would provide a solution at all, they might not even be 
         // found and assigned to one of the solvers. Provide solutions for such
         // dead end nodes here and set flow to the attached element to 0.0 
         // manually. This can happen if a reservoir assembly is attached but
-        // nothing is connected to the primary inlet.
+        // nothing is connected to the primary inlet. The set of dead-end nodes
+        // is structural and pre-computed once, so this no longer scans every
+        // node of the model on every cycle.
         GeneralNode otherNode;
-        for (GeneralNode n : modelNodes) {
+        for (GeneralNode n : deadEndNodes) {
             if (n.getNumberOfElements() == 1) {
                 n.setFlow(0.0, n.getElement(0), true);
             }
@@ -908,6 +994,10 @@ public class DomainAnalogySolver {
             }
         }
         lastIterator.doCalculation();
+
+        if (!diagnosticsEnabled) {
+            return true;
+        }
 
         for (GeneralNode n : modelNodes) {
             if (!n.allFlowsUpdated()) {
@@ -967,7 +1057,7 @@ public class DomainAnalogySolver {
                         break;
                     }
                 }
-                
+
                 if (!hasUnsolvedUpstream && e.getCoupledElement() != null) {
                     if (unsolvedElements.contains(e.getCoupledElement())) {
                         hasUnsolvedUpstream = true;

@@ -77,10 +77,14 @@ public abstract class LinearNetwork {
 
     /**
      * If not changed by derived and overridden methods, all elements are added
-     * to this instance of an iterative solver, providing methods to solve or
-     * prepare all elements and nodes.
+     * to this instance of an directed flow solver, providing methods to solve
+     * or prepare all elements and nodes. A {@link DirectedFlowSolver} is used
+     * here instead of a {@link SimpleIterator}: it reaches the same fixed point
+     * but propagates results along the flow direction with an event driven
+     * worklist, which is dramatically faster for large subnets where the blind
+     * re-scanning of every element on every pass dominated the cyclic runtime.
      */
-    protected SimpleIterator iterativeSolver = new SimpleIterator();
+    protected DirectedFlowSolver iterativeSolver = new DirectedFlowSolver();
 
     /**
      * Index of node 0 from element. The array index represents the index of the

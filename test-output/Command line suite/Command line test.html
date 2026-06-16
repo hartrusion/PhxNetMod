@@ -1,0 +1,593 @@
+<html>
+<head>
+<title>TestNG:  Command line test</title>
+<link href="../testng.css" rel="stylesheet" type="text/css" />
+<link href="../my-testng.css" rel="stylesheet" type="text/css" />
+
+<style type="text/css">
+.log { display: none;} 
+.stack-trace { display: none;} 
+</style>
+<script type="text/javascript">
+<!--
+function flip(e) {
+  current = e.style.display;
+  if (current == 'block') {
+    e.style.display = 'none';
+    return 0;
+  }
+  else {
+    e.style.display = 'block';
+    return 1;
+  }
+}
+
+function toggleBox(szDivId, elem, msg1, msg2)
+{
+  var res = -1;  if (document.getElementById) {
+    res = flip(document.getElementById(szDivId));
+  }
+  else if (document.all) {
+    // this is the way old msie versions work
+    res = flip(document.all[szDivId]);
+  }
+  if(elem) {
+    if(res == 0) elem.innerHTML = msg1; else elem.innerHTML = msg2;
+  }
+
+}
+
+function toggleAllBoxes() {
+  if (document.getElementsByTagName) {
+    d = document.getElementsByTagName('div');
+    for (i = 0; i < d.length; i++) {
+      if (d[i].className == 'log') {
+        flip(d[i]);
+      }
+    }
+  }
+}
+
+// -->
+</script>
+
+</head>
+<body>
+<h2 align='center'>Command line test</h2><table border='1' align="center">
+<tr>
+<td>Tests passed/Failed/Skipped:</td><td>87/2/0</td>
+</tr><tr>
+<td>Started on:</td><td>Tue Jun 16 08:23:47 CEST 2026</td>
+</tr>
+<tr><td>Total time:</td><td>0 seconds (231 ms)</td>
+</tr><tr>
+<td>Included groups:</td><td></td>
+</tr><tr>
+<td>Excluded groups:</td><td></td>
+</tr>
+</table><p/>
+<small><i>(Hover the method name to see the test class name)</i></small><p/>
+<table width='100%' border='1' class='invocation-failed'>
+<tr><td colspan='4' align='center'><b>FAILED TESTS</b></td></tr>
+<tr><td><b>Test method</b></td>
+<td width="30%"><b>Exception</b></td>
+<td width="10%"><b>Time (seconds)</b></td>
+<td><b>Instance</b></td>
+</tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testExport3()'><b>testExport3</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td><div><pre>java.lang.AssertionError: Calculation did not finish. expected [true] but found [false]
+	at com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testExport3(RecursiveSimplifierTest.java:1466)
+... Removed 25 stack frames</pre></div><a href='#' onClick='toggleBox("stack-trace951050903", this, "Click to show all stack frames", "Click to hide stack frames")'>Click to show all stack frames</a>
+<div class='stack-trace' id='stack-trace951050903'><pre>java.lang.AssertionError: Calculation did not finish. expected [true] but found [false]
+	at org.testng.Assert.fail(Assert.java:96)
+	at org.testng.Assert.failNotEquals(Assert.java:776)
+	at org.testng.Assert.assertTrue(Assert.java:44)
+	at com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testExport3(RecursiveSimplifierTest.java:1466)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.testng.internal.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:124)
+	at org.testng.internal.Invoker.invokeMethod(Invoker.java:583)
+	at org.testng.internal.Invoker.invokeTestMethod(Invoker.java:719)
+	at org.testng.internal.Invoker.invokeTestMethods(Invoker.java:989)
+	at org.testng.internal.TestMethodWorker.invokeTestMethods(TestMethodWorker.java:125)
+	at org.testng.internal.TestMethodWorker.run(TestMethodWorker.java:109)
+	at org.testng.TestRunner.privateRun(TestRunner.java:648)
+	at org.testng.TestRunner.run(TestRunner.java:505)
+	at org.testng.SuiteRunner.runTest(SuiteRunner.java:455)
+	at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:450)
+	at org.testng.SuiteRunner.privateRun(SuiteRunner.java:415)
+	at org.testng.SuiteRunner.run(SuiteRunner.java:364)
+	at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:52)
+	at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:84)
+	at org.testng.TestNG.runSuitesSequentially(TestNG.java:1208)
+	at org.testng.TestNG.runSuitesLocally(TestNG.java:1137)
+	at org.testng.TestNG.runSuites(TestNG.java:1049)
+	at org.testng.TestNG.run(TestNG.java:1017)
+	at org.testng.TestNG.privateMain(TestNG.java:1354)
+	at org.testng.TestNG.main(TestNG.java:1323)
+</pre></div></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedSuperheaterTest.testZeroFlow()'><b>testZeroFlow</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedSuperheaterTest</td>
+<td><div><pre>java.lang.AssertionError: expected [1260000.0] but found [1262144.2692385316]
+	at com.hartrusion.modeling.assemblies.PhasedSuperheaterTest.testZeroFlow(PhasedSuperheaterTest.java:209)
+... Removed 26 stack frames</pre></div><a href='#' onClick='toggleBox("stack-trace136157810", this, "Click to show all stack frames", "Click to hide stack frames")'>Click to show all stack frames</a>
+<div class='stack-trace' id='stack-trace136157810'><pre>java.lang.AssertionError: expected [1260000.0] but found [1262144.2692385316]
+	at org.testng.Assert.fail(Assert.java:96)
+	at org.testng.Assert.failNotEquals(Assert.java:776)
+	at org.testng.Assert.assertEquals(Assert.java:489)
+	at org.testng.Assert.assertEquals(Assert.java:502)
+	at com.hartrusion.modeling.assemblies.PhasedSuperheaterTest.testZeroFlow(PhasedSuperheaterTest.java:209)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.testng.internal.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:124)
+	at org.testng.internal.Invoker.invokeMethod(Invoker.java:583)
+	at org.testng.internal.Invoker.invokeTestMethod(Invoker.java:719)
+	at org.testng.internal.Invoker.invokeTestMethods(Invoker.java:989)
+	at org.testng.internal.TestMethodWorker.invokeTestMethods(TestMethodWorker.java:125)
+	at org.testng.internal.TestMethodWorker.run(TestMethodWorker.java:109)
+	at org.testng.TestRunner.privateRun(TestRunner.java:648)
+	at org.testng.TestRunner.run(TestRunner.java:505)
+	at org.testng.SuiteRunner.runTest(SuiteRunner.java:455)
+	at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:450)
+	at org.testng.SuiteRunner.privateRun(SuiteRunner.java:415)
+	at org.testng.SuiteRunner.run(SuiteRunner.java:364)
+	at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:52)
+	at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:84)
+	at org.testng.TestNG.runSuitesSequentially(TestNG.java:1208)
+	at org.testng.TestNG.runSuitesLocally(TestNG.java:1137)
+	at org.testng.TestNG.runSuites(TestNG.java:1049)
+	at org.testng.TestNG.run(TestNG.java:1017)
+	at org.testng.TestNG.privateMain(TestNG.java:1354)
+	at org.testng.TestNG.main(TestNG.java:1323)
+</pre></div></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedSuperheaterTest@185d8b6</td></tr>
+</table><p>
+<table width='100%' border='1' class='invocation-passed'>
+<tr><td colspan='4' align='center'><b>PASSED TESTS</b></td></tr>
+<tr><td><b>Test method</b></td>
+<td width="30%"><b>Exception</b></td>
+<td width="10%"><b>Time (seconds)</b></td>
+<td><b>Instance</b></td>
+</tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.OverlayTest.bridgedElementEffortValidation()'><b>bridgedElementEffortValidation</b><br>Test class: com.hartrusion.modeling.solvers.OverlayTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.OverlayTest@3108bc</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.OverlayTest.bridgedElementError()'><b>bridgedElementError</b><br>Test class: com.hartrusion.modeling.solvers.OverlayTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.OverlayTest@3108bc</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedSuperheaterTest.chernobylTurbine()'><b>chernobylTurbine</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedSuperheaterTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedSuperheaterTest@185d8b6</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest.differentFlowsAndEqualTemperatures()'><b>differentFlowsAndEqualTemperatures</b><br>Test class: com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest@6f1fba17</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest.differentFlowsAndEqualTemperatures()'><b>differentFlowsAndEqualTemperatures</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest@67784306</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest.equalFlowsAndDifferentTemperatures()'><b>equalFlowsAndDifferentTemperatures</b><br>Test class: com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest@6f1fba17</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest.equalFlowsAndDifferentTemperatures()'><b>equalFlowsAndDifferentTemperatures</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest@67784306</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest.equalFlowsAndTemperatures()'><b>equalFlowsAndTemperatures</b><br>Test class: com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest@6f1fba17</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest.equalFlowsAndTemperatures()'><b>equalFlowsAndTemperatures</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest@67784306</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.StarPolygonTransformTest.fullEqualStar()'><b>fullEqualStar</b><br>Test class: com.hartrusion.modeling.solvers.StarPolygonTransformTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.StarPolygonTransformTest@63753b6d</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedHeatExchangerNoMassTest.testAuxCondensateFailure()'><b>testAuxCondensateFailure</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedHeatExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedHeatExchangerNoMassTest@335eadca</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SuperPositionTest.testBasicNetwork()'><b>testBasicNetwork</b><br>Test class: com.hartrusion.modeling.solvers.SuperPositionTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SuperPositionTest@13a5fe33</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.NodalAnalysisTest.testBasicNetwork()'><b>testBasicNetwork</b><br>Test class: com.hartrusion.modeling.solvers.NodalAnalysisTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.NodalAnalysisTest@370736d9</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.LinearDissipatorTest.testBasicOhmsLaw()'><b>testBasicOhmsLaw</b><br>Test class: com.hartrusion.modeling.general.LinearDissipatorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.LinearDissipatorTest@2b2948e2</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SimplifiedResistorTest.testBasicParallelResistors()'><b>testBasicParallelResistors</b><br>Test class: com.hartrusion.modeling.solvers.SimplifiedResistorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SimplifiedResistorTest@18eed359</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testBasicParallelSeriesNetwork()'><b>testBasicParallelSeriesNetwork</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SimplifiedResistorTest.testBasicSeriesResistors()'><b>testBasicSeriesResistors</b><br>Test class: com.hartrusion.modeling.solvers.SimplifiedResistorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SimplifiedResistorTest@18eed359</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TwoSeriesSolverTest.testBridgeAndShortcut()'><b>testBridgeAndShortcut</b><br>Test class: com.hartrusion.modeling.solvers.TwoSeriesSolverTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TwoSeriesSolverTest@520a3426</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.StarDeltaTransformTest.testBridgeWithRealSource()'><b>testBridgeWithRealSource</b><br>Test class: com.hartrusion.modeling.solvers.StarDeltaTransformTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.StarDeltaTransformTest@6536e911</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.FlowSourceTest.testBridgedSource()'><b>testBridgedSource</b><br>Test class: com.hartrusion.modeling.general.FlowSourceTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.FlowSourceTest@6ddf90b0</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.MutualCapacitanceTest.testChargeFunction()'><b>testChargeFunction</b><br>Test class: com.hartrusion.modeling.general.MutualCapacitanceTest<br>Parameters: 0.01</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.MutualCapacitanceTest@3b0143d3</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.MutualCapacitanceTest.testChargeFunction()'><b>testChargeFunction</b><br>Test class: com.hartrusion.modeling.general.MutualCapacitanceTest<br>Parameters: 0.1</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.MutualCapacitanceTest@3b0143d3</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.MutualCapacitanceTest.testChargeFunction()'><b>testChargeFunction</b><br>Test class: com.hartrusion.modeling.general.MutualCapacitanceTest<br>Parameters: 0.2</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.MutualCapacitanceTest@3b0143d3</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.OverlayTest.testCheckForBridgedPaths()'><b>testCheckForBridgedPaths</b><br>Test class: com.hartrusion.modeling.solvers.OverlayTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.OverlayTest@3108bc</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.StarSquareTransformTest.testComplexFeedwaterDetail()'><b>testComplexFeedwaterDetail</b><br>Test class: com.hartrusion.modeling.solvers.StarSquareTransformTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.StarSquareTransformTest@3e9b1010</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testDeadEndStar()'><b>testDeadEndStar</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SuperPositionTest.testEffortSourcesWithOpenConnections()'><b>testEffortSourcesWithOpenConnections</b><br>Test class: com.hartrusion.modeling.solvers.SuperPositionTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SuperPositionTest@13a5fe33</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest.testEvaporatingNoFlowHeatUp()'><b>testEvaporatingNoFlowHeatUp</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest@731a74c</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testExport1()'><b>testExport1</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testExport2()'><b>testExport2</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testFloatingSeriesResistor()'><b>testFloatingSeriesResistor</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SimplifiedResistorTest.testFlowFacesMiddleSeriesResistors()'><b>testFlowFacesMiddleSeriesResistors</b><br>Test class: com.hartrusion.modeling.solvers.SimplifiedResistorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SimplifiedResistorTest@18eed359</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SimplifiedResistorTest.testFlowFacesOuterSeriesResistors()'><b>testFlowFacesOuterSeriesResistors</b><br>Test class: com.hartrusion.modeling.solvers.SimplifiedResistorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SimplifiedResistorTest@18eed359</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SimplifiedResistorTest.testFullReverseOrderSeriesResistors()'><b>testFullReverseOrderSeriesResistors</b><br>Test class: com.hartrusion.modeling.solvers.SimplifiedResistorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SimplifiedResistorTest@18eed359</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest.testGetAvgDensity()'><b>testGetAvgDensity</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest@4b4523f8</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest.testGetDensity()'><b>testGetDensity</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest@4b4523f8</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest.testGetSaturationEffort()'><b>testGetSaturationEffort</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest@4b4523f8</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest.testGetSaturationTemperature()'><b>testGetSaturationTemperature</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest@4b4523f8</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest.testGetVapourFraction()'><b>testGetVapourFraction</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedPropertiesWaterTest@4b4523f8</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest.testHeatupAndFlowthrough()'><b>testHeatupAndFlowthrough</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest@731a74c</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.NodalAnalysisTest.testIdealSourceRejected()'><b>testIdealSourceRejected</b><br>Test class: com.hartrusion.modeling.solvers.NodalAnalysisTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.NodalAnalysisTest@370736d9</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.StarSquareTransformTest.testIndecipherableMayhem()'><b>testIndecipherableMayhem</b><br>Test class: com.hartrusion.modeling.solvers.StarSquareTransformTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.StarSquareTransformTest@3e9b1010</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TwoSeriesSolverTest.testIsolatedEffortSource()'><b>testIsolatedEffortSource</b><br>Test class: com.hartrusion.modeling.solvers.TwoSeriesSolverTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TwoSeriesSolverTest@520a3426</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testMainCirculationPumps()'><b>testMainCirculationPumps</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testMainCirculationPumpsWithSteamOut()'><b>testMainCirculationPumpsWithSteamOut</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testMinimumNetwork()'><b>testMinimumNetwork</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SimplifiedResistorTest.testMixedOrderParallelResistors()'><b>testMixedOrderParallelResistors</b><br>Test class: com.hartrusion.modeling.solvers.SimplifiedResistorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SimplifiedResistorTest@18eed359</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SimplifiedResistorTest.testMixedReverseOrderParallelResistors()'><b>testMixedReverseOrderParallelResistors</b><br>Test class: com.hartrusion.modeling.solvers.SimplifiedResistorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SimplifiedResistorTest@18eed359</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testNetworkWithLoop()'><b>testNetworkWithLoop</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest.testNoFlow()'><b>testNoFlow</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest@731a74c</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest.testNoFlowFluidHeatUp()'><b>testNoFlowFluidHeatUp</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest@731a74c</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest.testNoHeatupFlushThrough()'><b>testNoHeatupFlushThrough</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest@731a74c</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest.testNoHeatupReverseFlushThrough()'><b>testNoHeatupReverseFlushThrough</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest@731a74c</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testNoOrigin()'><b>testNoOrigin</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testOhmsLawValidationFail()'><b>testOhmsLawValidationFail</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TwoSeriesSolverTest.testOneOpenConnection()'><b>testOneOpenConnection</b><br>Test class: com.hartrusion.modeling.solvers.TwoSeriesSolverTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TwoSeriesSolverTest@520a3426</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testOpenBridgedResistor()'><b>testOpenBridgedResistor</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.LinearDissipatorTest.testOpenConnectionWithVoltageSource()'><b>testOpenConnectionWithVoltageSource</b><br>Test class: com.hartrusion.modeling.general.LinearDissipatorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.LinearDissipatorTest@2b2948e2</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.FlowSourceTest.testOpenSource()'><b>testOpenSource</b><br>Test class: com.hartrusion.modeling.general.FlowSourceTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.FlowSourceTest@6ddf90b0</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.EffortSourceTest.testOpenSource()'><b>testOpenSource</b><br>Test class: com.hartrusion.modeling.general.EffortSourceTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.EffortSourceTest@57536d79</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testOpenWithLargeNumbers()'><b>testOpenWithLargeNumbers</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest.testReverseEvaporatingHeatUp()'><b>testReverseEvaporatingHeatUp</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchangerTest@731a74c</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SimplifiedResistorTest.testReverseParallelResistors()'><b>testReverseParallelResistors</b><br>Test class: com.hartrusion.modeling.solvers.SimplifiedResistorTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SimplifiedResistorTest@18eed359</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testRingIsle()'><b>testRingIsle</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.NodalAnalysisTest.testSharedSeriesResistor()'><b>testSharedSeriesResistor</b><br>Test class: com.hartrusion.modeling.solvers.NodalAnalysisTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.NodalAnalysisTest@370736d9</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.FlowSourceTest.testSourceAndResistor()'><b>testSourceAndResistor</b><br>Test class: com.hartrusion.modeling.general.FlowSourceTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.FlowSourceTest@6ddf90b0</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.general.EffortSourceTest.testSourceAndResistor()'><b>testSourceAndResistor</b><br>Test class: com.hartrusion.modeling.general.EffortSourceTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.general.EffortSourceTest@57536d79</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TwoSeriesSolverTest.testStandardBehaviour()'><b>testStandardBehaviour</b><br>Test class: com.hartrusion.modeling.solvers.TwoSeriesSolverTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TwoSeriesSolverTest@520a3426</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.StarDeltaTransformTest.testStarWithOneOpenConnection()'><b>testStarWithOneOpenConnection</b><br>Test class: com.hartrusion.modeling.solvers.StarDeltaTransformTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.StarDeltaTransformTest@6536e911</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.thermal.ThermalLogGradientResistanceTest.testStepResponses()'><b>testStepResponses</b><br>Test class: com.hartrusion.modeling.thermal.ThermalLogGradientResistanceTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.thermal.ThermalLogGradientResistanceTest@6c3708b3</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.SuperPositionTest.testSummerTermExam()'><b>testSummerTermExam</b><br>Test class: com.hartrusion.modeling.solvers.SuperPositionTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.SuperPositionTest@13a5fe33</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.NodalAnalysisTest.testSummerTermExam()'><b>testSummerTermExam</b><br>Test class: com.hartrusion.modeling.solvers.NodalAnalysisTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.NodalAnalysisTest@370736d9</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testThermalFlowSources()'><b>testThermalFlowSources</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testThermalFlowSourcesSharedOrigin()'><b>testThermalFlowSourcesSharedOrigin</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testThreeCapacitancePorts()'><b>testThreeCapacitancePorts</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.StarSquareTransformTest.testTwoBridgesVShaped()'><b>testTwoBridgesVShaped</b><br>Test class: com.hartrusion.modeling.solvers.StarSquareTransformTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.StarSquareTransformTest@3e9b1010</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testTwoCapacitancePorts()'><b>testTwoCapacitancePorts</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.RecursiveSimplifierTest.testTwoLoopsWithSource()'><b>testTwoLoopsWithSource</b><br>Test class: com.hartrusion.modeling.solvers.RecursiveSimplifierTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.RecursiveSimplifierTest@5f9d02cb</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testTwoOriginElements()'><b>testTwoOriginElements</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.TransferSubnetTest.testTwoPumpsOneTankExample()'><b>testTwoPumpsOneTankExample</b><br>Test class: com.hartrusion.modeling.solvers.TransferSubnetTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.TransferSubnetTest@6b09bb57</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoirTest.testValidateEnergyCirculation()'><b>testValidateEnergyCirculation</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoirTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoirTest@5a8e6209</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoirTest.testValidateEnergyNoFlow()'><b>testValidateEnergyNoFlow</b><br>Test class: com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoirTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoirTest@5a8e6209</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.solvers.StarDeltaTransformTest.testWheatstoneBridge()'><b>testWheatstoneBridge</b><br>Test class: com.hartrusion.modeling.solvers.StarDeltaTransformTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.solvers.StarDeltaTransformTest@6536e911</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest.testZeroFlow()'><b>testZeroFlow</b><br>Test class: com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.HeatExchangerNoMassTest@6f1fba17</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest.testZeroFlow()'><b>testZeroFlow</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedExchangerNoMassTest@67784306</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedCondenserTest.testZeroFlow()'><b>testZeroFlow</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedCondenserTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedCondenserTest@210366b4</td></tr>
+<tr>
+<td title='com.hartrusion.modeling.assemblies.PhasedCondenserNoMassTest.testZeroFlow()'><b>testZeroFlow</b><br>Test class: com.hartrusion.modeling.assemblies.PhasedCondenserNoMassTest</td>
+<td></td>
+<td>0</td>
+<td>com.hartrusion.modeling.assemblies.PhasedCondenserNoMassTest@eec5a4a</td></tr>
+</table><p>
+</body>
+</html>
