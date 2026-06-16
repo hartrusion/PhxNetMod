@@ -906,16 +906,12 @@ public class TransferSubnet extends LinearNetwork {
         GeneralNode targetNode, sourceNode;
         int idx, jdx;
         boolean noNoFlowCheck;
-        long startTime = System.nanoTime();
 
         // Get the solution calculated.
         if (dedicatedSolver != null) {
             dedicatedSolver.solveNetwork();
         } else {
             analyticSolver.doCalculation();
-        }
-        if (nodes.size() > 200) {
-            System.out.println("Calc finished after " + ((System.nanoTime() - startTime) / 1000) + " ms");
         }
 
         // call all origin elements first to allow them forcing their 
@@ -1033,9 +1029,6 @@ public class TransferSubnet extends LinearNetwork {
                 }
                 LOGGER.log(Level.WARNING, "Missing flow on " + n.toString());
             }
-        }
-        if (nodes.size() > 200) {
-            System.out.println("Transfersubnet finished after " + ((System.nanoTime() - startTime) / 1000) + " ms");
         }
     }
 
