@@ -24,19 +24,12 @@
 package com.hartrusion.modeling.solvers;
 
 import com.hartrusion.modeling.ElementType;
-import static com.hartrusion.modeling.ElementType.BRIDGED;
-import static com.hartrusion.modeling.ElementType.DISSIPATOR;
-import static com.hartrusion.modeling.ElementType.EFFORTSOURCE;
-import static com.hartrusion.modeling.ElementType.FLOWSOURCE;
-import static com.hartrusion.modeling.ElementType.OPEN;
-import static com.hartrusion.modeling.ElementType.ORIGIN;
 import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.ClosedOrigin;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -55,7 +48,6 @@ import java.util.List;
  */
 public class DeltaSourceSolver {
 
-    private List<GeneralNode> nodes;
     private List<AbstractElement> elements;
 
     private final SimpleIterator lastIterator = new SimpleIterator();
@@ -83,7 +75,6 @@ public class DeltaSourceSolver {
      */
     public boolean init(List<GeneralNode> nodes,
             List<AbstractElement> elements) {
-        this.nodes = nodes;
         this.elements = elements;
         
         if (elements.size() != 5) {
