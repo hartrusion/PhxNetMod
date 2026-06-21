@@ -46,15 +46,15 @@ public class LinearDissipator extends FlowThrough {
 
     private static final Logger LOGGER = Logger.getLogger(
             LinearDissipator.class.getName());
+    
+    /**
+     * Disables all validation checks.
+     */
+    private static boolean NO_VALIDATION = true;
 
     protected double resistance = 10.0; // main parameter
     private double externalDeltaEffort;
     private boolean externalDeltaEffortKnown;
-
-    /**
-     * Disables all validation checks.
-     */
-    private boolean noChecks;
 
     /**
      * Remembers that a validation failed to prevent spamming the logs.
@@ -173,10 +173,10 @@ public class LinearDissipator extends FlowThrough {
     @Override
     public boolean doCalculation() {
         boolean retVal = calculateOhmsLaw();
-        double diff, flow0, flow1, eff;
-        if (noChecks) { // no more checks to validate results.
+        if (NO_VALIDATION) {
             return retVal;
         }
+        double diff, flow0, flow1, eff;
         // Perform some additional checks to validate results
         if (elementType == ElementType.OPEN) {
             flowThroughDiffFlowWarningOccured = false;
