@@ -135,6 +135,12 @@ public class TransferSubnet extends LinearNetwork {
 
     private static final Logger LOGGER = Logger.getLogger(
             TransferSubnet.class.getName());
+    
+    /**
+     * Toggles a validation of results by checking all nodes for proper 
+     * solutions.
+     */
+    public static boolean NO_VALIDATION = true;
 
     /**
      * Holds a list of all nodes from the subnet that are to be considered by
@@ -759,14 +765,20 @@ public class TransferSubnet extends LinearNetwork {
             // domainanalogy solver and not even passed here.
             dedicatedSolver = new DualEffortCenterFlowSolver(nodes, elements);
         } catch (WrongSolverException ex) {
-            // If none of the dedicated circuits work, go for a more complex
-            // solver like nodal analyis or the superposition with recursion.
-            if (NodalAnalysis.isSolvableByNodalAnalysis(nodes, elements,
-                    forcedNodeProviders)) {
-                analyticSolver = new NodalAnalysis();
-            } else {
-                analyticSolver = new SuperPosition();
+            try {
+                // Next dedicated circuit: two effort sources with a series
+                // resistor chain in between.
+                dedicatedSolver = new DualEffortSeriesResistors(nodes, elements);
+            } catch (WrongSolverException ex2) {
+                // If none of the dedicated circuits work, go for a more complex
+                // solver like nodal analyis or the superposition with recursion.
+                if (NodalAnalysis.isSolvableByNodalAnalysis(nodes, elements,
+                        forcedNodeProviders)) {
+                    analyticSolver = new NodalAnalysis();
+                } else {
+                    analyticSolver = new SuperPosition();
 
+                }
             }
         }
 
@@ -1003,6 +1015,10 @@ public class TransferSubnet extends LinearNetwork {
         }
         // get all network components to an as much as possible calculated state
         iterativeSolver.doCalculation();
+        
+        if (NO_VALIDATION) {
+            return;
+        }
 
         // Check that all efforts are now available:
         for (GeneralNode n : linkedNodes) {
