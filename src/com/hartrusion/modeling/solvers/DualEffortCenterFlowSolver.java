@@ -180,6 +180,7 @@ public class DualEffortCenterFlowSolver implements DedicatedSolver {
         }
         // current from current source flows from nI to n1 and nI to n2.
         double iQ1 = uQ * r1.getConductance();
+        double iQ2 = uQ * r2.getConductance();
         
         // Set the flow from the current source first, otherwise the update 
         // call below will cause an illgal set by that solution.
@@ -193,9 +194,9 @@ public class DualEffortCenterFlowSolver implements DedicatedSolver {
             r1.setFlow(i1 - i2 - iQ1, true);
         }
         if (r2Reversed) {
-            r2.setFlow(i1 - i2 + iQ1, true);
+            r2.setFlow(i1 - i2 + iQ2, true);
         } else {
-            r2.setFlow(i2 - i1 - iQ1, true);
+            r2.setFlow(i2 - i1 - iQ2, true);
         }
         r1.doCalculation(); // make ohms law to apply voltage to nI
     }
