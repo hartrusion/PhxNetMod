@@ -143,13 +143,14 @@ public class DomainAnalogySolver {
     private final List<TransferSubnet> subnets = new ArrayList<>();
 
     /**
-     * Holds references to all created TransferSubnet solver instances.
+     * Holds references to all created SimpleIterators that are trying to solve
+     * non-linear networks by iterating them until a solution is given.
      */
     private final List<SimpleIterator> nonLinearNets = new ArrayList<>();
 
     /**
      * Holds references to all created SuperPosition instances which can solve a
-     * network on their own.
+     * network on their own without the need of a transfer subnet solver.
      */
     private final List<SuperPosition> superPosNets = new ArrayList<>();
 
