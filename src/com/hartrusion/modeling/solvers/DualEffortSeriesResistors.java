@@ -61,7 +61,7 @@ import java.util.List;
  * direction), then let each resistor apply Ohm's law to fill in the
  * intermediate node efforts.
  * <p>
- * Generated using Claude Opus 4.8
+ * This is 100 % generated with Github Copilot using Claude Opus 4.8.
  *
  * @author Viktor Alexander Hartung
  */

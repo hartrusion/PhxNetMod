@@ -80,7 +80,7 @@ import com.hartrusion.modeling.general.GeneralNode;
  * result. The order in which elements are evaluated never changes the fixed
  * point, only how quickly it is reached.
  * <p>
- * Generated using Claude Opus 4.8
+ * This is completely AI generated using Github Copilot with Claude Opus 4.8.
  *
  * @author Viktor Alexander Hartung
  */
@@ -146,8 +146,8 @@ public class DirectedFlowSolver {
      * productive element invocations that solved the network on the previous
      * full solve. As long as the flow directions do not change (no valve fully
      * closed, no reversal) replaying this order reaches the fixed point without
-     * any of the worklist's neighbour-search bookkeeping. Empty when no order is
-     * known yet.
+     * any of the worklist's neighbour-search bookkeeping. Empty when no order
+     * is known yet.
      */
     private int[] cachedOrder = new int[0];
 
@@ -238,8 +238,8 @@ public class DirectedFlowSolver {
      * element invocations that made progress, in the exact order they did. If
      * replaying that order leaves the network at its fixed point - confirmed by
      * a single verification sweep that finds nothing left to do, i.e. exactly
-     * {@link SimpleIterator}'s termination condition - the result is correct and
-     * was reached without any of the worklist's queue and neighbour-search
+     * {@link SimpleIterator}'s termination condition - the result is correct
+     * and was reached without any of the worklist's queue and neighbour-search
      * bookkeeping. Only when that verification sweep still finds work (the path
      * changed, or no order is known yet) does the full worklist algorithm run
      * and learn a fresh order.
@@ -299,15 +299,16 @@ public class DirectedFlowSolver {
      * <p>
      * The cached order only dictates which element is evaluated when; every
      * element still computes from the node values read fresh this cycle, so a
-     * replay can never invent values for a changed network - it can only fail to
-     * finish, which the verification sweep then detects. If the sweep makes no
-     * progress the network is at the unique fixed point and the cached order was
-     * a hit. If it does make progress the path has changed; the partial state is
-     * left in place and the caller completes it with the full worklist.
+     * replay can never invent values for a changed network - it can only fail
+     * to finish, which the verification sweep then detects. If the sweep makes
+     * no progress the network is at the unique fixed point and the cached order
+     * was a hit. If it does make progress the path has changed; the partial
+     * state is left in place and the caller completes it with the full
+     * worklist.
      *
      * @param n Number of managed elements.
      * @return true if the cached order solved the network (verified), false if
-     *         it is stale and the full algorithm must run.
+     * it is stale and the full algorithm must run.
      */
     private boolean replayCachedOrder(int n) {
         for (int k = 0; k < cachedOrderSize; k++) {

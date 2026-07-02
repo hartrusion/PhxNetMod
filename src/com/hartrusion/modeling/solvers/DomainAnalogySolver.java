@@ -58,6 +58,9 @@ import java.util.logging.Logger;
  * <p>
  * The prepareCalculation and doCalculation methods can be called and those
  * calls will be redirected to the used solving objects.
+ * <p>
+ * Parallel execution with thread pools and the circular ring detection are
+ * generated with Github Copilot using Claude Opus 4.8 and Gemini 3.1 Preview.
  *
  * @author Viktor Alexander Hartung
  */
@@ -70,8 +73,8 @@ public class DomainAnalogySolver {
      * Globally enables the per-cycle diagnostic scans (missing-flow warnings,
      * unsolved-element detection and the root-cause analysis). These only
      * produce log output and never influence the simulation result, so they are
-     * disabled by default to keep the cyclic calculation as cheap as possible on
-     * low-end hardware. Set to {@code true} once during startup to get the
+     * disabled by default to keep the cyclic calculation as cheap as possible
+     * on low-end hardware. Set to {@code true} once during startup to get the
      * detailed model-setup diagnostics back. It is static so debugging can be
      * toggled globally for all solver instances at once.
      */
