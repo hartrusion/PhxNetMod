@@ -189,7 +189,7 @@ public class PhasedSuperheaterTest {
 
         // pressurize secondary loop
         secOrigDrain.setEffort(5e6);
-        secOrigDrain.setEffort(5e6);
+        secOrigSource.setEffort(5e6);
 
         instance.initConditions(temperature, heatEnergy, 1.0, 5e6);
         priInFlowSource.setFlow(0.0);
@@ -203,14 +203,14 @@ public class PhasedSuperheaterTest {
             // There must be no flow in primary side
             assertEquals(instance.getPhasedNode(PhasedCondenser.PRIMARY_INNER)
                     .getFlow(0), 0.0, 1e-8);
-        }
-
-        // There must be no changes to the inner energy.
-        assertEquals(instance.getSecondarySideReservoir().getPhasedHandler()
-                .getHeatEnergy(), heatEnergy, 1e-8);
-
-        assertEquals(instance.getPrimarySideReservoir().getTemperature(),
+            
+            // There must be no changes to the inner energy.
+            assertEquals(instance.getSecondarySideReservoir().getPhasedHandler()
+                    .getHeatEnergy(), heatEnergy, 1e-8);
+            
+            assertEquals(instance.getPrimarySideReservoir().getTemperature(),
                 temperature, 1e-8);
+        }
     }
 
     /**

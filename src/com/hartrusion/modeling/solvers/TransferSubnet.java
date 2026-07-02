@@ -42,6 +42,7 @@ import com.hartrusion.modeling.general.FlowThrough;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.OpenOrigin;
+import com.hartrusion.modeling.general.Origin;
 import com.hartrusion.modeling.general.SelfCapacitance;
 import com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchanger;
 import com.hartrusion.modeling.steam.SteamIsobaricIsochoricEvaporator;
@@ -56,13 +57,11 @@ import static com.hartrusion.util.ArraysExt.*;
  * Subnet descibes the part of the model which is to be solved. As the large
  * physical model can and should be divided into smaller, independably solveable
  * parts, the term subnet is used.
- *
  * <p>
  * The derived network contains only closed loops in terms of electrical
  * circuits. There are no open origins or self-capacitances present in the
  * network so the new network can be solved with means of electronic circuit
  * mehtods.
- *
  * <p>
  * The network is a first representation of the subnet in a more simplified
  * form, representing all subnet elements just as general elements which can
@@ -70,7 +69,6 @@ import static com.hartrusion.util.ArraysExt.*;
  * solution for heat fluid or other extension will be provided, however, the
  * model should be able to calculate those things based on the results of this
  * network.
- *
  * <p>
  * It is basically the same as if you do those calculations manually on paper,
  * there are some methods available to provide solutions but you will always
@@ -78,7 +76,6 @@ import static com.hartrusion.util.ArraysExt.*;
  * there. Sames goes for this class, it will provide only effort and flow values
  * for all resistors, but this should be enough to get a fully calculated
  * network by just calling doCalculation on the remaining elements.
- *
  * <p>
  * <strong>There is a certain order to in which the network element has to be
  * set up. </strong>
@@ -95,25 +92,21 @@ import static com.hartrusion.util.ArraysExt.*;
  * initialize additional solvers, also creating lots of networks, to provide
  * methods for solving.
  * </ul>
- *
  * <p>
  * Capacitors get replaced internally with effort sources to imply the effort
  * value of the subnet to the network. If they represent a boundary of the
  * network (for example, in fluid systems, a pipe network may be surrounded with
  * tanks to form a boundary).
- *
  * <p>
  * As this transfers a network to a strict linear electronic circuit, only
  * closed origins are available. All origins will be transfered to a single
  * ground origin, origins with a different effort value than the first found
  * origin will be replaced with an effort source which is connected to the
  * ground origin.
- *
  * <p>
  * The created network will be then further transfered into more networks as
  * necessary, most times to be solved with superposition layering which then
  * will create even more networks.
- *
  * <p>
  * Ultimately, this will be a copy of a part of a larger network, therefore the
  * part of the original network is called subnet. The solution of the network
@@ -121,7 +114,6 @@ import static com.hartrusion.util.ArraysExt.*;
  * network to the subnet. As all variables are stored in nodes and not in
  * elements, this will result in all linked nodes to get the values from the
  * nodes of the calculated network.
- *
  * <p>
  * This will call prepare and docalculation-methods on all elements of the
  * subnet, but, as this subnet is only part of a large network usually, it will
@@ -135,9 +127,9 @@ public class TransferSubnet extends LinearNetwork {
 
     private static final Logger LOGGER = Logger.getLogger(
             TransferSubnet.class.getName());
-    
+
     /**
-     * Toggles a validation of results by checking all nodes for proper 
+     * Toggles a validation of results by checking all nodes for proper
      * solutions.
      */
     public static boolean NO_VALIDATION = true;
@@ -832,11 +824,11 @@ public class TransferSubnet extends LinearNetwork {
 
     /**
      * Copies the current parameters (resistance/bridged/open state, source
-     * efforts and flows) of every linked subnet element onto its corresponding
-     * network element. As elements which are bridged in the subnet (for example
-     * thermal exchangers) must be reflected as bridged in the network before
-     * the solver is set up, this is called both during the setup of the solver
-     * and on every prepareCalculation.
+     * efforts, flows and origin efforts) of every linked subnet element onto
+     * its corresponding network element. As elements which are bridged in the
+     * subnet (for example thermal exchangers) must be reflected as bridged in
+     * the network before the solver is set up, this is called both during the
+     * setup of the solver and on every prepareCalculation.
      */
     private void transferLinkedPropertiesToNetwork() {
         AbstractElement e, le;
@@ -845,10 +837,31 @@ public class TransferSubnet extends LinearNetwork {
             e = elements.get(idx);
             le = linkedElements.get(idx);
 
-            // Both origins and Dummy-Elements will not get any changes, as
-            // dynamic chainging of origin values is not allowed.
-            if (e.getElementType() == ElementType.ORIGIN
-                    || le.getElementType() == ElementType.ORIGIN) {
+            // Origin effort values may be changed on the subnet between the
+            // calculation cycles (a changed boundary condition), so the
+            // network has to follow those values. The ground origin gets the
+            // effort of the origin it was derived from. An origin that was
+            // replaced with an effort source to ground gets the effort
+            // relative to the ground origin assigned, as both the solvers and
+            // the network elements treat that source value as a difference to
+            // the ground node. Origins that were merged into the ground node
+            // (same effort as the ground origin on setup) have no own network
+            // element and are expected to keep the same value as the ground
+            // origin. Note that idxGroundOrigin is always the first origin in
+            // the linked elements, so the ground effort is refreshed before
+            // any replaced origin is processed here.
+            // 
+            // This fix was found and implemented using Claude Fable 5.
+            if (le.getElementType() == ElementType.ORIGIN) {
+                if (idx == idxGroundOrigin) {
+                    groundOrigin.setEffort(((Origin) le).getEffort());
+                } else if (isReplacedOrigin[idx]) {
+                    ((EffortSource) e).setEffort(((Origin) le).getEffort()
+                            - groundOrigin.getEffort());
+                }
+                continue;
+            }
+            if (e.getElementType() == ElementType.ORIGIN) {
                 continue;
             }
             if (le.getElementType() == ElementType.NONE
@@ -1015,7 +1028,7 @@ public class TransferSubnet extends LinearNetwork {
         }
         // get all network components to an as much as possible calculated state
         iterativeSolver.doCalculation();
-        
+
         if (NO_VALIDATION) {
             return;
         }
