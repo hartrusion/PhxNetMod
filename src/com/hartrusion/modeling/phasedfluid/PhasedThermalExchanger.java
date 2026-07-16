@@ -103,13 +103,22 @@ public class PhasedThermalExchanger extends FlowThrough
         }
 
         if (!previousPressureSet) {
-            if (getNode(0).effortUpdated()) {
+            // In theory, just using node 0 should be sufficient but there was 
+            // a small issue with the solver, setting the pressure to "0".
+            // Therefore, only valid values are used, the 0.0 pressure is 
+            // ignored as it would heavily affect the calulated temperatures.
+            // The solver is fixed but we leave this here to keep the element
+            // more robust, so checking the effort > 0 will ensure no 0 or 
+            // negative values are used.
+            // 
+            // This fix was found and implemented using Claude Fable 5.
+            if (getNode(0).effortUpdated() 
+                    && getNode(0).getEffort() > 0.0) {
                 phasedHandler.setPreviousPressure(getNode(0).getEffort());
                 didSomething = true;
                 previousPressureSet = true;
-            } else if (getNode(1).effortUpdated()) {
-                // as this is a flowthrough type element, we should never
-                // need this and node 0 is sufficient.
+            } else if (getNode(1).effortUpdated()
+                    && getNode(1).getEffort() > 0.0) {
                 phasedHandler.setPreviousPressure(getNode(1).getEffort());
                 didSomething = true;
                 previousPressureSet = true;

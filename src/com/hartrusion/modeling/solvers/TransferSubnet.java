@@ -210,6 +210,14 @@ public class TransferSubnet extends LinearNetwork {
     private ClosedOrigin groundOrigin; // refers to network, not subnet
     private GeneralNode groundNode; // refers to network, not subnet
 
+    /**
+     * True if the subnet did not contain any origin element and the ground
+     * origin was created artificially. In that case the ground effort is
+     * refreshed from the first capacitance boundary on every cycle, see
+     * transferLinkedPropertiesToNetwork.
+     */
+    private boolean artificialGround = false;
+
     public TransferSubnet() {
 
         for (int idx = 0; idx < INIT_ARRAY_SIZE; idx++) {
@@ -486,6 +494,7 @@ public class TransferSubnet extends LinearNetwork {
             // existing node for this one!
             super.registerNode(groundNode);
             additionalGroundNode = true;
+            artificialGround = true;
         }
 
         // Check self capacitances for multiple nodes. If a self capacitance has
@@ -833,6 +842,29 @@ public class TransferSubnet extends LinearNetwork {
     private void transferLinkedPropertiesToNetwork() {
         AbstractElement e, le;
 
+        // If the ground origin was created artificially (no origin element in
+        // the subnet, only capacitance boundaries like reservoirs), refresh
+        // its effort from the first capacitance boundary each cycle. The
+        // reference potential matters for nodes that have no conductive path
+        // to any boundary (a region cut off by closed valves): the analytic
+        // solvers assign such floating nodes the reference potential. With a
+        // fixed 0.0 ground those nodes would be stamped with 0.0 (for the
+        // fluid domains: absolute vacuum) which discards any sensible initial
+        // condition of elements inside the region. Using a boundary reservoir
+        // effort instead lets a closed-off region keep the pressure of its
+        // surrounding system, which is the expected model behavior.
+        //
+        // This fix was found and implemented using Claude Fable 5.
+        if (artificialGround) {
+            for (int idx = 0; idx < linkedElements.size(); idx++) {
+                if (isCapacitanceBoundary[idx]) {
+                    groundOrigin.setEffort(((Capacitance) linkedElements
+                            .get(idx)).getEffort());
+                    break;
+                }
+            }
+        }
+
         for (int idx = 0; idx < linkedElements.size(); idx++) {
             e = elements.get(idx);
             le = linkedElements.get(idx);
@@ -894,7 +926,14 @@ public class TransferSubnet extends LinearNetwork {
             }
             if (e.getElementType() == ElementType.EFFORTSOURCE
                     && le.getElementType() == ElementType.CAPACTIANCE) {
-                ((EffortSource) e).setEffort(((Capacitance) le).getEffort());
+                // Like replaced origins, the boundary source value is a
+                // difference to the ground node, so the capacitance effort
+                // must be assigned relative to the ground origin. As long as
+                // the ground effort is 0.0 this matches the previous absolute
+                // assignment, but with a refreshed artificial ground (see
+                // above) the relative value is required.
+                ((EffortSource) e).setEffort(((Capacitance) le).getEffort()
+                        - groundOrigin.getEffort());
                 continue;
             }
             throw new ModelErrorException("There was an element where no "
