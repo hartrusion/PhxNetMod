@@ -210,10 +210,10 @@ public class PhasedExpandingThermalVolumeHandler
             thermalResistance.setConductanceParameter(emptyConductance);
         } else {
             // Linear interpolation with resistance
-            double m = (1/fullConductance - 1/emptyConductance)
+            double m = (1 / fullConductance - 1 / emptyConductance)
                     / (fullMass - emptyMass);
             thermalResistance.setResistanceParameter(
-                     m * (innerHeatMass - emptyMass) + 1/emptyConductance);
+                    m * (innerHeatMass - emptyMass) + 1 / emptyConductance);
         }
     }
 
@@ -578,13 +578,26 @@ public class PhasedExpandingThermalVolumeHandler
 
             // Now the heat energy can be calculated as it was possible in
             // normal operation.
-            energyWithoutOutflow = ((innerHeatMass + staticMass) * heatEnergy
-                    + otherNode.getFlow(aElement) * stepTime
-                    * otherNode.getHeatEnergy(aElement)
-                    - thermalSource.getFlow() * stepTime)
-                    // divided by next mass
-                    / ((innerHeatMass + staticMass)
-                    + otherNode.getFlow(aElement) * stepTime);
+            if (otherNode.noHeatEnergy(aElement)) {
+                // In a rare case, it is possible that there is a small flow but
+                // it is nevertheless marked as noHeatEnergy state (some 1e-14
+                // flow value. 
+                energyWithoutOutflow
+                        = ((innerHeatMass + staticMass) * heatEnergy
+                        - thermalSource.getFlow() * stepTime)
+                        // divided by next mass
+                        / ((innerHeatMass + staticMass));
+            } else {
+                energyWithoutOutflow
+                        = ((innerHeatMass + staticMass) * heatEnergy
+                        + otherNode.getFlow(aElement) * stepTime
+                        * otherNode.getHeatEnergy(aElement)
+                        - thermalSource.getFlow() * stepTime)
+                        // divided by next mass
+                        / ((innerHeatMass + staticMass)
+                        + otherNode.getFlow(aElement) * stepTime);
+            }
+            
             nextHeatEnergy = energyWithoutOutflow;
             heatEnergyPrepared = true;
 
@@ -602,14 +615,22 @@ public class PhasedExpandingThermalVolumeHandler
             // good. Hopefully no one will ever notice.
             // A positive value is considered to be too much in the volume so
             // it will be less mass in requested if this value is positive.
-            reverseOutMassCorretion = innerHeatMass - massCapacity
-                    - firstUpdatedNode.getFlow(aElement) * stepTime
-                    - otherNode.getFlow(aElement) * stepTime;
+            if (otherNode.noHeatEnergy(aElement)) {
+                reverseOutMassCorretion = innerHeatMass - massCapacity
+                        - firstUpdatedNode.getFlow(aElement) * stepTime;
+                nextInnerHeatMass = innerHeatMass
+                        + firstUpdatedNode.getFlow(aElement) * stepTime;
 
-            // Next mass is calculated by sum up what happened
-            nextInnerHeatMass = innerHeatMass
-                    + firstUpdatedNode.getFlow(aElement) * stepTime
-                    + otherNode.getFlow(aElement) * stepTime;
+            } else { // default behavior
+                reverseOutMassCorretion = innerHeatMass - massCapacity
+                        - firstUpdatedNode.getFlow(aElement) * stepTime
+                        - otherNode.getFlow(aElement) * stepTime;
+                // Next mass is calculated by sum up what happened
+                nextInnerHeatMass = innerHeatMass
+                        + firstUpdatedNode.getFlow(aElement) * stepTime
+                        + otherNode.getFlow(aElement) * stepTime;
+            }
+
             didSomething = true;
         }
         return didSomething;
