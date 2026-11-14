@@ -24,3 +24,6 @@ Thumbs.db
 # Claude Code files
 /.claude
 CLAUDE.md
+LLM-GLOSSARY.md
+LLM-HISTORY.md
+/test-output
