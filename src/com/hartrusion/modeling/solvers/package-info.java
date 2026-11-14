@@ -47,9 +47,11 @@
  * follow its conventions, so that every dedicated solver offers a static check
  * whether it fits a network and a constructor that sets it up for that network.
  * The dedicated solvers are {@link DualEffortCenterFlowSolver},
- * {@link DualEffortSeriesResistors}, {@link FuelCellSolver} and
- * {@link ThreeEffortsTwoResistorsCircle}, which are used by
- * {@link TransferSubnet},
+ * {@link DualEffortSeriesResistors}, {@link FuelCellSolver},
+ * {@link ThreeEffortsTwoResistorsCircle}, {@link ThreeEffortsOneResistorCircle}
+ * and {@link FloatingEffortRing}, which are used by {@link TransferSubnet}
+ * and of which the last three share the mesh calculation of
+ * {@link SingleMesh},
  * as well as {@link TwoSeriesSolver} and {@link DeltaSourceSolver}, which are
  * used by {@link RecursiveSimplifier} as end solvers for the last
  * simplification layer.

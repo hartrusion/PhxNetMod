@@ -783,6 +783,16 @@ public class TransferSubnet extends LinearNetwork {
                 // A single mesh of three effort sources and two resistors.
                 dedicatedSolver = new ThreeEffortsTwoResistorsCircle(
                         nodes, elements);
+            } else if (ThreeEffortsOneResistorCircle.isSolveableBySolver(
+                    nodes, elements)) {
+                // A single mesh of three effort sources and one resistor.
+                dedicatedSolver = new ThreeEffortsOneResistorCircle(
+                        nodes, elements);
+            } else if (FloatingEffortRing.isSolveableBySolver(nodes,
+                    elements)) {
+                // A ring of resistors and effort sources which is lifted by
+                // a grounded effort source on one of its nodes.
+                dedicatedSolver = new FloatingEffortRing(nodes, elements);
             } else if (NodalAnalysis.isSolvableByNodalAnalysis(nodes, elements,
                     forcedNodeProviders)) {
                 // If none of the dedicated circuits work, go for a more
