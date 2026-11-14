@@ -39,5 +39,20 @@
  * elements with corresponding effort or flow sources to calculate the network
  * state from the energy storage values for that specific time. This is achieved
  * by the so called TransferSubnet class.
+ * <p>
+ * Some network arrangements occur so frequently, or have to be solved so many
+ * times, that a systematic solver would waste calculation time although their
+ * solution is already known analytically. Such arrangements are handled by
+ * dedicated solvers, which implement the {@link DedicatedSolver} interface and
+ * follow its conventions, so that every dedicated solver offers a static check
+ * whether it fits a network and a constructor that sets it up for that network.
+ * The dedicated solvers are {@link DualEffortCenterFlowSolver} and
+ * {@link DualEffortSeriesResistors}, which are used by {@link TransferSubnet},
+ * as well as {@link TwoSeriesSolver} and {@link DeltaSourceSolver}, which are
+ * used by {@link RecursiveSimplifier} as end solvers for the last
+ * simplification layer.
+ * <p>
+ * The paragraph about dedicated solvers was written with LLM: LLM code
+ * generated with Claude Opus 5.5.
  */
 package com.hartrusion.modeling.solvers;

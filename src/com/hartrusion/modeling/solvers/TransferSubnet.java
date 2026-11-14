@@ -759,28 +759,34 @@ public class TransferSubnet extends LinearNetwork {
             }
         }
 
+        // Try to assign a solver to the elements used. First, start with the
+        // dedicated solvers. More to do here, there might even be more simple
+        // cases, but some are already handled in the domainanalogy solver and
+        // not even passed here.
         try {
-            // Try to assign a solver to the elements used. First, start with 
-            // the dedicated solver. More to do here, there might even be 
-            // more simple cases, but some are already handled in the 
-            // domainanalogy solver and not even passed here.
-            dedicatedSolver = new DualEffortCenterFlowSolver(nodes, elements);
-        } catch (WrongSolverException ex) {
-            try {
+            if (DualEffortCenterFlowSolver.isSolveableBySolver(
+                    nodes, elements)) {
+                dedicatedSolver = new DualEffortCenterFlowSolver(
+                        nodes, elements);
+            } else if (DualEffortSeriesResistors.isSolveableBySolver(
+                    nodes, elements)) {
                 // Next dedicated circuit: two effort sources with a series
                 // resistor chain in between.
-                dedicatedSolver = new DualEffortSeriesResistors(nodes, elements);
-            } catch (WrongSolverException ex2) {
-                // If none of the dedicated circuits work, go for a more complex
-                // solver like nodal analyis or the superposition with recursion.
-                if (NodalAnalysis.isSolvableByNodalAnalysis(nodes, elements,
-                        forcedNodeProviders)) {
-                    analyticSolver = new NodalAnalysis();
-                } else {
-                    analyticSolver = new SuperPosition();
-
-                }
+                dedicatedSolver = new DualEffortSeriesResistors(
+                        nodes, elements);
+            } else if (NodalAnalysis.isSolvableByNodalAnalysis(nodes, elements,
+                    forcedNodeProviders)) {
+                // If none of the dedicated circuits work, go for a more
+                // complex solver like nodal analyis or the superposition with
+                // recursion.
+                analyticSolver = new NodalAnalysis();
+            } else {
+                analyticSolver = new SuperPosition();
             }
+        } catch (WrongSolverException ex) {
+            // Can not happen as the solver was checked before creation.
+            throw new ModelErrorException("Dedicated solver rejected a "
+                    + "network that was checked to be solveable by it.");
         }
 
         // Below this comment, some methods can be reworked and made a bit

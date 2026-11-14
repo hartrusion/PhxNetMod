@@ -154,6 +154,27 @@ public class DualEffortCenterFlowSolver implements DedicatedSolver {
         this.elements = elements;
     }
 
+    /**
+     * Checks if the given network matches the constellation this solver was
+     * made for. The check constructs a temporary instance, so that the
+     * topology analysis only exists once in the constructor.
+     * <p>
+     * LLM code generated with Claude Opus 5.5.
+     *
+     * @param nodes Full list of nodes of the network
+     * @param elements Full list of elements of the network
+     * @return true if the network can be solved by this solver.
+     */
+    public static boolean isSolveableBySolver(List<GeneralNode> nodes,
+            List<AbstractElement> elements) {
+        try {
+            new DualEffortCenterFlowSolver(nodes, elements);
+            return true;
+        } catch (WrongSolverException ex) {
+            return false;
+        }
+    }
+
     @Override
     public void solveNetwork() {
         // Resistance values for both resistors in parallel and in series

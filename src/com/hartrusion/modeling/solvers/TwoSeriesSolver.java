@@ -23,19 +23,13 @@
  */
 package com.hartrusion.modeling.solvers;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
+import com.hartrusion.modeling.exceptions.WrongSolverException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.ElementType;
-import static com.hartrusion.modeling.ElementType.BRIDGED;
-import static com.hartrusion.modeling.ElementType.DISSIPATOR;
-import static com.hartrusion.modeling.ElementType.EFFORTSOURCE;
-import static com.hartrusion.modeling.ElementType.FLOWSOURCE;
-import static com.hartrusion.modeling.ElementType.OPEN;
-import static com.hartrusion.modeling.ElementType.ORIGIN;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.ClosedOrigin;
@@ -46,11 +40,23 @@ import com.hartrusion.modeling.general.ClosedOrigin;
  * happen if a network is simplified by using parallel and series
  * simplification. If an origin element is between two resistors, they will not
  * be further simplified because they are not strictly in series.
+ * <p>
+ * The solver is used by the {@link RecursiveSimplifier} as an end solver for
+ * the last simplification layer, because that layer can not be simplified any
+ * further but still has an obvious solution. It implements the
+ * {@link DedicatedSolver} conventions, so the network is analyzed in the
+ * constructor and {@link #isSolveableBySolver(List, List)} can be used to
+ * check the network before creating an instance.
+ * <p>
+ * Restructured to the DedicatedSolver interface with LLM: LLM code generated
+ * with Claude Opus 5.5.
+ *
+ * @author Viktor Alexander Hartung
  */
-public class TwoSeriesSolver {
+public class TwoSeriesSolver implements DedicatedSolver {
 
-    private List<GeneralNode> nodes;
-    private List<AbstractElement> elements;
+    private final List<GeneralNode> nodes;
+    private final List<AbstractElement> elements;
 
     private LinearDissipator resistorX = null;
     private LinearDissipator resistorY = null;
@@ -61,26 +67,24 @@ public class TwoSeriesSolver {
     private GeneralNode nodeX;
     private GeneralNode nodeY;
 
-    private int resistors = 0;
-    private int sources = 0;
-    private int origins = 0;
-
     /**
-     * Initializes the solver with a given list of nodes and elements. It will
-     * return true if everything is fine, otherwise FALSE (the solver cant be
-     * used then)
+     * Generates a solver for the given network type. The network is analyzed
+     * and all elements and nodes are assigned to their role in the solver. If
+     * the network does not match the expected constellation, an exception is
+     * thrown and the solver can not be used.
      *
-     * @param nodes
-     * @param elements
-     * @return
+     * @param nodes Full list of nodes of the network
+     * @param elements Full list of elements of the network
+     * @throws WrongSolverException if the network does not match.
      */
-    public boolean init(List<GeneralNode> nodes,
-            List<AbstractElement> elements) {
-        this.nodes = nodes;
-        this.elements = elements;
+    public TwoSeriesSolver(List<GeneralNode> nodes,
+            List<AbstractElement> elements) throws WrongSolverException {
+        int resistors = 0;
+        int sources = 0;
+        int origins = 0;
 
         if (elements.size() != 4) {
-            return false; // this is the most general depedency
+            throw new WrongSolverException(); // most general depedency
         }
         // count number of elements
         for (AbstractElement e : elements) {
@@ -100,7 +104,7 @@ public class TwoSeriesSolver {
             }
         }
         if (resistors != 2 || sources != 1 || origins != 1) {
-            return false; // wrong element combination
+            throw new WrongSolverException(); // wrong element combination
         }
         // there must be one node that has three connections, this is the
         // node between the resistors with the origin.
@@ -128,14 +132,15 @@ public class TwoSeriesSolver {
                 middleNode = n; // remember node, will be used later
                 // Check the exact number of elements on the middle node
                 if (mResistors != 2 || mSources != 0 || mOrigins != 1) {
-                    return false; // wrong combination on 3-element-node
+                    // wrong combination on 3-element-node
+                    throw new WrongSolverException();
                 }
             }
         }
 
         sourceType = ElementType.NONE;
         for (AbstractElement e : elements) {
-            if (isElementResistorType(e)) {
+            if (LinearNetwork.isElementResistorType(e)) {
                 // there are 2 resistors, assign them to X and Y
                 if (resistorX == null) {
                     resistorX = (LinearDissipator) e;
@@ -143,6 +148,9 @@ public class TwoSeriesSolver {
                     resistorY = (LinearDissipator) e;
                 }
             } else if (e.getElementType() == ElementType.ORIGIN) {
+                if (!(e instanceof ClosedOrigin)) {
+                    throw new WrongSolverException();
+                }
                 orig = (ClosedOrigin) e;
             } else if (e.getElementType() == ElementType.EFFORTSOURCE) {
                 source = e;
@@ -155,7 +163,7 @@ public class TwoSeriesSolver {
         // Check if everything was assigned
         if (orig == null || resistorX == null || middleNode == null
                 || resistorY == null || source == null) {
-            return false; // prevent nullpointer, supress warning message...
+            throw new WrongSolverException();
         }
         // Assign the nodes
         try {
@@ -170,10 +178,33 @@ public class TwoSeriesSolver {
             throw new ModelErrorException("Expected flow through element has "
                     + "inconsistent number of nodes.");
         }
-        return true;
+        this.nodes = nodes;
+        this.elements = elements;
     }
 
-    public boolean solve() {
+    /**
+     * Checks if the given network matches the constellation this solver was
+     * made for. The check constructs a temporary instance, so that the
+     * topology analysis only exists once in the constructor.
+     * <p>
+     * LLM code generated with Claude Opus 5.5.
+     *
+     * @param nodes Full list of nodes of the network
+     * @param elements Full list of elements of the network
+     * @return true if the network can be solved by this solver.
+     */
+    public static boolean isSolveableBySolver(List<GeneralNode> nodes,
+            List<AbstractElement> elements) {
+        try {
+            new TwoSeriesSolver(nodes, elements);
+            return true;
+        } catch (WrongSolverException ex) {
+            return false;
+        }
+    }
+
+    @Override
+    public void solveNetwork() {
         double resistance, effort, flow;
 
         boolean open = resistorX.getElementType() == ElementType.OPEN
@@ -238,7 +269,7 @@ public class TwoSeriesSolver {
             resistorX.doCalculation();
             resistorY.doCalculation();
 
-            return true;
+            return;
         }
         if (sourceType == ElementType.FLOWSOURCE) {
             throw new UnsupportedOperationException("NOT YET IMPLEMENTED!");
@@ -271,22 +302,5 @@ public class TwoSeriesSolver {
         resistorY.doCalculation();
 
         // model should be fully updated by now.
-        return true;
-    }
-
-    /**
-     * Check if an element is of a type that can be seen as a resistor.
-     *
-     * Shortcuts or open connections will stay in the model, as these can be
-     * just temporarily behave like this and the overall calculation does work
-     * for those extreme conditions also.
-     *
-     * @param e element to check
-     * @return true: it is a resistor or similar
-     */
-    protected static boolean isElementResistorType(AbstractElement e) {
-        return e.getElementType() == ElementType.DISSIPATOR
-                || e.getElementType() == ElementType.OPEN
-                || e.getElementType() == ElementType.BRIDGED;
     }
 }

@@ -25,6 +25,7 @@ package com.hartrusion.modeling.solvers;
 
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.exceptions.CalculationException;
+import com.hartrusion.modeling.exceptions.WrongSolverException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.ClosedOrigin;
 import com.hartrusion.modeling.general.EffortSource;
@@ -43,18 +44,25 @@ import java.util.List;
  * side of the source. This arrangement can not be simplified further with the
  * existing means of any of the simplifications available and has to be solved
  * manually.
+ * <p>
+ * The solver is used by the {@link RecursiveSimplifier} as an end solver for
+ * the last simplification layer. It implements the {@link DedicatedSolver}
+ * conventions, so the network is analyzed in the constructor and
+ * {@link #isSolveableBySolver(List, List)} can be used to check the network
+ * before creating an instance.
+ * <p>
+ * Restructured to the DedicatedSolver interface with LLM: LLM code generated
+ * with Claude Opus 5.5.
  *
  * @author Viktor Alexander Hartung
  */
-public class DeltaSourceSolver {
+public class DeltaSourceSolver implements DedicatedSolver {
 
-    private List<AbstractElement> elements;
+    private final List<GeneralNode> nodes;
+    private final List<AbstractElement> elements;
 
     private final SimpleIterator lastIterator = new SimpleIterator();
 
-    private int resistors = 0;
-    private int sources = 0;
-    private int origins = 0;
     private LinearDissipator resistorX = null;
     private LinearDissipator resistorY = null;
     private LinearDissipator resistorZ = null;
@@ -65,23 +73,30 @@ public class DeltaSourceSolver {
     private GeneralNode nodeY;
 
     /**
-     * Initializes the solver with a given list of nodes and elements. It will
-     * return true if everything is fine, otherwise FALSE (the solver cant be
-     * used then)
+     * Generates a solver for the given network type. The network is analyzed
+     * and all elements and nodes are assigned to their role in the solver. If
+     * the network does not match the expected constellation, an exception is
+     * thrown and the solver can not be used.
      *
-     * @param nodes
-     * @param elements
-     * @return
+     * @param nodes Full list of nodes of the network
+     * @param elements Full list of elements of the network
+     * @throws WrongSolverException if the network does not match.
      */
-    public boolean init(List<GeneralNode> nodes,
-            List<AbstractElement> elements) {
+    public DeltaSourceSolver(List<GeneralNode> nodes,
+            List<AbstractElement> elements) throws WrongSolverException {
+        int resistors = 0;
+        int sources = 0;
+        int origins = 0;
+
+        this.nodes = nodes;
         this.elements = elements;
-        
+
         if (elements.size() != 5) {
-            return false; // this is the most general depedency
+            throw new WrongSolverException(); // most general depedency
         }
 
-        // count number of elements
+        // count number of elements. Only an effort source and a closed origin
+        // can be handled, any other source or origin type does not match.
         for (AbstractElement e : elements) {
             switch (e.getElementType()) {
                 case DISSIPATOR:
@@ -90,18 +105,22 @@ public class DeltaSourceSolver {
                     resistors++;
                     break;
                 case FLOWSOURCE:
+                    throw new WrongSolverException();
                 case EFFORTSOURCE:
                     sources++;
                     source = (EffortSource) e;
                     break;
                 case ORIGIN:
+                    if (!(e instanceof ClosedOrigin)) {
+                        throw new WrongSolverException();
+                    }
                     origins++;
                     orig = (ClosedOrigin) e;
                     break;
             }
         }
         if (resistors != 3 || sources != 1 || origins != 1) {
-            return false; // wrong element combination
+            throw new WrongSolverException(); // wrong element combination
         }
 
         // try to identify all three nodes and the connecting elements.
@@ -125,13 +144,34 @@ public class DeltaSourceSolver {
         resistorY = findElementBetween(nodeY, middleNode);
 
         if (resistorZ == null || resistorX == null || resistorY == null) {
-            return false; // unable to find the exact layout that was expected.
+            // unable to find the exact layout that was expected.
+            throw new WrongSolverException();
         }
-
-        return true;
     }
 
-    public boolean solve() {
+    /**
+     * Checks if the given network matches the constellation this solver was
+     * made for. The check constructs a temporary instance, so that the
+     * topology analysis only exists once in the constructor.
+     * <p>
+     * LLM code generated with Claude Opus 5.5.
+     *
+     * @param nodes Full list of nodes of the network
+     * @param elements Full list of elements of the network
+     * @return true if the network can be solved by this solver.
+     */
+    public static boolean isSolveableBySolver(List<GeneralNode> nodes,
+            List<AbstractElement> elements) {
+        try {
+            new DeltaSourceSolver(nodes, elements);
+            return true;
+        } catch (WrongSolverException ex) {
+            return false;
+        }
+    }
+
+    @Override
+    public void solveNetwork() {
         double resistance, flow, effortX, effortY;
 
         // special case: set effort to 0.0
@@ -143,7 +183,7 @@ public class DeltaSourceSolver {
             resistorY.setFlow(0.0, nodeY);
             resistorZ.setFlow(0.0, nodeX);
             lastIterator.doCalculation();
-            return true;
+            return;
         }
 
         // unsolveable case 1: resistor Z shorted but source has effort
@@ -168,7 +208,7 @@ public class DeltaSourceSolver {
                 && resistorY.getElementType() == ElementType.OPEN) {
             nodeX.setEffort(orig.getEffort()); // set one effort here
             lastIterator.doCalculation(); // do the rest.
-            return true;
+            return;
         }
 
         // resistorX open: This forces nodeY to the origin effort and no flow
@@ -178,7 +218,7 @@ public class DeltaSourceSolver {
             resistorX.setFlow(0.0, nodeX);
             resistorY.setFlow(0.0, nodeY);
             lastIterator.doCalculation(); // do the rest.
-            return true;
+            return;
         }
 
         // same for X resistor
@@ -187,7 +227,7 @@ public class DeltaSourceSolver {
             resistorX.setFlow(0.0, nodeX);
             resistorY.setFlow(0.0, nodeY);
             lastIterator.doCalculation(); // do the rest.
-            return true;
+            return;
         }
 
         // The end: now we have a flow through the X and Y part, we will 
@@ -213,7 +253,6 @@ public class DeltaSourceSolver {
         // Now the iterator can do its job. We do not set flow here as we do 
         // not know the direction in which the resistors are placed in.
         lastIterator.doCalculation();
-        return true;
     }
 
     /**
@@ -227,7 +266,7 @@ public class DeltaSourceSolver {
     private LinearDissipator findElementBetween(
             GeneralNode n1, GeneralNode n2) {
         for (AbstractElement e : elements) {
-            if (!isElementResistorType(e)) {
+            if (!LinearNetwork.isElementResistorType(e)) {
                 continue;
             }
             if (n1.isElementRegistered(e)
@@ -236,21 +275,5 @@ public class DeltaSourceSolver {
             }
         }
         return null;
-    }
-
-    /**
-     * Check if an element is of a type that can be seen as a resistor.
-     *
-     * Shortcuts or open connections will stay in the model, as these can be
-     * just temporarily behave like this and the overall calculation does work
-     * for those extreme conditions also.
-     *
-     * @param e element to check
-     * @return true: it is a resistor or similar
-     */
-    protected static boolean isElementResistorType(AbstractElement e) {
-        return e.getElementType() == ElementType.DISSIPATOR
-                || e.getElementType() == ElementType.OPEN
-                || e.getElementType() == ElementType.BRIDGED;
     }
 }

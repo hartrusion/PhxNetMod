@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
+import com.hartrusion.modeling.exceptions.WrongSolverException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.PhysicalDomain;
@@ -113,17 +114,14 @@ public class RecursiveSimplifier extends ChildNetwork {
     private StarPolygonTransform starPolygon;
 
     /**
-     * Instance to solve a two-elements-in-series situation which can occur when
-     * simplifying networks by series and parallel simplification. This is
-     * handled by this special solver to provide a solution even if resistors
-     * are open or shorted and have that origin node between them.
+     * End solver for the last layer if that layer can not be simplified
+     * further but matches a known arrangement. This is either a
+     * {@link TwoSeriesSolver} for two resistors in series with an origin
+     * between them, which provides a solution even if resistors are open or
+     * shorted, or a {@link DeltaSourceSolver} for a delta arrangement with a
+     * parallel source. The value is null if no dedicated solver fits.
      */
-    private TwoSeriesSolver twoSeriesSolver;
-
-    /**
-     * Instance to solve another special arrangement of resistors and sources.
-     */
-    private DeltaSourceSolver deltaSourceSolver;
+    private DedicatedSolver dedicatedSolver;
 
     /**
      * For not spamming the validation error message, this will save that the
@@ -923,17 +921,16 @@ public class RecursiveSimplifier extends ChildNetwork {
 
         // The end. Check if it is necessary to have a more detailed solution
         // for the last step.
-        if (elements.size() == 4) {
-            // Try to set up the specific solution.
-            twoSeriesSolver = new TwoSeriesSolver();
-            if (!twoSeriesSolver.init(nodes, elements)) {
-                twoSeriesSolver = null; // dump it, does not work.
+        try {
+            if (TwoSeriesSolver.isSolveableBySolver(nodes, elements)) {
+                dedicatedSolver = new TwoSeriesSolver(nodes, elements);
+            } else if (DeltaSourceSolver.isSolveableBySolver(nodes, elements)) {
+                dedicatedSolver = new DeltaSourceSolver(nodes, elements);
             }
-        } else if (elements.size() == 5) {
-            deltaSourceSolver = new DeltaSourceSolver();
-            if (!deltaSourceSolver.init(nodes, elements)) {
-                deltaSourceSolver = null; // dump it, does not work.
-            }
+        } catch (WrongSolverException ex) {
+            // Can not happen as the solver was checked before creation.
+            throw new ModelErrorException("Dedicated solver rejected a "
+                    + "network that was checked to be solveable by it.");
         }
 
         // Output the Recursion end state to log, including the used end solver.
@@ -942,16 +939,12 @@ public class RecursiveSimplifier extends ChildNetwork {
                     Level.INFO, (parentLayers + 1)
                     + " layers created, last layer containing "
                     + elements.size() + " elements.");
-        } else if (elements.size() == 4 && twoSeriesSolver != null) {
+        } else if (dedicatedSolver != null) {
             LOGGER.log(
                     Level.INFO, (parentLayers + 1)
                     + " layers created, last layer containing "
-                    + elements.size() + " elements, using TwoSeriesSolver");
-        } else if (elements.size() == 5 && deltaSourceSolver != null) {
-            LOGGER.log(
-                    Level.INFO, (parentLayers + 1)
-                    + " layers created, last layer containing "
-                    + elements.size() + " elements, using DeltaSourceSolver");
+                    + elements.size() + " elements, using "
+                    + dedicatedSolver.getClass().getSimpleName());
         } else {
             LOGGER.log(
                     Level.WARNING, (parentLayers + 1)
@@ -1106,10 +1099,8 @@ public class RecursiveSimplifier extends ChildNetwork {
 
         // Call specialized solvers at the end, those handle situations that
         // can not be simplified further but have an obvious solution.
-        if (twoSeriesSolver != null) {
-            twoSeriesSolver.solve();
-        } else if (deltaSourceSolver != null) {
-            deltaSourceSolver.solve();
+        if (dedicatedSolver != null) {
+            dedicatedSolver.solveNetwork();
         }
 
         // now run the super class method, this will run an iterative call
