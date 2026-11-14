@@ -778,6 +778,11 @@ public class TransferSubnet extends LinearNetwork {
                 // Several fuel cells sharing one bus node, as the thermal
                 // model of the fuel elements of one evaporator.
                 dedicatedSolver = new FuelCellSolver(nodes, elements);
+            } else if (ThreeEffortsTwoResistorsCircle.isSolveableBySolver(
+                    nodes, elements)) {
+                // A single mesh of three effort sources and two resistors.
+                dedicatedSolver = new ThreeEffortsTwoResistorsCircle(
+                        nodes, elements);
             } else if (NodalAnalysis.isSolvableByNodalAnalysis(nodes, elements,
                     forcedNodeProviders)) {
                 // If none of the dedicated circuits work, go for a more
