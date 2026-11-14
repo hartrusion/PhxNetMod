@@ -774,6 +774,10 @@ public class TransferSubnet extends LinearNetwork {
                 // resistor chain in between.
                 dedicatedSolver = new DualEffortSeriesResistors(
                         nodes, elements);
+            } else if (FuelCellSolver.isSolveableBySolver(nodes, elements)) {
+                // Several fuel cells sharing one bus node, as the thermal
+                // model of the fuel elements of one evaporator.
+                dedicatedSolver = new FuelCellSolver(nodes, elements);
             } else if (NodalAnalysis.isSolvableByNodalAnalysis(nodes, elements,
                     forcedNodeProviders)) {
                 // If none of the dedicated circuits work, go for a more
