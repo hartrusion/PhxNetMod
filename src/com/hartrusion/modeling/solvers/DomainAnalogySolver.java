@@ -197,19 +197,21 @@ public class DomainAnalogySolver {
     private List<Callable<Void>> heavyTasks;
 
     /**
-     * True once the shared lock has been handed to the model nodes, so the
-     * injection is only ever done once.
+     * All model nodes which have their effort forced by an origin or a self
+     * capacitance. These nodes are the boundaries between the independently
+     * solved sub networks, so the last unknown flow on them, which belongs to
+     * the element forcing the effort, is only derived after all sub networks
+     * have provided their flows. Built once during setup.
      */
-    private boolean locksInjected;
+    private final List<GeneralNode> forcedEffortNodes = new ArrayList<>();
 
     /**
-     * Monitor handed to the shared model nodes while parallel solving is
-     * active. The independent sub networks only ever meet on the forced-effort
-     * boundary nodes, where they contribute flows concurrently; this single
-     * re-entrant lock serializes exactly those flow contributions and is owned
-     * here in the solver instead of inside the node.
+     * All two-node elements of the model. Those which are of type OPEN after
+     * the preparation get their flow hard-set to 0.0 before any solver runs,
+     * so the no-flow state is known exactly and can not be replaced by a
+     * numerical result of a solver. Built once during setup.
      */
-    private final Object parallelLock = new Object();
+    private final List<FlowThrough> flowThroughElements = new ArrayList<>();
 
     public void setString(String name) {
         this.name = name;
@@ -224,9 +226,7 @@ public class DomainAnalogySolver {
      * the calling thread, overlapping with the heavy work for free.
      * <p>
      * The pool is stored statically and shared by all solver instances, so it
-     * only needs to be set once during application startup. It must be set
-     * <b>before</b> {@link #addNetwork(GeneralNode)} is called, so that the
-     * model nodes can be prepared for concurrent access.
+     * only needs to be set once during application startup.
      * <p>
      * The pool must be a <b>separate</b> pool, not the single threaded executor
      * that drives the cyclic {@code doCalculation} call, otherwise the blocking
@@ -271,31 +271,6 @@ public class DomainAnalogySolver {
                 return null;
             });
         }
-    }
-
-    /**
-     * Hands the shared lock to the real model nodes so several threads may
-     * safely contribute flows to the boundary nodes. Only the forced-effort
-     * boundary nodes are ever touched by more than one solver thread: by design
-     * the independent sub networks are partitioned by exactly these nodes and
-     * only meet there. Every other node belongs to a single sub network and is
-     * therefore written by a single thread, so it stays lock-free. Leaving the
-     * interior nodes unlocked keeps the expensive iterative back-solve of the
-     * big subnets (thousands of synchronized flow accesses per cycle) free of
-     * monitor overhead. The copy networks used internally by the solvers keep
-     * no lock either. Safe to call more than once; the work is only done on the
-     * first call.
-     */
-    private void injectNodeLock() {
-        if (locksInjected) {
-            return;
-        }
-        for (int i = 0; i < modelNodes.size(); i++) {
-            if (hasForcedEffort[i]) {
-                modelNodes.get(i).setLock(parallelLock);
-            }
-        }
-        locksInjected = true;
     }
 
     /**
@@ -557,12 +532,27 @@ public class DomainAnalogySolver {
         }
 
         // Classify the detected subnets into heavy (own thread) and light
-        // (series) once, now that all nodes and networks are known. If a thread
-        // pool was configured (statically, during startup), also hand the
-        // shared lock to the model nodes for safe concurrent access.
+        // (series) once, now that all nodes and networks are known.
         buildSolverBatches();
-        if (threadPool != null) {
-            injectNodeLock();
+
+        // The forced-effort nodes are the boundaries between the sub networks.
+        // No sub network derives the last flow on them, which belongs to the
+        // forcing element, this is done once after all sub networks are solved.
+        forcedEffortNodes.clear();
+        for (int i = 0; i < modelNodes.size(); i++) {
+            if (hasForcedEffort[i]) {
+                modelNodes.get(i).setLastFlowSolvedExternally(true);
+                forcedEffortNodes.add(modelNodes.get(i));
+            }
+        }
+
+        // Two-node elements can be of type OPEN, which forces a 0.0 flow that
+        // is set before any solver runs.
+        flowThroughElements.clear();
+        for (AbstractElement e : modelElements) {
+            if (e instanceof FlowThrough) {
+                flowThroughElements.add((FlowThrough) e);
+            }
         }
 
         // Pre-compute the dead-end nodes (one or zero connected elements). The
@@ -917,17 +907,15 @@ public class DomainAnalogySolver {
     }
 
     public boolean doCalculation() {
-        // Hard-assign all flows to 0.0 on elements which are of OPEN type. 
-        // This eliminates numerical issues and ensures an exact 0.0 value when
-        // adding flows in superposition.
-        /*
-        for (int idx = 0; idx < modelNodes.size(); idx++) {
-            for (int jdx = 0; jdx < modelNodes.get(idx).getNumberOfElements(); jdx++) {
-                if (modelNodes.get(idx).getElement(jdx).getElementType() == ElementType.OPEN) {
-                    modelNodes.get(idx).setFlow(0.0, modelNodes.get(idx).getElement(jdx), false);
-                }
+        // Hard-assign all flows to 0.0 on elements which are of OPEN type. The
+        // element type was set during the preparation, so this is known before
+        // any solver runs and no solver can replace the exact 0.0 by a
+        // numerical result, as the first value set on a node is kept.
+        for (FlowThrough ft : flowThroughElements) {
+            if (ft.getElementType() == ElementType.OPEN) {
+                ft.setFlow(0.0, true);
             }
-        } */
+        }
 
         // Resolve all forced efforts first. Origins and self capacitances push
         // their effort onto the boundary nodes, so every node shared between
@@ -935,13 +923,13 @@ public class DomainAnalogySolver {
         // solving begins. The sub networks then only read those efforts and
         // contribute flows, which confines the concurrent work to flow values
         // and means a boundary node never resolves a flow into a neighbouring
-        // sub network (its absorbing element is already fixed).
+        // sub network (the last flow on it is derived after all sub networks
+        // are solved).
         for (AbstractElement e : effortForcingElements) {
             e.doCalculation();
         }
         if (threadPool != null && heavyTasks != null
                 && !heavyTasks.isEmpty()) {
-            injectNodeLock(); // safety net if pool was set after addNetwork
             // Submit the heavy work (complex subnets + standalone super
             // positions) to the pool and immediately solve all the cheap
             // networks in this thread, so the light series work overlaps with
@@ -966,6 +954,11 @@ public class DomainAnalogySolver {
                 sp.doCalculation();
             }
             solveLightNetworks();
+        }
+        // All sub networks have provided their flows to the boundary nodes, so
+        // the only unknown flow on them belongs to the forcing element.
+        for (GeneralNode n : forcedEffortNodes) {
+            n.solveLastFlow();
         }
         // Dead-End-Nodes may not have a solution as there is nothing so far
         // that would provide a solution at all, they might not even be 

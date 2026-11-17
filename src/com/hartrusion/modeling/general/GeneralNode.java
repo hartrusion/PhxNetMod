@@ -56,13 +56,27 @@ public class GeneralNode {
     private final List<FlowProperties> flowToElements = new ArrayList<>();
 
     /**
-     * Optional monitor the node synchronizes its flow access on. It is supplied
-     * from the outside (by the solver) when the surrounding network is solved
-     * by several threads at once, so that concurrent flow contributions to a
-     * shared node stay consistent. While it is {@code null} (the normal case)
-     * no synchronization happens at all and the node stays plain logic.
+     * Absolute tolerance for flow values which covers the numerical error that
+     * solvers like the nodal analysis produce on each connection of a node.
+     * Flow values with a magnitude below this tolerance carry no physical
+     * meaning in a network, so they are stored as an exact 0.0. This makes a
+     * comparison with 0.0 a valid no-flow check for the whole library, while
+     * solvers must make sure that their numerical error stays below this value.
+     * Consistency checks on flows have to accept this tolerance as the error of
+     * each connection on a node.
      */
-    private Object lock;
+    public static final double FLOW_TOLERANCE = 1e-8;
+
+    /**
+     * Marks that the last unknown flow on this node is not derived when the
+     * other flows are set, because the owner of the node calls
+     * {@link #solveLastFlow()} at a defined point of the calculation instead.
+     * The DomainAnalogySolver sets this on nodes with a forced effort, which
+     * are the boundaries between independently solved sub networks, so that no
+     * sub network derives a flow that belongs to the element forcing the
+     * effort while the neighbouring sub networks are still being solved.
+     */
+    private boolean lastFlowSolvedExternally;
 
     /**
      * true, if there are only two elements connected to this node. This is not
@@ -158,15 +172,15 @@ public class GeneralNode {
     }
 
     /**
-     * Assigns the monitor this node uses to guard concurrent flow access, or
-     * {@code null} to switch synchronization off. The monitor is owned and
-     * handed in by the solver; the node itself neither creates nor manages it
-     * and stays free of any threading logic beyond honoring the given lock.
+     * Defines whether the last unknown flow on this node is derived as soon as
+     * all other flows are known or only when {@link #solveLastFlow()} is called
+     * from outside. This is part of the model setup and must not be changed
+     * during a calculation run.
      *
-     * @param lock Shared monitor for concurrent solving, or null for none.
+     * @param solvedExternally true: derivation only by calling solveLastFlow.
      */
-    public void setLock(Object lock) {
-        this.lock = lock;
+    public void setLastFlowSolvedExternally(boolean solvedExternally) {
+        lastFlowSolvedExternally = solvedExternally;
     }
 
     /**
@@ -237,6 +251,19 @@ public class GeneralNode {
      * node to distribute it, making it forcing effort onto each node to keep
      * the model solveable.
      *
+     * <p>
+     * A flow value is a result of the calculation run and the node only
+     * describes whether it is known or not. The first value that any solver
+     * provides is therefore kept, and every later call for an already updated
+     * flow is ignored, so that no result of the run can change after other
+     * calculations have already used it. Values with a magnitude below
+     * {@link #FLOW_TOLERANCE} are stored as an exact 0.0.
+     *
+     * <p>
+     * The remaining unknown flow is derived immediately with
+     * {@link #solveLastFlow()}, unless the node is marked to have its last flow
+     * solved externally.
+     *
      * @param flow positive: flows out of this node into element. negative:
      * flows into this node from an element.
      * @param source Element to identify which direction the value came from
@@ -245,68 +272,75 @@ public class GeneralNode {
      * transfer values without triggering any update process.
      */
     public void setFlow(double flow, AbstractElement source, boolean update) {
-        if (lock == null) {
-            setFlowInternal(flow, source, update);
-        } else {
-            synchronized (lock) {
-                setFlowInternal(flow, source, update);
-            }
-        }
-    }
-
-    private void setFlowInternal(double flow, AbstractElement source,
-            boolean update) {
         if (!Double.isFinite(flow)) {
             throw new CalculationException(
                     "Non-finite flow value (NaN or inf) set to node.");
         }
-        AbstractElement e;
-        FlowProperties fp;
-        int sourceIdx = connectedElements.indexOf(source);
-        int idx;
-        double flowSum;
-
-        // Save flow value from source object and mark it as updated.
         // The source element itself doesn't save the updated state, it's here.
-        fp = flowToElements.get(sourceIdx);
-        fp.setFlowValue(flow);
+        FlowProperties fp = flowToElements.get(
+                connectedElements.indexOf(source));
         if (fp.isFlowUpdated()) {
-            return; // to prevent infinite loops, just accept new value
+            return; // first value wins, this also prevents infinite loops
         }
+        fp.setFlowValue(snapToFlowTolerance(flow));
         fp.setFlowUpdated(true);
+        if (!lastFlowSolvedExternally) {
+            solveLastFlow();
+        }
+    }
 
-        // check how many flow values are still unknown
-        int unknownFlows = flowToElements.size();
+    /**
+     * Derives the flow towards the only element whose flow is still unknown,
+     * because the sum of all flows on a node has to be zero. The derived flow
+     * is passed to that element so it can continue the calculation. Nothing
+     * happens if more than one or no flow is unknown.
+     *
+     * <p>
+     * This is called from setFlow on every node, except for nodes marked to
+     * have their last flow solved externally, on which the DomainAnalogySolver
+     * calls it after all sub networks have provided their flows.
+     *
+     * @return true if a flow value was derived.
+     */
+    public boolean solveLastFlow() {
+        int unknownFlows = 0;
         int idxUnknown = -1;
-        for (idx = 0; idx < flowToElements.size(); idx++) {
-            fp = flowToElements.get(idx);
-            if (fp.isFlowUpdated()) {
-                unknownFlows--;
-            } else {
-                // save for later use, if usable this got called only once
+        for (int idx = 0; idx < flowToElements.size(); idx++) {
+            if (!flowToElements.get(idx).isFlowUpdated()) {
+                unknownFlows++;
                 idxUnknown = idx;
             }
         }
-        // if there's just one remaining missing flow value, it can be
-        // calculated as the sum of all flows has to be zero.
-        if (unknownFlows == 1) {
-            flowSum = 0;
-            for (idx = 0; idx < flowToElements.size(); idx++) {
-                if (idx == idxUnknown) {
-                    continue;
-                }
-                flowSum = flowSum - flowToElements.get(idx).getFlowValue();
-                // note the negative sign, cause f3 = -f1 -f2 -f4
-            }
-            // set to remaining node
-            fp = flowToElements.get(idxUnknown);
-            fp.setFlowUpdated(true);
-            fp.setFlowValue(flowSum);
-
-            // set at corresponding element
-            e = connectedElements.get(idxUnknown);
-            e.setFlow(flowSum, this);
+        if (unknownFlows != 1) {
+            return false;
         }
+        double flowSum = 0.0;
+        for (int idx = 0; idx < flowToElements.size(); idx++) {
+            if (idx == idxUnknown) {
+                continue;
+            }
+            // note the negative sign, cause f3 = -f1 -f2 -f4
+            flowSum = flowSum - flowToElements.get(idx).getFlowValue();
+        }
+        flowSum = snapToFlowTolerance(flowSum);
+        FlowProperties fp = flowToElements.get(idxUnknown);
+        fp.setFlowValue(flowSum);
+        fp.setFlowUpdated(true);
+        connectedElements.get(idxUnknown).setFlow(flowSum, this);
+        return true;
+    }
+
+    /**
+     * Replaces a flow value that is within the flow tolerance by an exact 0.0.
+     *
+     * @param flow Flow value as calculated
+     * @return Flow value to be stored on the node
+     */
+    private static double snapToFlowTolerance(double flow) {
+        if (Math.abs(flow) < FLOW_TOLERANCE) {
+            return 0.0;
+        }
+        return flow;
     }
 
     /**
@@ -350,15 +384,6 @@ public class GeneralNode {
      * @return flow
      */
     public double getFlow(int idx) {
-        if (lock == null) {
-            return readFlow(idx);
-        }
-        synchronized (lock) {
-            return readFlow(idx);
-        }
-    }
-
-    private double readFlow(int idx) {
         if (!flowToElements.get(idx).isFlowUpdated()) {
             throw new ModelErrorException("Tried to get "
                     + "non-updated flow value.");
@@ -391,13 +416,8 @@ public class GeneralNode {
             throw new IllegalArgumentException(
                     "Provided element not registered with node.");
         }
-        int idx = connectedElements.indexOf(e);
-        if (lock == null) {
-            return flowToElements.get(idx).isFlowUpdated();
-        }
-        synchronized (lock) {
-            return flowToElements.get(idx).isFlowUpdated();
-        }
+        return flowToElements.get(connectedElements.indexOf(e))
+                .isFlowUpdated();
     }
 
     /**
@@ -410,15 +430,6 @@ public class GeneralNode {
      * @return true, if flow was set.
      */
     public boolean allFlowsUpdated() {
-        if (lock == null) {
-            return allFlowsKnown();
-        }
-        synchronized (lock) {
-            return allFlowsKnown();
-        }
-    }
-
-    private boolean allFlowsKnown() {
         boolean allFlowsUpdated = true;
         for (FlowProperties fp : flowToElements) {
             allFlowsUpdated = allFlowsUpdated && fp.isFlowUpdated();

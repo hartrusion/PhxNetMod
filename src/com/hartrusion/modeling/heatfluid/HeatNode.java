@@ -233,9 +233,9 @@ public class HeatNode extends GeneralNode {
             // so it is valid to compare a double with an exact value here.
             allFlowsZero = true; // init
             for (int idx = 0; idx < connectedElements.size(); idx++) {
-                // allFlowsZero = allFlowsZero && (getFlow(idx) == 0.0);
-                allFlowsZero = allFlowsZero && Math.abs(getFlow(idx)) < 1e-8;
-                // changed from 1e-10 to 1e-8 due to some numeric errors.
+                // The node stores flows within the flow tolerance as an
+                // exact 0.0, so the exact comparison is valid.
+                allFlowsZero = allFlowsZero && (getFlow(idx) == 0.0);
             }
             // Now, get total incoming thermal energy and check if those
             // temperatures are updated.
