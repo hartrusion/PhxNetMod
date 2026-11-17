@@ -32,6 +32,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.exceptions.NoFlowThroughException;
@@ -330,6 +331,116 @@ public class DomainAnalogySolver {
             return name;
         }
         return super.toString();
+    }
+
+    /**
+     * Returns the number of nodes that were found in the network, which is a
+     * measure for the size of the model that this solver handles. The value is
+     * only valid after addNetwork was called.
+     * <p>
+     * LLM code generated with Claude Opus 5.5
+     *
+     * @return number of nodes of the model
+     */
+    public int getNodeCount() {
+        return modelNodes.size();
+    }
+
+    /**
+     * Returns the number of elements that were found in the network. The value
+     * is only valid after addNetwork was called.
+     * <p>
+     * LLM code generated with Claude Opus 5.5
+     *
+     * @return number of elements of the model
+     */
+    public int getElementCount() {
+        return modelElements.size();
+    }
+
+    /**
+     * Returns the number of parallel tasks, which are the heavy transfer
+     * subnets together with the standalone super positions that are handed to
+     * the thread pool in each cycle if a pool is configured. The value is only
+     * valid after addNetwork was called and is 0 before.
+     * <p>
+     * LLM code generated with Claude Opus 5.5
+     *
+     * @return number of tasks that can be solved in parallel
+     */
+    public int getParallelTaskCount() {
+        if (heavyTasks == null) {
+            return 0;
+        }
+        return heavyTasks.size();
+    }
+
+    /**
+     * Returns the number of networks and elements that are always solved in
+     * series on the calling thread, which are the light transfer subnets with
+     * a dedicated solver, the non-linear networks and the self solving
+     * dissipators. The value is only valid after addNetwork was called and is
+     * 0 before.
+     * <p>
+     * LLM code generated with Claude Opus 5.5
+     *
+     * @return number of networks solved in series
+     */
+    public int getSerialNetworkCount() {
+        if (lightSubnets == null) {
+            return 0;
+        }
+        return lightSubnets.size() + nonLinearNets.size()
+                + selfSolvingDissipatorElements.size();
+    }
+
+    /**
+     * Returns the number of threads that this solver keeps busy at the same
+     * time during doCalculation. The calling thread always solves the light
+     * networks while the thread pool works on the parallel tasks, so with a
+     * configured pool and at least one parallel task the count is one more
+     * than the number of pool threads that can be used, which is limited by
+     * both the number of parallel tasks and the size of the pool. Without a
+     * pool or without parallel tasks, everything runs on the calling thread
+     * only.
+     * <p>
+     * LLM code generated with Claude Opus 5.5
+     *
+     * @return number of threads used in parallel by this solver
+     */
+    public int getUsedThreadCount() {
+        int parallelTasks = getParallelTaskCount();
+        if (threadPool == null || parallelTasks == 0) {
+            return 1;
+        }
+        int poolThreads = getThreadPoolSize();
+        if (poolThreads <= 0) {
+            // The size of a pool that is no ThreadPoolExecutor is unknown, so
+            // it is assumed that each task gets a thread of its own.
+            poolThreads = parallelTasks;
+        }
+        return 1 + Math.min(parallelTasks, poolThreads);
+    }
+
+    /**
+     * Returns the maximum number of threads of the thread pool that is shared
+     * by all solver instances. The size can only be determined if the pool is
+     * a ThreadPoolExecutor, which is what the factory methods of Executors
+     * create for fixed pools.
+     * <p>
+     * LLM code generated with Claude Opus 5.5
+     *
+     * @return number of pool threads, 0 without a pool and -1 if the size of
+     * the configured pool is unknown
+     */
+    public static int getThreadPoolSize() {
+        if (threadPool == null) {
+            return 0;
+        }
+        if (threadPool instanceof ThreadPoolExecutor pool) {
+            return pool.getMaximumPoolSize();
+        }
+        return -1;
     }
 
     /**
