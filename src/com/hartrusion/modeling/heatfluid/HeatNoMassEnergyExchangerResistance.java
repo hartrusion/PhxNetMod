@@ -28,6 +28,10 @@ import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
 /**
  * A no-mass element designed to exchange thermal energy with a counterpart
  * no-mass element in the phased domain.
+ * <p>
+ * This represents a flow resistance on the heat side of the no-mass energy
+ * exchanger. It is called energy exchanger as both sides have different
+ * variables that they manage above the effort and flow network.
  *
  * @author Viktor Alexander Hartung
  */

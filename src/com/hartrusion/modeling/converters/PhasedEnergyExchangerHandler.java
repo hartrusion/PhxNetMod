@@ -31,8 +31,21 @@ package com.hartrusion.modeling.converters;
  */
 public interface PhasedEnergyExchangerHandler {
 
+    /**
+     * Checks if the nodes (which define what happens in the element as the
+     * element itself does not contain the information) are in a state the
+     * calculation can be made.
+     *
+     * @return true if the elements nodes on which this handler is used are in a
+     * state where any calculation can obtain values from them.
+     */
     public boolean isNodeStateMet();
 
+    /**
+     * A no flow state also means no information in a massless element.
+     *
+     * @return true if there is a condition detected where there is no flow.
+     */
     public boolean isNoFlowCondition();
 
     /**
@@ -72,7 +85,7 @@ public interface PhasedEnergyExchangerHandler {
      * @return K
      */
     public double getInTemperature();
-    
+
     public void setEfficency(double efficiency);
 
 }

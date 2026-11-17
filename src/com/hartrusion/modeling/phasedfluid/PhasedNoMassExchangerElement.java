@@ -26,7 +26,9 @@ package com.hartrusion.modeling.phasedfluid;
 import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
 
 /**
- *
+ * One side of a heat (energy) exchanger in the phased domain that does not 
+ * have its own mass but a flow resistance.
+ * 
  * @author Viktor Alexander Hartung
  */
 public class PhasedNoMassExchangerElement extends PhasedAbstractFlowResistance {

@@ -24,7 +24,6 @@
 package com.hartrusion.modeling.heatfluid;
 
 import com.hartrusion.modeling.converters.PhasedEnergyExchangerHandler;
-import com.hartrusion.modeling.exceptions.CalculationException;
 import com.hartrusion.modeling.exceptions.NonexistingStateVariableException;
 import com.hartrusion.modeling.general.AbstractElement;
 import java.util.ArrayList;
