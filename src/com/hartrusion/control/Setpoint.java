@@ -33,7 +33,13 @@ import com.hartrusion.values.ValueProvider;
  * as a single usable object that can be used to get and manage a value from
  * a GUI controller.
  * <p>
- * It listens to actions with the same name as the setpoint object.
+ * It listens to actions with the same name as the setpoint object. An action
+ * with a ControlCommand moves the setpoint with the limited rate of the
+ * SetpointIntegrator, while an action with a number sets the setpoint
+ * immediately to that number, which allows a GUI to enter a value directly.
+ * Such a direct value causes a step of the setpoint, which is intended,
+ * because the user of a simulator shall be able to see the consequences of
+ * a setpoint step.
  * <p>
  * It provides an output value to a parameter handler object that gets updated
  * with the same name as this setpoint object.
@@ -64,7 +70,11 @@ public class Setpoint extends SetpointIntegrator implements ValueProvider {
 
     /**
      * Allows processing received events by the class itself. The Property name
-     * must match the name that was set when calling initName.
+     * must match the name that was set when calling initName. A value of the
+     * type Number sets the setpoint immediately within its limits, any other
+     * value is expected to be a ControlCommand.
+     * <p>
+     * LLM code generated with Claude Opus 5.5 (direct value)
      *
      * @param ac ActionCommand, will be further checked if it's matching.
      * @return true if event was processed by this instance.
@@ -72,6 +82,10 @@ public class Setpoint extends SetpointIntegrator implements ValueProvider {
     public boolean handleAction(ActionCommand ac) {
         if (!ac.getPropertyName().equals(name)) {
             return false;
+        }
+        if (ac.getValue() instanceof Number) {
+            forceOutputValue(((Number) ac.getValue()).doubleValue());
+            return true;
         }
         switch ((ControlCommand) ac.getValue()) {
             case SETPOINT_INCREASE -> setInputMax();
