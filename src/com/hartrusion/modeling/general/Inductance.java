@@ -108,6 +108,7 @@ public class Inductance extends EnergyStorage {
 
             didSomething = true;
         }
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

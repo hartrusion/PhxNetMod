@@ -104,6 +104,7 @@ public class PhasedHeatFluidConverter extends FlowThrough
         didSomething = phasedNode.doCalculateHeatEnergy() || didSomething;
         didSomething = heatNode.doCalculateTemperature() || didSomething;
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

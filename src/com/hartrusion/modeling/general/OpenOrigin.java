@@ -50,11 +50,13 @@ public class OpenOrigin extends Origin {
 
     @Override
     public boolean doCalculation() {
+        boolean didSomething = false;
         if (!nodes.get(0).effortUpdated()) {
             nodes.get(0).setEffort(effort, this, true);
-            return true;
+            didSomething = true;
         }
-        return false;
+        didSomething = doMaterialCalculation() || didSomething;
+        return didSomething;
     }
 
     @Override

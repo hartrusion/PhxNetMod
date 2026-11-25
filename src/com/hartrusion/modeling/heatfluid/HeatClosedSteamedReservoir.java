@@ -140,6 +140,7 @@ public class HeatClosedSteamedReservoir extends HeatFluidTank
             didSomething = tp.doCalculateTemperature() || didSomething;
         }
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

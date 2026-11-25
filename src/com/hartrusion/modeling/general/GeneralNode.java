@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.CalculationException;
+import com.hartrusion.modeling.material.MaterialNode;
 
 /**
  * Connects two or n Elements (which can be of any type) and holds effort and
@@ -87,6 +88,13 @@ public class GeneralNode {
     protected PhysicalDomain physicalDomain;
 
     private String nodeName;
+
+    /**
+     * Material concentrations on this node, which are attached by the
+     * MaterialLayer to transport materials through the network. It is null if
+     * no material was added to the network.
+     */
+    private MaterialNode materialNode;
 
     @SuppressWarnings("unused")
     private GeneralNode() { // do not allow constructor without parameters
@@ -169,6 +177,23 @@ public class GeneralNode {
         for (FlowProperties fp : flowToElements) {
             fp.setFlowUpdated(false);
         }
+        if (materialNode != null) {
+            materialNode.prepareCalculation();
+        }
+    }
+
+    public MaterialNode getMaterialNode() {
+        return materialNode;
+    }
+
+    /**
+     * Attaches the material concentrations to this node. This is called from
+     * the MaterialLayer when a material is added to the network.
+     *
+     * @param materialNode Material node that belongs to this node.
+     */
+    public void setMaterialNode(MaterialNode materialNode) {
+        this.materialNode = materialNode;
     }
 
     /**

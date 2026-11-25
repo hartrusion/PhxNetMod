@@ -30,6 +30,7 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
 import java.util.ArrayList;
 import java.util.List;
 import com.hartrusion.modeling.PhysicalDomain;
+import com.hartrusion.modeling.material.MaterialElement;
 
 /**
  * A most basic element that all elements extend to. Holds the basic ability to
@@ -60,6 +61,13 @@ public abstract class AbstractElement implements CalculationStep,
      * Used for the solving algorithms traverse algorithms.
      */
     private AbstractElement coupledElement = null;
+
+    /**
+     * Material part of this element, which is attached by the MaterialLayer to
+     * transport material concentrations through the network. It is null if no
+     * material was added to the network.
+     */
+    private MaterialElement materialElement = null;
 
     private AbstractElement() {
         // force the use of the parametrized constructor.
@@ -226,6 +234,54 @@ public abstract class AbstractElement implements CalculationStep,
         for (GeneralNode n : nodes) {
             n.prepareCalculation();
         }
+        if (materialElement != null) {
+            materialElement.prepareMaterialCalculation();
+        }
+    }
+
+    /**
+     * Calculates the material concentrations of this element and its nodes as
+     * far as the known flows allow. Every doCalculation implementation that
+     * does not call the doCalculation of a super class must call this and add
+     * the result to its own return value, so that the materials are calculated
+     * by all solvers.
+     *
+     * @return true if something was calculated.
+     */
+    protected boolean doMaterialCalculation() {
+        if (materialElement == null) {
+            return false;
+        }
+        return materialElement.doMaterialCalculation();
+    }
+
+    /**
+     * Returns whether the material concentrations of this element are
+     * calculated for the current run. This is kept separate from
+     * isCalculationFinished because some elements use that method to decide
+     * whether the effort and flow calculation has to be done.
+     *
+     * @return true if there are no materials or if they are calculated.
+     */
+    public boolean isMaterialCalculationFinished() {
+        if (materialElement == null) {
+            return true;
+        }
+        return materialElement.isMaterialCalculationFinished();
+    }
+
+    public MaterialElement getMaterialElement() {
+        return materialElement;
+    }
+
+    /**
+     * Attaches the material part to this element. This is called from the
+     * MaterialLayer when a material is added to the network.
+     *
+     * @param materialElement Material element that belongs to this element.
+     */
+    public void setMaterialElement(MaterialElement materialElement) {
+        this.materialElement = materialElement;
     }
 
     /**

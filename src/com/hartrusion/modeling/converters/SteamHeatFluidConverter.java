@@ -149,6 +149,7 @@ public class SteamHeatFluidConverter extends FlowThrough
         didSomething = steamNode.doCalculateSteamProperties() || didSomething;
         didSomething = heatNode.doCalculateTemperature() || didSomething;
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

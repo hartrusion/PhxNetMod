@@ -189,6 +189,7 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
             didSomething = pn.doCalculateHeatEnergy() || didSomething;
         }
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

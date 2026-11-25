@@ -89,7 +89,8 @@ public class SquareDissipator extends FlowThrough {
             throw new UnsupportedOperationException(
                     "Dissipator must have exactly two nodes for calculation");
         } else if (isCalculationFinished()) {
-            return false; // nothing to do.
+            // Efforts and flows are known, only the materials may be missing.
+            didSomething = false;
         } else {
             // same as for linear resistor, 2 of 3 node values must be known
             // while efforts will be used as delta (therefore 3, not 4).
@@ -143,6 +144,7 @@ public class SquareDissipator extends FlowThrough {
                 didSomething = true;
             }
         }
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
     

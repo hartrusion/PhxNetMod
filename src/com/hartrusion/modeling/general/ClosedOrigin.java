@@ -60,6 +60,7 @@ public class ClosedOrigin extends Origin {
             nodes.get(0).setEffort(effort, this, true);
             didSomething = true;
         }
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

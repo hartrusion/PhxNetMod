@@ -44,7 +44,7 @@ public class Dummy extends AbstractElement {
 
     @Override
     public boolean doCalculation() {
-        return false;
+        return doMaterialCalculation();
     }
 
     @Override

@@ -133,6 +133,7 @@ public class Enforcer extends AbstractElement {
             nodes.get(0).setEffort(effort, this, true);
             didSomething = true;
         }
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

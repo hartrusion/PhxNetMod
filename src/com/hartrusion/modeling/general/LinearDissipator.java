@@ -173,6 +173,7 @@ public class LinearDissipator extends FlowThrough {
     @Override
     public boolean doCalculation() {
         boolean retVal = calculateOhmsLaw();
+        retVal = doMaterialCalculation() || retVal;
         if (NO_VALIDATION) {
             return retVal;
         }

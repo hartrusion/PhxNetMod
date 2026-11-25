@@ -138,6 +138,7 @@ public class PhasedThermalExchanger extends FlowThrough
             didSomething = pn.doCalculateHeatEnergy() || didSomething;
         }
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

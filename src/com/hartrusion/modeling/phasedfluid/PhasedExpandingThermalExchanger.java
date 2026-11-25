@@ -173,6 +173,7 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
             didSomething = thermalEffortSource.doCalculation() || didSomething;
         }
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

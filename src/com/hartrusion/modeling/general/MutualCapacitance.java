@@ -55,14 +55,16 @@ public class MutualCapacitance extends Capacitance {
 
     @Override
     public boolean doCalculation() {
+        boolean didSomething = false;
         // as soon as flow is known, a delta value can be calculated.
         if (!deltaCalculated && nodes.get(0).flowUpdated(this)) {
             delta = nodes.get(0).getFlow(this) * stepTime;
             deltaCalculated = true;
             super.integrate(); // integrates
-            return true;
+            didSomething = true;
         }
-        return false;
+        didSomething = doMaterialCalculation() || didSomething;
+        return didSomething;
     }
 
     /**

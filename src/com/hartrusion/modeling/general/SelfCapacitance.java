@@ -49,7 +49,10 @@ public class SelfCapacitance extends Capacitance {
     public boolean doCalculation() {
         // state value is forced upon all connected nodes to let other elements
         // via nodes know about state value.
-        return setEffortValueOnNodes(stateValue) || calculateNewDeltaValue();
+        boolean didSomething = setEffortValueOnNodes(stateValue)
+                || calculateNewDeltaValue();
+        didSomething = doMaterialCalculation() || didSomething;
+        return didSomething;
     }
 
     /**

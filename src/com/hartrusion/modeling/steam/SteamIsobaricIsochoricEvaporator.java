@@ -148,6 +148,7 @@ public class SteamIsobaricIsochoricEvaporator extends AbstractElement
             didSomething = thermalEffortSource.doCalculation() || didSomething;
         }
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

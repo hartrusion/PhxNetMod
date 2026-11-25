@@ -93,6 +93,7 @@ public class ThermalInflowAdjustedResistance
                 didSomething = true;
             }
         }
+        didSomething = doMaterialCalculation() || didSomething;
         if (nodes.get(0).flowUpdated(this) && nodes.get(1).flowUpdated(this)) {
             return didSomething; // calculation is finished, nothing to do here.
         }

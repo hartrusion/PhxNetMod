@@ -74,6 +74,7 @@ public abstract class HeatPassive extends FlowThrough implements HeatElement {
             didSomething = tp.doCalculateTemperature() || didSomething;
         }
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

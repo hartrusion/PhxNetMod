@@ -44,7 +44,10 @@ public class SteamSink extends Origin {
     @Override
     public boolean doCalculation() {
         // call the nodes steam property calcuation also from here
-        return ((SteamNode) nodes.get(0)).doCalculateSteamProperties();
+        boolean didSomething
+                = ((SteamNode) nodes.get(0)).doCalculateSteamProperties();
+        didSomething = doMaterialCalculation() || didSomething;
+        return didSomething;
     }
     
     @Override

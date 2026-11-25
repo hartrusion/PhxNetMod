@@ -138,6 +138,7 @@ public class SteamSaturatedReservoir
             didSomething = sn.doCalculateSteamProperties() || didSomething;
         }
 
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 

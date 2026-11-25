@@ -115,18 +115,20 @@ public class EffortSource extends FlowThrough {
         // check if 1 of 2 efforts is updated, then update second node.
         // should not be necessary as the element always passes through as
         // soon as one effort is known. 
+        boolean didSomething = false;
         if (nodes.get(0).effortUpdated()
                 && !nodes.get(1).effortUpdated()) {
             nodes.get(1).setEffort(nodes.get(0).getEffort() + effort,
                     this, true);
-            return true;
+            didSomething = true;
         } else if (!nodes.get(0).effortUpdated()
                 && nodes.get(1).effortUpdated()) {
             nodes.get(0).setEffort(nodes.get(1).getEffort() - effort,
                     this, true);
-            return true;
+            didSomething = true;
         }
-        return false;
+        didSomething = doMaterialCalculation() || didSomething;
+        return didSomething;
     }
 
     @Override

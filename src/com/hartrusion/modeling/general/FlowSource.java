@@ -61,6 +61,7 @@ public class FlowSource extends FlowThrough {
             didSomething = true;
         }
         allowLooping = false;
+        didSomething = doMaterialCalculation() || didSomething;
         return didSomething;
     }
 
