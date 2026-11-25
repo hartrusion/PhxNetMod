@@ -156,11 +156,11 @@ public class ThermalLogGradientResistanceTest {
         // Set initial conditions from example
         oilPump.setFlow(0.138888888889); // 500 kg/h as kg/s
         waterPump.setFlow(0.1385); // 498.6 kg/h as kg/s
-        oilSide.getHeatHandler().setInnerThermalMass(75);
+        oilSide.setMass(75);
         oilSide.getHeatHandler().setInitialTemperature(273.15 + 33.8);
         oilSide.setSpecificHeatCapacity(1600);
         oilSource.setOriginTemperature(273.15 + 120);
-        waterSide.getHeatHandler().setInnerThermalMass(100);
+        waterSide.setMass(100);
         waterSide.getHeatHandler().setInitialTemperature(273.15 + 43.0);
         waterSource.setOriginTemperature(273.15 + 10);
 

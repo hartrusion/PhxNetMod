@@ -743,15 +743,6 @@ public class PhasedExpandingThermalVolumeHandler
                 phasedNodes.get(0).getEffort());
     }
 
-    /**
-     * Returns the current amount of mass inside the element.
-     *
-     * @return mass in kg
-     */
-    public double getInnerHeatedMass() {
-        return innerHeatMass;
-    }
-
     @Override
     public void setInnerHeatedMass(double heatedMass) {
         super.setInnerHeatedMass(heatedMass);

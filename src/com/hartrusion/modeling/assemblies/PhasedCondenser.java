@@ -270,12 +270,11 @@ public class PhasedCondenser {
             double ambientPressure) {
         primarySideReservoir.setBaseArea(primaryBaseArea);
         primarySideReservoir.setAmbientPressure(ambientPressure);
-        primarySideCondenser.getPhasedHandler().setInnerHeatedMass(
-                primaryCondensingMass);
+        primarySideCondenser.setMass(primaryCondensingMass);
         this.fillLevelLow = fillLevelLow;
         this.fillLevelHigh = fillLevelHigh;
         this.kTimesA = kTimesA;
-        secondarySide.getHeatHandler().setInnerThermalMass(secondaryMass);
+        secondarySide.setMass(secondaryMass);
         // Calculate some factors once for kTimesA calculation.
         // Condensation piping part: fFilled 0.4, fReservoir 0.1
         cm = -((1.0 - fReservoir) * kTimesA)
@@ -400,9 +399,9 @@ public class PhasedCondenser {
         // phased handler needs to know it.
         primaryCondenserHandler.setPreviousPressure(pressure);
         secondarySide.getHeatHandler().setInitialTemperature(secondaryTemp);
-        primarySideReservoir.setInitialState(
-                primarySideReservoir.getMassForHeight(fillHeight, primaryTemp),
-                primaryTemp);
+        primarySideReservoir.setInitialMass(
+                primarySideReservoir.getMassForHeight(fillHeight, primaryTemp));
+        primarySideReservoir.setInitialTemperature(primaryTemp);
     }
 
     /**

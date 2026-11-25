@@ -23,6 +23,7 @@
  */
 package com.hartrusion.modeling.heatfluid;
 
+import com.hartrusion.modeling.general.ConstantMassElement;
 import com.hartrusion.modeling.initial.TemperatureIC;
 import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.InitialConditions;
@@ -33,7 +34,7 @@ import com.hartrusion.modeling.initial.InitialConditions;
  * @author Viktor Alexander Hartung
  */
 public class HeatVolumizedFlowResistance extends HeatAbstractFlowResistance
-        implements InitialConditions {
+        implements InitialConditions, ConstantMassElement {
 
     private final HeatVolumizedHandler volumeHeatHandler;
 
@@ -51,11 +52,17 @@ public class HeatVolumizedFlowResistance extends HeatAbstractFlowResistance
     /**
      * Sets the inner thermal mass (usually kg) of the element. Has to be set
      * when initializing the model.
-     * 
-     * @param thermalMass value, mostly in kg.
+     *
+     * @param mass value, mostly in kg.
      */
-    public void setInnerThermalMass(double thermalMass) {
-        volumeHeatHandler.setInnerThermalMass(thermalMass);
+    @Override
+    public void setMass(double mass) {
+        volumeHeatHandler.setInnerThermalMass(mass);
+    }
+
+    @Override
+    public double getMass() {
+        return volumeHeatHandler.getInnerThermalMass();
     }
     
     @Override

@@ -33,6 +33,7 @@ import com.hartrusion.modeling.general.SelfCapacitance;
 import com.hartrusion.modeling.heatfluid.HeatFlowSource;
 import com.hartrusion.modeling.heatfluid.HeatNode;
 import com.hartrusion.modeling.heatfluid.HeatOrigin;
+import com.hartrusion.modeling.heatfluid.HeatVolumizedFlowResistance;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
@@ -225,6 +226,54 @@ public class MaterialLayerTest {
         tankSolver.prepareCalculation();
         double expected = (100.0 * 1.0 + inflow * 4.0) / (100.0 + inflow);
         assertEquals(tankMaterial.getConcentration(SALT), expected, 1e-9);
+    }
+
+    /**
+     * An element that implements ConstantMassElement provides its mass to the
+     * material layer, so the mass set on the element is used for the mixing
+     * without setting it on the material element.
+     */
+    @Test
+    public void testMassFromConstantMassElement() {
+        HeatOrigin src = new HeatOrigin();
+        HeatOrigin snk = new HeatOrigin();
+        HeatFlowSource flow = new HeatFlowSource();
+        HeatVolumizedFlowResistance pipe = new HeatVolumizedFlowResistance();
+        HeatNode n1 = new HeatNode();
+        HeatNode n2 = new HeatNode();
+        HeatNode n3 = new HeatNode();
+        src.connectTo(n1);
+        flow.connectBetween(n1, n2);
+        pipe.connectBetween(n2, n3);
+        snk.connectTo(n3);
+        flow.setFlow(5.0);
+        src.setOriginTemperature(300.0);
+        snk.setOriginTemperature(300.0);
+        pipe.setResistanceParameter(1.0);
+        pipe.setStepTime(1.0);
+        pipe.getHeatHandler().setInitialTemperature(300.0);
+        pipe.setMass(100.0);
+
+        MaterialLayer.add(SALT, n1);
+        MaterialLayer.setStepTime(n1, 1.0);
+        // Both origins provide the same value so the flow direction does not
+        // matter for the expected result.
+        MaterialLayer.setOriginConcentration(src, SALT, 4.0);
+        MaterialLayer.setOriginConcentration(snk, SALT, 4.0);
+        MaterialLayer.setInitialConcentration(pipe, SALT, 1.0);
+        MaterialElementMass pipeMaterial
+                = (MaterialElementMass) pipe.getMaterialElement();
+        assertEquals(pipeMaterial.getMass(), 100.0, 1e-12);
+
+        DomainAnalogySolver pipeSolver = new DomainAnalogySolver();
+        pipeSolver.addNetwork(n1);
+        pipeSolver.prepareCalculation();
+        pipeSolver.doCalculation();
+        double inflow = Math.abs(n2.getFlow(pipe));
+        assertEquals(inflow, 5.0, 1e-9);
+        pipeSolver.prepareCalculation();
+        double expected = (100.0 * 1.0 + inflow * 4.0) / (100.0 + inflow);
+        assertEquals(pipeMaterial.getConcentration(SALT), expected, 1e-9);
     }
 
     /**

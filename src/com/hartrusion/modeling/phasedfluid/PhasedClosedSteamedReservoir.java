@@ -26,6 +26,7 @@ package com.hartrusion.modeling.phasedfluid;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.SelfCapacitance;
+import com.hartrusion.modeling.general.VariableMassElement;
 import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.PhasedPressurizedEnergyStorageIC;
 
@@ -51,7 +52,7 @@ import com.hartrusion.modeling.initial.PhasedPressurizedEnergyStorageIC;
  * @author Viktor Alexander Hartung
  */
 public class PhasedClosedSteamedReservoir extends SelfCapacitance
-        implements PhasedElement {
+        implements PhasedElement, VariableMassElement {
 
     private PhasedAbstractVolumizedHandler phasedHandler;
 
@@ -251,7 +252,8 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
      *
      * @return mass in kg
      */
-    public double getStoredMass() {
+    @Override
+    public double getMass() {
         return stateValue;
     }
 
@@ -283,8 +285,27 @@ public class PhasedClosedSteamedReservoir extends SelfCapacitance
         return stateValue / rhoFluid / baseArea;
     }
 
-    public void setInitialState(double storedMass, double temperature) {
-        stateValue = storedMass;
+    /**
+     * Sets the initial mass of the fluid inside the reservoir, which is the
+     * state value of this element.
+     *
+     * @param mass Mass in kg
+     */
+    @Override
+    public void setInitialMass(double mass) {
+        stateValue = mass;
+    }
+
+    /**
+     * Sets the initial temperature of the fluid inside the reservoir by
+     * setting the heat energy of the handler. If the handler is a thermal
+     * exchanger, the saturation pressure of this temperature is also set as
+     * the previous pressure, but never less than the ambient pressure, so the
+     * ambient pressure has to be set before.
+     *
+     * @param temperature Temperature in K
+     */
+    public void setInitialTemperature(double temperature) {
         phasedHandler.setInitialHeatEnergy(
                 fluidProperties.getSpecificHeatCapacity() * temperature);
         // in case of the handler beeing a thermal exchanger (this is possible

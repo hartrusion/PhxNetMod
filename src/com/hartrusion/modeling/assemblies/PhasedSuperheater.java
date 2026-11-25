@@ -156,7 +156,7 @@ public class PhasedSuperheater {
             double ambientPressure) {
         primarySideReservoir.setBaseArea(primaryBaseArea);
         primarySideReservoir.setAmbientPressure(ambientPressure);
-        secondaryReservoirLoop.getPhasedHandler().setInnerHeatedMass(secondaryMass);
+        secondaryReservoirLoop.setMass(secondaryMass);
         thermalFlowReservoirResistance.setConductanceParameter(kTimesA);
     }
 
@@ -272,9 +272,9 @@ public class PhasedSuperheater {
                 secondaryHeatEnergy);
         ((PhasedThermalVolumeHandler) secondaryReservoirLoop.getPhasedHandler())
                 .setPreviousPressure(secondaryPressure);
-        primarySideReservoir.setInitialState(
-                primarySideReservoir.getMassForHeight(fillHeight, primaryTemp),
-                primaryTemp);
+        primarySideReservoir.setInitialMass(
+                primarySideReservoir.getMassForHeight(fillHeight, primaryTemp));
+        primarySideReservoir.setInitialTemperature(primaryTemp);
     }
 
     /**

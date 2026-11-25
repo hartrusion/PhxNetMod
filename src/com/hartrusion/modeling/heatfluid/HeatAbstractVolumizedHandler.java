@@ -213,6 +213,16 @@ public abstract class HeatAbstractVolumizedHandler implements HeatHandler {
         this.innerThermalMass = thermalMass;
     }
 
+    /**
+     * Returns the thermal mass inside the element which is heated up by the
+     * inflowing fluid and which is mixed ideally with it.
+     *
+     * @return Mass in kg
+     */
+    public double getInnerThermalMass() {
+        return innerThermalMass;
+    }
+
     public void setStepTime(double dt) {
         stepTime = dt;
     }

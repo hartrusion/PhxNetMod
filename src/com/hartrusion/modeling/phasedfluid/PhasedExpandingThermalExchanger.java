@@ -31,6 +31,7 @@ import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
 import com.hartrusion.modeling.general.OpenOrigin;
+import com.hartrusion.modeling.general.VariableMassElement;
 import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.InitialConditions;
 import com.hartrusion.modeling.initial.PhasedExpandingExchangerIC;
@@ -66,7 +67,7 @@ import com.hartrusion.modeling.initial.TemperatureIC;
  * @author Viktor Alexander Hartung
  */
 public class PhasedExpandingThermalExchanger extends AbstractElement
-        implements PhasedElement, InitialConditions {
+        implements PhasedElement, InitialConditions, VariableMassElement {
 
     private OpenOrigin thermalOrigin;
     private EffortSource thermalEffortSource;
@@ -224,11 +225,24 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
                 fp.getSpecificHeatCapacity() * temperatureState,
                 pressure);
 
-        phasedHandler.setInnerHeatedMass(phasedHandler.getVolume() * rho);
+        setInitialMass(phasedHandler.getVolume() * rho);
         phasedHandler.setInitialHeatEnergy(
                 temperatureState * fp.getSpecificHeatCapacity());
         phasedHandler.setInitialInHeatEnergy(
                 temperatureIn * fp.getSpecificHeatCapacity());
+    }
+
+    /**
+     * Sets the initial mass of the fluid inside the element. The static mass
+     * that is set with setThermalDimension is not part of this mass. Usually,
+     * the initial mass is calculated from the volume and the density by
+     * setInitialState, so this is only needed to overwrite that value.
+     *
+     * @param mass Mass in kg
+     */
+    @Override
+    public void setInitialMass(double mass) {
+        phasedHandler.setInnerHeatedMass(mass);
     }
 
     /**
@@ -363,6 +377,7 @@ public class PhasedExpandingThermalExchanger extends AbstractElement
      *
      * @return mass in kg
      */
+    @Override
     public double getMass() {
         return phasedHandler.getInnerHeatedMass();
     }

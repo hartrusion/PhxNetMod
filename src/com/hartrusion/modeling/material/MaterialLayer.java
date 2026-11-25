@@ -27,11 +27,7 @@ import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.GeneralNode;
-import com.hartrusion.modeling.heatfluid.HeatThermalExchanger;
-import com.hartrusion.modeling.heatfluid.HeatVolumizedFlowResistance;
-import com.hartrusion.modeling.phasedfluid.PhasedExpandingThermalExchanger;
-import com.hartrusion.modeling.phasedfluid.PhasedThermalExchanger;
-import com.hartrusion.modeling.phasedfluid.PhasedVolumizedFlowResistance;
+import com.hartrusion.modeling.general.MassedElement;
 import com.hartrusion.modeling.steam.SteamIsobaricIsochoricEvaporator;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -212,8 +208,9 @@ public final class MaterialLayer {
     /**
      * Creates the material element that matches the behaviour of an element.
      * Origins and enforcers are the boundaries of the network and provide fixed
-     * concentrations. Capacitances and the elements with a volumized heat or
-     * phased handler have an own fluid content that the inflow is mixed with.
+     * concentrations. Capacitances and the elements that implement the
+     * MassedElement interface have an own fluid content that the inflow is
+     * mixed with.
      * All other elements pass the concentration through.
      *
      * @param element Element to create the material element for.
@@ -225,12 +222,10 @@ public final class MaterialLayer {
         if (type == ElementType.ORIGIN || type == ElementType.ENFORCER) {
             return new MaterialOrigin(element);
         }
+        // The steam evaporator has a fluid content, but its mass can not be
+        // set freely, so it does not implement the MassedElement interface.
         if (type == ElementType.CAPACTIANCE
-                || element instanceof HeatVolumizedFlowResistance
-                || element instanceof HeatThermalExchanger
-                || element instanceof PhasedVolumizedFlowResistance
-                || element instanceof PhasedThermalExchanger
-                || element instanceof PhasedExpandingThermalExchanger
+                || element instanceof MassedElement
                 || element instanceof SteamIsobaricIsochoricEvaporator) {
             return new MaterialElementMass(element);
         }

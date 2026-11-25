@@ -90,8 +90,8 @@ public class HeatExchanger {
     public void initCharacteristic(double primaryMass, double secondaryMass,
             double kTimesA) {
         thermalFlowResistance.setThermalConductance(kTimesA);
-        primarySide.getHeatHandler().setInnerThermalMass(primaryMass);
-        secondarySide.getHeatHandler().setInnerThermalMass(secondaryMass);
+        primarySide.setMass(primaryMass);
+        secondarySide.setMass(secondaryMass);
     }
 
     /**

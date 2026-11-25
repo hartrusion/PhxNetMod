@@ -221,6 +221,17 @@ public abstract class PhasedAbstractVolumizedHandler implements PhasedHandler {
         this.innerHeatMass = heatedMass;
     }
 
+    /**
+     * Returns the current amount of heated mass inside the element, which is
+     * constant for most handlers but changes with the flows for handlers that
+     * model an expanding fluid.
+     *
+     * @return Mass in kg
+     */
+    public double getInnerHeatedMass() {
+        return innerHeatMass;
+    }
+
     public void setStepTime(double dt) {
         stepTime = dt;
     }

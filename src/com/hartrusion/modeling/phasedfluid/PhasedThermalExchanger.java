@@ -27,6 +27,7 @@ import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.assemblies.PhasedCondenser;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
+import com.hartrusion.modeling.general.ConstantMassElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.FlowThrough;
 import com.hartrusion.modeling.general.GeneralNode;
@@ -49,7 +50,7 @@ import com.hartrusion.modeling.initial.PhasedPressurizedIC;
  * @author Viktor Alexander Hartung
  */
 public class PhasedThermalExchanger extends FlowThrough
-        implements PhasedElement, InitialConditions {
+        implements PhasedElement, InitialConditions, ConstantMassElement {
 
     PhasedThermalVolumeHandler phasedHandler;
 
@@ -268,6 +269,22 @@ public class PhasedThermalExchanger extends FlowThrough
     @Override
     public void setStepTime(double dt) {
         phasedHandler.setStepTime(dt);
+    }
+
+    /**
+     * Sets the constant mass of the fluid inside the exchanger which exchanges
+     * heat with the thermal network and is mixed ideally with the inflow.
+     *
+     * @param mass Mass in kg
+     */
+    @Override
+    public void setMass(double mass) {
+        phasedHandler.setInnerHeatedMass(mass);
+    }
+
+    @Override
+    public double getMass() {
+        return phasedHandler.getInnerHeatedMass();
     }
 
     @Override

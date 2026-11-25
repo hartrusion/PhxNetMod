@@ -23,6 +23,7 @@
  */
 package com.hartrusion.modeling.phasedfluid;
 
+import com.hartrusion.modeling.general.ConstantMassElement;
 import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.InitialConditions;
 import com.hartrusion.modeling.initial.PhasedEnergyStorageIC;
@@ -36,7 +37,7 @@ import com.hartrusion.modeling.initial.PhasedEnergyStorageIC;
  * @author Viktor Alexander Hartung
  */
 public class PhasedVolumizedFlowResistance extends PhasedAbstractFlowResistance
-        implements InitialConditions {
+        implements InitialConditions, ConstantMassElement {
 
     public PhasedVolumizedFlowResistance(PhasedFluidProperties fluidProperties) {
         phasedHandler = new PhasedVolumizedHandler(fluidProperties, this);
@@ -51,10 +52,16 @@ public class PhasedVolumizedFlowResistance extends PhasedAbstractFlowResistance
      * Sets the inner thermal mass (usually kg) of the element. Has to be set
      * when initializing the model.
      *
-     * @param heatedMass value, mostly in kg.
+     * @param mass value, mostly in kg.
      */
-    public void setInnerHeatedMass(double heatedMass) {
-        phasedHandler.setInnerHeatedMass(heatedMass);
+    @Override
+    public void setMass(double mass) {
+        phasedHandler.setInnerHeatedMass(mass);
+    }
+
+    @Override
+    public double getMass() {
+        return ((PhasedVolumizedHandler) phasedHandler).getInnerHeatedMass();
     }
 
     /**

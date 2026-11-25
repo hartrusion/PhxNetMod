@@ -25,6 +25,7 @@ package com.hartrusion.modeling.heatfluid;
 
 import com.hartrusion.modeling.ElementType;
 import com.hartrusion.modeling.PhysicalDomain;
+import com.hartrusion.modeling.general.ConstantMassElement;
 import com.hartrusion.modeling.general.EffortSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.initial.AbstractIC;
@@ -64,7 +65,7 @@ import com.hartrusion.modeling.initial.InitialConditions;
  * @author Viktor Alexander Hartung
  */
 public class HeatThermalExchanger extends HeatPassive
-        implements InitialConditions {
+        implements InitialConditions, ConstantMassElement {
 
     private OpenOrigin thermalOrigin;
     private EffortSource thermalEffortSource;
@@ -183,6 +184,22 @@ public class HeatThermalExchanger extends HeatPassive
      */
     public void setSpecificHeatCapacity(double c) {
         heatHandler.setSpecificHeatCapacity(c);
+    }
+
+    /**
+     * Sets the constant mass of the fluid inside the exchanger which is heated
+     * or cooled by the thermal network and mixed ideally with the inflow.
+     *
+     * @param mass Mass in kg
+     */
+    @Override
+    public void setMass(double mass) {
+        heatHandler.setInnerThermalMass(mass);
+    }
+
+    @Override
+    public double getMass() {
+        return heatHandler.getInnerThermalMass();
     }
 
     @Override

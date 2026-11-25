@@ -152,16 +152,6 @@ public class HeatClosedSteamedReservoir extends HeatFluidTank
     }
 
     /**
-     * Returns the total stored mass in kg. The stored mass is the integral
-     * value of the mass flows into the element without any factor.
-     *
-     * @return mass in kg
-     */
-    public double getStoredMass() {
-        return stateValue / tau;
-    }
-
-    /**
      * Retruns the fill height of the reservoir.
      *
      * @return level in m

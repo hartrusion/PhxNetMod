@@ -27,6 +27,7 @@ import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.SelfCapacitance;
+import com.hartrusion.modeling.general.VariableMassElement;
 import com.hartrusion.modeling.initial.AbstractIC;
 import com.hartrusion.modeling.initial.HeatedEnerergyStorageIC;
 
@@ -83,7 +84,8 @@ import com.hartrusion.modeling.initial.HeatedEnerergyStorageIC;
  *
  * @author Viktor Alexander Hartung
  */
-public class HeatFluidTank extends SelfCapacitance implements HeatElement {
+public class HeatFluidTank extends SelfCapacitance implements HeatElement,
+        VariableMassElement {
 
     protected final HeatVolumizedHandler heatHandler
             = new HeatVolumizedHandler(this);
@@ -92,12 +94,35 @@ public class HeatFluidTank extends SelfCapacitance implements HeatElement {
         super(PhysicalDomain.HEATFLUID);
     }
 
+    /**
+     * Sets the initial mass of the fluid in the tank by converting it to the
+     * hydrostatic pressure, which is the state value of the tank. The time
+     * constant has to be set before as it defines the base area of the tank.
+     *
+     * @param mass Mass in kg
+     */
+    @Override
+    public void setInitialMass(double mass) {
+        // p = tau * m, see beginning of file.
+        stateValue = mass * tau;
+    }
+
+    /**
+     * Returns the mass of the fluid in the tank, which is calculated from the
+     * hydrostatic pressure as m = p / tau (see class documentation).
+     *
+     * @return Mass in kg
+     */
+    @Override
+    public double getMass() {
+        return stateValue / tau;
+    }
+
 
     @Override
     public void prepareCalculation() {
         super.prepareCalculation();
-        // for explainaiton of stateValue / tau see beginning of file.
-        heatHandler.setInnerThermalMass(stateValue / tau);
+        heatHandler.setInnerThermalMass(getMass());
         heatHandler.prepareHeatCalculation();
     }
 

@@ -163,7 +163,7 @@ public class PhasedCondenserNoMass {
             double ambientPressure) {
         primarySideReservoir.setBaseArea(primaryBaseArea);
         primarySideReservoir.setAmbientPressure(ambientPressure);
-        secondarySideReservoir.getHeatHandler().setInnerThermalMass(secondaryMass);
+        secondarySideReservoir.setMass(secondaryMass);
         thermalFlowReservoirResistance.setConductanceParameter(kTimesA);
     }
     
@@ -274,9 +274,9 @@ public class PhasedCondenserNoMass {
         primarySideReservoir.setInitialEffort(pressure);
         secondarySideReservoir.getHeatHandler()
                 .setInitialTemperature(secondaryTemp);
-        primarySideReservoir.setInitialState(
-                primarySideReservoir.getMassForHeight(fillHeight, primaryTemp),
-                primaryTemp);
+        primarySideReservoir.setInitialMass(
+                primarySideReservoir.getMassForHeight(fillHeight, primaryTemp));
+        primarySideReservoir.setInitialTemperature(primaryTemp);
     }
     
     /**

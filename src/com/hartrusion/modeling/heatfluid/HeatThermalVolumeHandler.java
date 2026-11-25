@@ -243,15 +243,6 @@ public final class HeatThermalVolumeHandler extends HeatAbstractVolumizedHandler
     }
 
     /**
-     * Thermal mass inside the heat exchanger which can be heated up (constant)
-     *
-     * @return Mass in kg
-     */
-    public double getStoredThermalMass() {
-        return innerThermalMass;
-    }
-
-    /**
      * Returns flow through the parent element, requiring the parent element to
      * be of a flow through type. Positive flow value on this element means:
      * flow into port 0, out of port 1.

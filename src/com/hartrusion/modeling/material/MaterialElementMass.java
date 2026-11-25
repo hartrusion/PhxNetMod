@@ -24,6 +24,7 @@
 package com.hartrusion.modeling.material;
 
 import com.hartrusion.modeling.general.AbstractElement;
+import com.hartrusion.modeling.general.MassedElement;
 
 /**
  * Material part of an element with an own content, like a tank, a reservoir
@@ -35,10 +36,18 @@ import com.hartrusion.modeling.general.AbstractElement;
  * delays the transport through the element by one time step.
  *
  * <p>
+ * The mass of the content is read from the element if it implements the
+ * MassedElement interface, so the mass that is configured on the element with
+ * setMass or setInitialMass is used without setting it again here, and the
+ * changing mass of tanks and reservoirs is followed in each run. Only for
+ * elements without that interface, like general capacitances, the mass is
+ * held by this object and has to be set with its own setMass method.
+ *
+ * <p>
  * To keep the network stable, a mass of zero or below does not mix at all and
  * the element keeps its last concentration instead of throwing an exception.
- * As the mass is 0.0 until it is set, mass elements keep their concentration
- * constant until a mass is assigned.
+ * As the own mass is 0.0 until it is set, elements without the MassedElement
+ * interface keep their concentration constant until a mass is assigned.
  */
 public class MaterialElementMass extends MaterialElement {
 
@@ -64,6 +73,7 @@ public class MaterialElementMass extends MaterialElement {
     /**
      * Mass of the content in the unit of the integral of the flow, so with a
      * flow in kg/s this is a mass in kg and with a volume flow it is a volume.
+     * It is only used if the element does not implement MassedElement.
      */
     private double mass = 0.0;
 
@@ -126,8 +136,9 @@ public class MaterialElementMass extends MaterialElement {
             return didSomething;
         }
         double inflowAmount = 0.0;
+        double contentMass = getMass();
         for (int mdx = 0; mdx < nextConcentration.length; mdx++) {
-            nextConcentration[mdx] = mass * concentration[mdx];
+            nextConcentration[mdx] = contentMass * concentration[mdx];
         }
         for (int idx = 0; idx < materialNodes.length; idx++) {
             flow = getInflow(idx);
@@ -143,10 +154,10 @@ public class MaterialElementMass extends MaterialElement {
                                 .getConcentration(connectionIndex[idx], mdx);
             }
         }
-        if (mass > 0.0 && inflowAmount > 0.0) {
+        if (contentMass > 0.0 && inflowAmount > 0.0) {
             for (int mdx = 0; mdx < nextConcentration.length; mdx++) {
                 nextConcentration[mdx] = nextConcentration[mdx]
-                        / (mass + inflowAmount);
+                        / (contentMass + inflowAmount);
             }
         } else {
             // No mass to mix with or nothing flows in, keep the last value.
@@ -163,8 +174,10 @@ public class MaterialElementMass extends MaterialElement {
     }
 
     /**
-     * Sets the mass of the content which the inflows are mixed with. A mass of
-     * zero or below makes the element keep its concentration.
+     * Sets the mass of the content which the inflows are mixed with, which is
+     * only used for elements that do not implement MassedElement, as the mass
+     * of the element itself is used otherwise. A mass of zero or below makes
+     * the element keep its concentration.
      *
      * @param mass Mass in the unit of the integral of the flow.
      */
@@ -172,7 +185,17 @@ public class MaterialElementMass extends MaterialElement {
         this.mass = mass;
     }
 
+    /**
+     * Returns the mass of the content which the inflows are mixed with. This
+     * is the current mass of the element if it implements MassedElement and
+     * the mass set on this object otherwise.
+     *
+     * @return Mass in the unit of the integral of the flow.
+     */
     public double getMass() {
+        if (element instanceof MassedElement massedElement) {
+            return massedElement.getMass();
+        }
         return mass;
     }
 

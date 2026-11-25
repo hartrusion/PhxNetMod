@@ -125,7 +125,8 @@ public class PhasedClosedSteamedReservoirTest {
         double specificHeatEnergy 
                 = temperature * Water.INSTANCE.getSpecificHeatCapacity();
         
-        reservoir.setInitialState(100, temperature);
+        reservoir.setInitialMass(100);
+        reservoir.setInitialTemperature(temperature);
         heater.setThermalDimension(0.1, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         heater.setInitialState(1e5, temperature, temperature);
         
@@ -150,7 +151,8 @@ public class PhasedClosedSteamedReservoirTest {
         double specificHeatEnergy 
                 = temperature * Water.INSTANCE.getSpecificHeatCapacity();
         
-        reservoir.setInitialState(100, temperature);
+        reservoir.setInitialMass(100);
+        reservoir.setInitialTemperature(temperature);
         heater.setThermalDimension(0.1, 0.0, 1e5, 0.0, Double.NaN, 0.0);
         heater.setInitialState(1e5, temperature, temperature);
         

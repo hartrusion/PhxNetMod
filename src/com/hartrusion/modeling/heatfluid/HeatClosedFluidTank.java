@@ -35,8 +35,10 @@ import com.hartrusion.modeling.general.GeneralNode;
  * <p>
  * It is not allowed to completely fill or drain the fluid tank so there should
  * be some safety logic implemented on connected valves. As it uses the effort 
- * as state value, its initial condition has to be set with the setInitialEffort
- * method from the super class.
+ * as state value, its initial condition can be set either as pressure with the
+ * setInitialEffort method or as mass with setInitialMass, which converts the
+ * mass to the pressure by using the characteristic of the tank. Therefore,
+ * initCharacteristic has to be called before setting the initial mass.
  *
  * @author Viktor Alexander Hartung
  */
@@ -80,9 +82,7 @@ public class HeatClosedFluidTank extends HeatFluidTank {
 
             // Mass will be calculated from the current pressure (state value)
             // instead of saving it directly.
-            double currentMass = density * totalVolume
-                    * (1.0 - Math.pow(stateValue / prechargePressure,
-                            -1.0 / polytropicIndex));
+            double currentMass = getMass();
 
             // Add mass flows from node
             double nextMass = currentMass + flowSum * stepTime;
@@ -94,9 +94,7 @@ public class HeatClosedFluidTank extends HeatFluidTank {
                 throw new ModelErrorException("Fluid completely empty");
             }
 
-            double nextPressure = prechargePressure
-                    * Math.pow(totalVolume / (totalVolume
-                            - (nextMass / density)), polytropicIndex);
+            double nextPressure = getPressureForMass(nextMass);
 
             // Manipulate delta value to make it match the desired result, as
             // integrate() does nextStateValue = stateValue + delta * tau
@@ -111,20 +109,49 @@ public class HeatClosedFluidTank extends HeatFluidTank {
         return false;
     }
 
+    /**
+     * Calculates the pressure of the compressed gas above the fluid for a
+     * given fluid mass, using the polytropic compression of the precharged gas
+     * volume.
+     *
+     * @param mass Fluid mass in kg
+     * @return Pressure in Pa
+     */
+    private double getPressureForMass(double mass) {
+        return prechargePressure
+                * Math.pow(totalVolume / (totalVolume - (mass / density)),
+                        polytropicIndex);
+    }
+
+    /**
+     * Sets the initial mass of the fluid in the tank by converting it to the
+     * pressure, which is the state value of this tank. The characteristic has
+     * to be set with initCharacteristic before.
+     *
+     * @param mass Mass in kg
+     */
     @Override
-    public void prepareCalculation() {
-        // call this for EnergyStorage and HeatFluidTank but note that it does 
-        // set the mass to stateValue/tau which is not correct!
-        super.prepareCalculation();
+    public void setInitialMass(double mass) {
+        if (mass < 0.0 || mass >= density * totalVolume) {
+            throw new ModelErrorException("Initial mass must be positive and "
+                    + "less than the mass of a completely filled tank.");
+        }
+        stateValue = getPressureForMass(mass);
+    }
 
-        // Calculate the correct mass and set it to the heat handler afterwards,
-        // this will effectively overwrite the wrong mass
-        heatHandler.setInnerThermalMass(density * totalVolume
+    /**
+     * Returns the fluid mass in the tank, which is calculated from the
+     * pressure as the inverse of the polytropic compression. This replaces the
+     * mass calculation of the open tank, so the heat handler of the super
+     * class gets the correct mass.
+     *
+     * @return Mass in kg
+     */
+    @Override
+    public double getMass() {
+        return density * totalVolume
                 * (1.0 - Math.pow(stateValue / prechargePressure,
-                        -1.0 / polytropicIndex)));
-
-        // apply prepare method again to fix the initial wrong setting.
-        heatHandler.prepareHeatCalculation();
+                        -1.0 / polytropicIndex));
     }
 
     /**
