@@ -116,6 +116,28 @@ public final class MaterialLayer {
     }
 
     /**
+     * Sets the half-life of a material on all mass material elements of the
+     * network that is connected to the given node, as the decay is a property
+     * of the material itself and takes place in every element with a content.
+     * The material must already be added to the network.
+     *
+     * @param materialName Unique name of the material.
+     * @param anyNode Any node of the network.
+     * @param halfLife Half-life in seconds, zero or below disables the decay.
+     */
+    public static void setHalfLife(String materialName, GeneralNode anyNode,
+            double halfLife) {
+        List<GeneralNode> nodes = new ArrayList<>();
+        List<AbstractElement> elements = new ArrayList<>();
+        collectNetwork(anyNode, nodes, elements);
+        for (AbstractElement e : elements) {
+            if (e.getMaterialElement() instanceof MaterialElementMass mem) {
+                mem.setHalfLife(materialName, halfLife);
+            }
+        }
+    }
+
+    /**
      * Defines the concentration of a material that enters the network through
      * an origin or enforcer element.
      *

@@ -54,5 +54,10 @@
  * MaterialElementMassSplitter, where the highest concentration of a material
  * can be limited for the flow leaving through a defined node, like the steam
  * outlet. The material that is held back stays in the drum and enriches it.
+ *
+ * <p>
+ * A material can be given a half-life with MaterialLayer.setHalfLife, which
+ * makes it decay towards zero in every element with a content, independent of
+ * the flows through that element.
  */
 package com.hartrusion.modeling.material;

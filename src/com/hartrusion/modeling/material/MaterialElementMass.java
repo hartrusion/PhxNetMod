@@ -39,6 +39,13 @@ import java.util.Arrays;
  * to the inflow of a material, which also works without any real inflow.
  *
  * <p>
+ * A material can decay with a half-life, which reduces its concentration in
+ * the content in each run by the factor exp(-ln(2) dt / halfLife) after the
+ * mixing, so that the concentration of a closed content halves after each
+ * half-life. The decay only takes place in elements with a content, because
+ * elements without mass hold no material over time.
+ *
+ * <p>
  * The mass of the content is read from the element if it implements the
  * MassedElement interface, so the mass that is configured on the element with
  * setMass or setInitialMass is used without setting it again here, and the
@@ -53,6 +60,12 @@ import java.util.Arrays;
  * interface keep their concentration constant until a mass is assigned.
  */
 public class MaterialElementMass extends MaterialElement {
+
+    /**
+     * Natural logarithm of 2, which converts a half-life into the time
+     * constant of the exponential decay.
+     */
+    private static final double LN2 = Math.log(2.0);
 
     /**
      * Concentration of each material in the content of the element, which is
@@ -72,6 +85,12 @@ public class MaterialElementMass extends MaterialElement {
      * content. It is kept as a field only to avoid an allocation on each run.
      */
     private double[] retainedAmount = new double[0];
+
+    /**
+     * Half-life of each material in seconds, where a value of zero or below
+     * means that the material does not decay, which is the default.
+     */
+    private double[] halfLife = new double[0];
 
     /**
      * Marks that nextConcentration was calculated in the current run. It
@@ -106,6 +125,7 @@ public class MaterialElementMass extends MaterialElement {
         nextConcentration = MaterialNode.extendArray(nextConcentration,
                 getMaterialCount());
         retainedAmount = new double[getMaterialCount()];
+        halfLife = MaterialNode.extendArray(halfLife, getMaterialCount());
         return true;
     }
 
@@ -194,6 +214,10 @@ public class MaterialElementMass extends MaterialElement {
                 // No mass to mix with or nothing flows in, keep the value.
                 nextConcentration[mdx] = concentration[mdx];
             }
+            if (contentMass > 0.0 && halfLife[mdx] > 0.0) {
+                nextConcentration[mdx] = nextConcentration[mdx]
+                        * Math.exp(-LN2 * stepTime / halfLife[mdx]);
+            }
         }
         concentrationPrepared = true;
         return true;
@@ -262,5 +286,21 @@ public class MaterialElementMass extends MaterialElement {
 
     public double getConcentration(String materialName) {
         return concentration[getMaterialIndex(materialName)];
+    }
+
+    /**
+     * Sets the half-life of a material, after which the concentration of a
+     * content without any inflow or outflow is reduced to one half. The
+     * value can be changed at any time between two runs.
+     *
+     * @param materialName Unique name of the material.
+     * @param halfLife Half-life in seconds, zero or below disables the decay.
+     */
+    public void setHalfLife(String materialName, double halfLife) {
+        this.halfLife[getMaterialIndex(materialName)] = halfLife;
+    }
+
+    public double getHalfLife(String materialName) {
+        return halfLife[getMaterialIndex(materialName)];
     }
 }

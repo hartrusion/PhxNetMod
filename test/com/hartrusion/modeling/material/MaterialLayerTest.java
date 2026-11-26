@@ -350,6 +350,52 @@ public class MaterialLayerTest {
     }
 
     /**
+     * A material with a half-life halves its concentration in a closed tank
+     * after each half-life. A half-life of zero stops the decay.
+     */
+    @Test
+    public void testHalfLifeDecay() {
+        OpenOrigin src = new OpenOrigin(PhysicalDomain.HYDRAULIC);
+        LinearDissipator r = new LinearDissipator(PhysicalDomain.HYDRAULIC);
+        SelfCapacitance tank = new SelfCapacitance(PhysicalDomain.HYDRAULIC);
+        GeneralNode n1 = new GeneralNode(PhysicalDomain.HYDRAULIC);
+        GeneralNode n2 = new GeneralNode(PhysicalDomain.HYDRAULIC);
+        src.connectTo(n1);
+        r.connectBetween(n1, n2);
+        tank.connectTo(n2);
+        src.setEffort(0.0);
+        r.setResistanceParameter(1.0);
+        tank.setTimeConstant(1000.0);
+        tank.setStepTime(1.0);
+        tank.setInitialEffort(0.0);
+
+        MaterialLayer.add(SALT, n1);
+        MaterialLayer.setStepTime(n1, 1.0);
+        MaterialLayer.setOriginConcentration(src, SALT, 4.0);
+        MaterialLayer.setInitialConcentration(tank, SALT, 1.0);
+        MaterialLayer.setHalfLife(SALT, n1, 10.0);
+        MaterialElementMass tankMaterial
+                = (MaterialElementMass) tank.getMaterialElement();
+        tankMaterial.setMass(100.0);
+        assertEquals(tankMaterial.getHalfLife(SALT), 10.0, 0.0);
+        DomainAnalogySolver tankSolver = new DomainAnalogySolver();
+        tankSolver.addNetwork(n1);
+
+        for (int idx = 0; idx < 10; idx++) {
+            tankSolver.prepareCalculation();
+            tankSolver.doCalculation();
+        }
+        assertEquals(n2.getFlow(tank), 0.0, 0.0);
+        tankSolver.prepareCalculation();
+        assertEquals(tankMaterial.getConcentration(SALT), 0.5, 1e-12);
+
+        MaterialLayer.setHalfLife(SALT, n1, 0.0);
+        tankSolver.doCalculation();
+        tankSolver.prepareCalculation();
+        assertEquals(tankMaterial.getConcentration(SALT), 0.5, 1e-12);
+    }
+
+    /**
      * The steam drum gets a splitter instead of a plain mass element.
      */
     @Test
