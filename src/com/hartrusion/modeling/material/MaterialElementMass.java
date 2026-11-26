@@ -33,7 +33,9 @@ import com.hartrusion.modeling.general.MassedElement;
  * the temperature: All outflows leave the element with the concentration of
  * the content, and the concentration of the content for the next run is
  * calculated from the content mass and the inflow of the current run, which
- * delays the transport through the element by one time step.
+ * delays the transport through the element by one time step. An active
+ * material manipulation adds its virtual flow with the target concentration
+ * to the inflow of a material, which also works without any real inflow.
  *
  * <p>
  * The mass of the content is read from the element if it implements the
@@ -154,15 +156,18 @@ public class MaterialElementMass extends MaterialElement {
                                 .getConcentration(connectionIndex[idx], mdx);
             }
         }
-        if (contentMass > 0.0 && inflowAmount > 0.0) {
-            for (int mdx = 0; mdx < nextConcentration.length; mdx++) {
-                nextConcentration[mdx] = nextConcentration[mdx]
-                        / (contentMass + inflowAmount);
+        double manipulationAmount;
+        for (int mdx = 0; mdx < nextConcentration.length; mdx++) {
+            manipulationAmount = getActiveManipulationFlow(mdx) * stepTime;
+            if (contentMass > 0.0
+                    && inflowAmount + manipulationAmount > 0.0) {
+                nextConcentration[mdx] = (nextConcentration[mdx]
+                        + manipulationAmount * getManipulationTarget(mdx))
+                        / (contentMass + inflowAmount + manipulationAmount);
+            } else {
+                // No mass to mix with or nothing flows in, keep the value.
+                nextConcentration[mdx] = concentration[mdx];
             }
-        } else {
-            // No mass to mix with or nothing flows in, keep the last value.
-            System.arraycopy(concentration, 0, nextConcentration, 0,
-                    concentration.length);
         }
         concentrationPrepared = true;
         return true;

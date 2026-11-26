@@ -25,6 +25,7 @@ package com.hartrusion.modeling.material;
 
 import com.hartrusion.modeling.PhysicalDomain;
 import com.hartrusion.modeling.assemblies.HeatExchanger;
+import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.FlowSource;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.LinearDissipator;
@@ -225,6 +226,123 @@ public class MaterialLayerTest {
         assertTrue(inflow > 0.0);
         tankSolver.prepareCalculation();
         double expected = (100.0 * 1.0 + inflow * 4.0) / (100.0 + inflow);
+        assertEquals(tankMaterial.getConcentration(SALT), expected, 1e-9);
+    }
+
+    /**
+     * A material manipulation on an element without mass is mixed instantly
+     * into the real inflow: 4.0 with 6.5 and a virtual flow of 4.0 with 0.0
+     * result in 3.25 after rOut, while nMix is not affected. Switching the
+     * manipulation off restores the plain transport.
+     */
+    @Test
+    public void testManipulationWithoutMass() {
+        MaterialElement outMaterial = rOut.getMaterialElement();
+        outMaterial.setManipulationFlow(SALT, 4.0);
+        outMaterial.setManipulationTarget(SALT, 0.0);
+        outMaterial.setMaterialManipulation(SALT, true);
+        runCycle();
+        assertEquals(MaterialLayer.getConcentration(nMix, SALT), 6.5, 1e-9);
+        assertEquals(MaterialLayer.getConcentration(nOut, SALT), 3.25, 1e-9);
+        outMaterial.setMaterialManipulation(SALT, false);
+        runCycle();
+        assertEquals(MaterialLayer.getConcentration(nOut, SALT), 6.5, 1e-9);
+    }
+
+    /**
+     * A material added later starts with a switched off manipulation, while
+     * the settings of the existing material are kept.
+     */
+    @Test
+    public void testManipulationOfAddedMaterial() {
+        MaterialElement outMaterial = rOut.getMaterialElement();
+        outMaterial.setManipulationFlow(SALT, 4.0);
+        outMaterial.setManipulationTarget(SALT, 1.0);
+        outMaterial.setMaterialManipulation(SALT, true);
+        MaterialLayer.add("iron", nA);
+        assertFalse(outMaterial.isMaterialManipulation("iron"));
+        assertEquals(outMaterial.getManipulationFlow("iron"), 0.0, 0.0);
+        assertTrue(outMaterial.isMaterialManipulation(SALT));
+        assertEquals(outMaterial.getManipulationFlow(SALT), 4.0, 0.0);
+        assertEquals(outMaterial.getManipulationTarget(SALT), 1.0, 0.0);
+    }
+
+    /**
+     * An origin defines a fixed concentration, so a manipulation can not be
+     * switched on there, while switching it off is accepted.
+     */
+    @Test
+    public void testManipulationOnOriginRejected() {
+        srcA.getMaterialElement().setMaterialManipulation(SALT, false);
+        assertThrows(ModelErrorException.class, ()
+                -> srcA.getMaterialElement().setMaterialManipulation(SALT,
+                        true));
+    }
+
+    /**
+     * A tank without any flow approaches the target concentration of an
+     * active manipulation with each step, keeps its concentration while the
+     * manipulation is switched off and continues when it is switched on
+     * again. With a flow, the virtual flow is added to the real inflow.
+     */
+    @Test
+    public void testManipulationWithMass() {
+        OpenOrigin src = new OpenOrigin(PhysicalDomain.HYDRAULIC);
+        LinearDissipator r = new LinearDissipator(PhysicalDomain.HYDRAULIC);
+        SelfCapacitance tank = new SelfCapacitance(PhysicalDomain.HYDRAULIC);
+        GeneralNode n1 = new GeneralNode(PhysicalDomain.HYDRAULIC);
+        GeneralNode n2 = new GeneralNode(PhysicalDomain.HYDRAULIC);
+        src.connectTo(n1);
+        r.connectBetween(n1, n2);
+        tank.connectTo(n2);
+        // Same effort on both sides, so there is no flow.
+        src.setEffort(0.0);
+        r.setResistanceParameter(1.0);
+        tank.setTimeConstant(1000.0);
+        tank.setStepTime(1.0);
+        tank.setInitialEffort(0.0);
+
+        MaterialLayer.add(SALT, n1);
+        MaterialLayer.setStepTime(n1, 1.0);
+        MaterialLayer.setOriginConcentration(src, SALT, 4.0);
+        MaterialLayer.setInitialConcentration(tank, SALT, 1.0);
+        MaterialElementMass tankMaterial
+                = (MaterialElementMass) tank.getMaterialElement();
+        tankMaterial.setMass(100.0);
+        tankMaterial.setManipulationFlow(SALT, 10.0);
+        tankMaterial.setManipulationTarget(SALT, 0.0);
+        tankMaterial.setMaterialManipulation(SALT, true);
+        DomainAnalogySolver tankSolver = new DomainAnalogySolver();
+        tankSolver.addNetwork(n1);
+
+        double expected = 100.0 / 110.0;
+        tankSolver.prepareCalculation();
+        tankSolver.doCalculation();
+        assertEquals(n2.getFlow(tank), 0.0, 0.0);
+        tankSolver.prepareCalculation();
+        assertEquals(tankMaterial.getConcentration(SALT), expected, 1e-12);
+
+        tankMaterial.setMaterialManipulation(SALT, false);
+        tankSolver.doCalculation();
+        tankSolver.prepareCalculation();
+        assertEquals(tankMaterial.getConcentration(SALT), expected, 1e-12);
+
+        tankMaterial.setMaterialManipulation(SALT, true);
+        tankSolver.doCalculation();
+        tankSolver.prepareCalculation();
+        expected = expected * 100.0 / 110.0;
+        assertEquals(tankMaterial.getConcentration(SALT), expected, 1e-12);
+
+        // With a flow into the tank, the virtual flow adds to the inflow.
+        src.setEffort(10.0);
+        double start = tankMaterial.getConcentration(SALT);
+        tankSolver.prepareCalculation();
+        tankSolver.doCalculation();
+        double inflow = n2.getFlow(tank);
+        assertTrue(inflow > 0.0);
+        tankSolver.prepareCalculation();
+        expected = (100.0 * start + inflow * 4.0 + 10.0 * 0.0)
+                / (100.0 + inflow + 10.0);
         assertEquals(tankMaterial.getConcentration(SALT), expected, 1e-9);
     }
 

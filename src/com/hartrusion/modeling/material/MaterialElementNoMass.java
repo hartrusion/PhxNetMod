@@ -31,6 +31,9 @@ import com.hartrusion.modeling.general.AbstractElement;
  * delay. If more than one flow goes into the element, the inflows are mixed
  * ideally and the mixture leaves the element on all outbound connections. This
  * is the same calculation as the HeatSimpleHandler does for the temperature.
+ * An active material manipulation is mixed in as an additional virtual inflow
+ * with the target concentration, so that it changes the outflow concentration
+ * instantly, but only while there is a real inflow.
  */
 public class MaterialElementNoMass extends MaterialElement {
 
@@ -97,8 +100,14 @@ public class MaterialElementNoMass extends MaterialElement {
         }
         boolean didSomething = false;
         if (inflow > 0.0) {
+            // An active material manipulation is mixed in instantly as an
+            // additional virtual inflow, which only exists with a real inflow.
+            double virtualFlow;
             for (int mdx = 0; mdx < mixedConcentration.length; mdx++) {
-                mixedConcentration[mdx] = mixedConcentration[mdx] / inflow;
+                virtualFlow = getActiveManipulationFlow(mdx);
+                mixedConcentration[mdx] = (mixedConcentration[mdx]
+                        + virtualFlow * getManipulationTarget(mdx))
+                        / (inflow + virtualFlow);
             }
             for (int idx = 0; idx < materialNodes.length; idx++) {
                 if (getInflow(idx) > 0.0) {

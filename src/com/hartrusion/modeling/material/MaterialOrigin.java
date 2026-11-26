@@ -23,6 +23,7 @@
  */
 package com.hartrusion.modeling.material;
 
+import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.AbstractElement;
 
 /**
@@ -57,6 +58,25 @@ public class MaterialOrigin extends MaterialElement {
     @Override
     public void prepareMaterialCalculation() {
         // The concentrations are fixed, there is no state to update.
+    }
+
+    /**
+     * Rejects switching on a material manipulation, because an origin already
+     * defines a fixed concentration, which has to be changed with
+     * setConcentration instead.
+     *
+     * @param materialName Unique name of the material.
+     * @param enabled Only false is accepted.
+     * @throws ModelErrorException if enabled is true.
+     */
+    @Override
+    public void setMaterialManipulation(String materialName, boolean enabled) {
+        if (enabled) {
+            throw new ModelErrorException("Material manipulation is not "
+                    + "possible on origin " + element.toString()
+                    + ", set the concentration of the origin instead.");
+        }
+        super.setMaterialManipulation(materialName, enabled);
     }
 
     /**

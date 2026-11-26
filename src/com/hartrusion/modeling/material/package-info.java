@@ -39,5 +39,14 @@
  * concentrations are calculated by any solver that calculates the network.
  * Any number of materials can be added, which are held in arrays and are
  * identified by a unique name.
+ *
+ * <p>
+ * The concentrations inside the elements can be changed by a material
+ * manipulation, which is switched on and off per material with
+ * setMaterialManipulation of the MaterialElement, also while the model is
+ * running. It mixes a virtual flow with a target concentration into the
+ * element, which does not exist in the network itself. An element with a mass
+ * m approaches the target concentration with the time constant m divided by
+ * the flow rate of the virtual flow.
  */
 package com.hartrusion.modeling.material;

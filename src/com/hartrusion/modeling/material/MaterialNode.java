@@ -155,6 +155,22 @@ public class MaterialNode {
     }
 
     /**
+     * Returns a copy of the given array with the new length, filling the new
+     * values with false. It is used for the per material switches of the
+     * material elements.
+     *
+     * @param values Array to extend.
+     * @param length New length of the array.
+     * @return The extended array.
+     */
+    static boolean[] extendArray(boolean[] values, int length) {
+        boolean[] extended = new boolean[length];
+        System.arraycopy(values, 0, extended, 0,
+                Math.min(values.length, length));
+        return extended;
+    }
+
+    /**
      * Returns the index of a material in the concentration arrays.
      *
      * @param materialName Unique name of the material.

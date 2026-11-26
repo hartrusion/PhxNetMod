@@ -49,6 +49,18 @@ import java.util.List;
  * MaterialElementMass mixes the inflow ideally with the content of the element
  * and MaterialOrigin provides fixed concentrations at the boundary of the
  * network.
+ *
+ * <p>
+ * The concentrations inside the element can be changed by a material
+ * manipulation, which is configured per material after the material layer was
+ * created and can be switched on and off while the model is running. The
+ * element is then calculated as if an additional, virtual flow with the
+ * manipulation flow rate and the target concentration was mixed into it. This
+ * virtual flow only exists in the concentration balance and does not change
+ * any mass, effort or flow of the network. For an element with a mass m, the
+ * concentration approaches the target value exponentially with the time
+ * constant m divided by the manipulation flow, while an element without a mass
+ * mixes the virtual flow instantly with its real inflow.
  */
 public abstract class MaterialElement {
 
@@ -76,6 +88,25 @@ public abstract class MaterialElement {
      * this list is the index of the material in all concentration arrays.
      */
     protected final List<String> materialNames = new ArrayList<>();
+
+    /**
+     * Marks for each material whether the material manipulation is active.
+     * It can be switched between two calculation runs at any time.
+     */
+    private boolean[] manipulationEnabled = new boolean[0];
+
+    /**
+     * Target concentration of each material, which is the concentration of
+     * the virtual flow that is mixed into the element by the manipulation.
+     */
+    private double[] manipulationTarget = new double[0];
+
+    /**
+     * Flow rate of the virtual flow of each material manipulation, in the
+     * unit of the network flows, usually kg/s. A value of zero or below
+     * disables the effect of the manipulation.
+     */
+    private double[] manipulationFlow = new double[0];
 
     /**
      * Creates the material element for an existing element. All nodes of the
@@ -129,7 +160,87 @@ public abstract class MaterialElement {
             return false;
         }
         materialNames.add(materialName);
+        manipulationEnabled = MaterialNode.extendArray(manipulationEnabled,
+                getMaterialCount());
+        manipulationTarget = MaterialNode.extendArray(manipulationTarget,
+                getMaterialCount());
+        manipulationFlow = MaterialNode.extendArray(manipulationFlow,
+                getMaterialCount());
         return true;
+    }
+
+    /**
+     * Switches the material manipulation of a material on or off. This is
+     * allowed while the model is running, the change takes effect with the
+     * next calculation run.
+     *
+     * @param materialName Unique name of the material.
+     * @param enabled true to mix the virtual flow into the element.
+     */
+    public void setMaterialManipulation(String materialName, boolean enabled) {
+        manipulationEnabled[getMaterialIndex(materialName)] = enabled;
+    }
+
+    public boolean isMaterialManipulation(String materialName) {
+        return manipulationEnabled[getMaterialIndex(materialName)];
+    }
+
+    /**
+     * Sets the target concentration of a material manipulation, which is the
+     * concentration of the virtual flow mixed into the element.
+     *
+     * @param materialName Unique name of the material.
+     * @param value Target concentration.
+     */
+    public void setManipulationTarget(String materialName, double value) {
+        manipulationTarget[getMaterialIndex(materialName)] = value;
+    }
+
+    public double getManipulationTarget(String materialName) {
+        return manipulationTarget[getMaterialIndex(materialName)];
+    }
+
+    /**
+     * Sets the flow rate of the virtual flow of a material manipulation, in
+     * the unit of the network flows. For an element with a mass, the mass
+     * divided by this flow is the time constant of the approach to the target
+     * concentration. A value of zero or below makes the manipulation have no
+     * effect.
+     *
+     * @param materialName Unique name of the material.
+     * @param flow Flow rate of the virtual flow.
+     */
+    public void setManipulationFlow(String materialName, double flow) {
+        manipulationFlow[getMaterialIndex(materialName)] = flow;
+    }
+
+    public double getManipulationFlow(String materialName) {
+        return manipulationFlow[getMaterialIndex(materialName)];
+    }
+
+    /**
+     * Returns the flow rate of the virtual flow that is mixed into the element
+     * for a material in the current run, which is 0.0 if the manipulation is
+     * switched off or its flow rate is zero or below.
+     *
+     * @param mdx Index of the material.
+     * @return Flow rate of the virtual flow.
+     */
+    protected double getActiveManipulationFlow(int mdx) {
+        if (manipulationEnabled[mdx] && manipulationFlow[mdx] > 0.0) {
+            return manipulationFlow[mdx];
+        }
+        return 0.0;
+    }
+
+    /**
+     * Returns the target concentration of a material manipulation by index.
+     *
+     * @param mdx Index of the material.
+     * @return Target concentration.
+     */
+    protected double getManipulationTarget(int mdx) {
+        return manipulationTarget[mdx];
     }
 
     /**
