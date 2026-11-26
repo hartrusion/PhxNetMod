@@ -48,5 +48,11 @@
  * element, which does not exist in the network itself. An element with a mass
  * m approaches the target concentration with the time constant m divided by
  * the flow rate of the virtual flow.
+ *
+ * <p>
+ * A PhasedClosedSteamedReservoir, which is a steam drum, gets a
+ * MaterialElementMassSplitter, where the highest concentration of a material
+ * can be limited for the flow leaving through a defined node, like the steam
+ * outlet. The material that is held back stays in the drum and enriches it.
  */
 package com.hartrusion.modeling.material;

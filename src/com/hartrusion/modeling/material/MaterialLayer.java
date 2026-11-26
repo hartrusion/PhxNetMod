@@ -28,6 +28,7 @@ import com.hartrusion.modeling.exceptions.ModelErrorException;
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.GeneralNode;
 import com.hartrusion.modeling.general.MassedElement;
+import com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoir;
 import com.hartrusion.modeling.steam.SteamIsobaricIsochoricEvaporator;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -132,6 +133,26 @@ public final class MaterialLayer {
     }
 
     /**
+     * Defines the highest concentration of a material for the flow that
+     * leaves an element through one of its nodes, like the steam outlet of a
+     * steam drum. The material that is held back stays in the element.
+     *
+     * @param element Element with a MaterialElementMassSplitter assigned.
+     * @param node Node of the element.
+     * @param materialName Unique name of the material.
+     * @param limit Highest concentration of the outflow.
+     */
+    public static void setOutflowLimit(AbstractElement element,
+            GeneralNode node, String materialName, double limit) {
+        if (!(element.getMaterialElement()
+                instanceof MaterialElementMassSplitter splitter)) {
+            throw new ModelErrorException("Element " + element.toString()
+                    + " has no material splitter assigned.");
+        }
+        splitter.setOutflowLimit(node, materialName, limit);
+    }
+
+    /**
      * Sets the concentration of a material in the content of an element with
      * an own fluid content, which is used to define initial conditions.
      *
@@ -210,7 +231,8 @@ public final class MaterialLayer {
      * Origins and enforcers are the boundaries of the network and provide fixed
      * concentrations. Capacitances and the elements that implement the
      * MassedElement interface have an own fluid content that the inflow is
-     * mixed with.
+     * mixed with, where the PhasedClosedSteamedReservoir gets a splitter that
+     * can limit the concentration of its outflows.
      * All other elements pass the concentration through.
      *
      * @param element Element to create the material element for.
@@ -221,6 +243,11 @@ public final class MaterialLayer {
         ElementType type = element.getElementType();
         if (type == ElementType.ORIGIN || type == ElementType.ENFORCER) {
             return new MaterialOrigin(element);
+        }
+        // The steam drum separates steam with a lower concentration from the
+        // water, which needs the outflow limits of the splitter.
+        if (element instanceof PhasedClosedSteamedReservoir) {
+            return new MaterialElementMassSplitter(element);
         }
         // The steam evaporator has a fluid content, but its mass can not be
         // set freely, so it does not implement the MassedElement interface.

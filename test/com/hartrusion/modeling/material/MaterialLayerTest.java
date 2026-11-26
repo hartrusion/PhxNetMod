@@ -35,6 +35,9 @@ import com.hartrusion.modeling.heatfluid.HeatFlowSource;
 import com.hartrusion.modeling.heatfluid.HeatNode;
 import com.hartrusion.modeling.heatfluid.HeatOrigin;
 import com.hartrusion.modeling.heatfluid.HeatVolumizedFlowResistance;
+import com.hartrusion.modeling.phasedfluid.PhasedClosedSteamedReservoir;
+import com.hartrusion.modeling.phasedfluid.PhasedNode;
+import com.hartrusion.modeling.phasedfluid.Water;
 import com.hartrusion.modeling.solvers.DomainAnalogySolver;
 import com.hartrusion.util.SimpleLogOut;
 import static org.testng.Assert.*;
@@ -344,6 +347,98 @@ public class MaterialLayerTest {
         expected = (100.0 * start + inflow * 4.0 + 10.0 * 0.0)
                 / (100.0 + inflow + 10.0);
         assertEquals(tankMaterial.getConcentration(SALT), expected, 1e-9);
+    }
+
+    /**
+     * The steam drum gets a splitter instead of a plain mass element.
+     */
+    @Test
+    public void testSplitterAssignedToSteamedReservoir() {
+        PhasedClosedSteamedReservoir drum
+                = new PhasedClosedSteamedReservoir(Water.INSTANCE);
+        PhasedNode water = new PhasedNode();
+        PhasedNode steam = new PhasedNode();
+        drum.connectTo(water);
+        drum.connectTo(steam);
+        MaterialLayer.add(SALT, water);
+        assertTrue(drum.getMaterialElement()
+                instanceof MaterialElementMassSplitter);
+        MaterialLayer.setOutflowLimit(drum, steam, SALT, 0.1);
+        assertEquals(((MaterialElementMassSplitter) drum.getMaterialElement())
+                .getOutflowLimit(steam, SALT), 0.1, 0.0);
+        assertThrows(ModelErrorException.class, ()
+                -> MaterialLayer.setOutflowLimit(rOut, nOut, SALT, 0.1));
+    }
+
+    /**
+     * A tank with an inflow of 5.0 with 4.0 and an outflow of 5.0 through a
+     * node limited to 0.25 lets the outflow leave with 0.25, while the held
+     * back material stays in the tank. Without a limit, the result is the
+     * same as for a plain mass element.
+     */
+    @Test
+    public void testSplitterLimitsOutflow() {
+        OpenOrigin src = new OpenOrigin(PhysicalDomain.HYDRAULIC);
+        OpenOrigin snk = new OpenOrigin(PhysicalDomain.HYDRAULIC);
+        LinearDissipator rIn = new LinearDissipator(PhysicalDomain.HYDRAULIC);
+        LinearDissipator rOutTank
+                = new LinearDissipator(PhysicalDomain.HYDRAULIC);
+        SelfCapacitance tank = new SelfCapacitance(PhysicalDomain.HYDRAULIC);
+        GeneralNode n1 = new GeneralNode(PhysicalDomain.HYDRAULIC);
+        GeneralNode n2 = new GeneralNode(PhysicalDomain.HYDRAULIC);
+        GeneralNode n3 = new GeneralNode(PhysicalDomain.HYDRAULIC);
+        GeneralNode n4 = new GeneralNode(PhysicalDomain.HYDRAULIC);
+        src.connectTo(n1);
+        rIn.connectBetween(n1, n2);
+        tank.connectTo(n2);
+        tank.connectTo(n3);
+        rOutTank.connectBetween(n3, n4);
+        snk.connectTo(n4);
+        src.setEffort(10.0);
+        snk.setEffort(0.0);
+        rIn.setResistanceParameter(1.0);
+        rOutTank.setResistanceParameter(1.0);
+        tank.setTimeConstant(1e9);
+        tank.setStepTime(1.0);
+        tank.setInitialEffort(5.0);
+
+        MaterialLayer.add(SALT, n1);
+        // A plain tank gets no splitter, so it is replaced here to test the
+        // splitter without the phased fluid model of a steam drum.
+        MaterialElementMassSplitter splitter
+                = new MaterialElementMassSplitter(tank);
+        tank.setMaterialElement(splitter);
+        splitter.addMaterial(SALT);
+        splitter.setMass(100.0);
+        splitter.setConcentration(SALT, 1.0);
+        MaterialLayer.setStepTime(n1, 1.0);
+        MaterialLayer.setOriginConcentration(src, SALT, 4.0);
+        assertEquals(splitter.getOutflowLimit(n3, SALT),
+                Double.POSITIVE_INFINITY, 0.0);
+        splitter.setOutflowLimit(n3, SALT, 0.25);
+        DomainAnalogySolver tankSolver = new DomainAnalogySolver();
+        tankSolver.addNetwork(n1);
+
+        tankSolver.prepareCalculation();
+        tankSolver.doCalculation();
+        // Positive flows go from the node into the tank.
+        assertEquals(n2.getFlow(tank), 5.0, 1e-6);
+        assertEquals(n3.getFlow(tank), -5.0, 1e-6);
+        assertEquals(MaterialLayer.getConcentration(n3, SALT), 0.25, 1e-12);
+        assertEquals(MaterialLayer.getConcentration(n4, SALT), 0.25, 1e-12);
+        tankSolver.prepareCalculation();
+        double expected = (100.0 * 1.0 + 5.0 * 4.0 + 5.0 * (1.0 - 0.25))
+                / (100.0 + 5.0);
+        assertEquals(splitter.getConcentration(SALT), expected, 1e-6);
+
+        // Without a limit, it behaves like a plain mass element.
+        splitter.setOutflowLimit(n3, SALT, Double.POSITIVE_INFINITY);
+        double start = splitter.getConcentration(SALT);
+        tankSolver.doCalculation();
+        assertEquals(MaterialLayer.getConcentration(n3, SALT), start, 1e-12);
+        tankSolver.prepareCalculation();
+        expected = (100.0 * start + 5.0 * 4.0) / (100.0 + 5.0);
+        assertEquals(splitter.getConcentration(SALT), expected, 1e-6);
     }
 
     /**

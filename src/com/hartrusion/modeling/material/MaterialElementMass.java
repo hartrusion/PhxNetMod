@@ -25,6 +25,7 @@ package com.hartrusion.modeling.material;
 
 import com.hartrusion.modeling.general.AbstractElement;
 import com.hartrusion.modeling.general.MassedElement;
+import java.util.Arrays;
 
 /**
  * Material part of an element with an own content, like a tank, a reservoir
@@ -66,6 +67,13 @@ public class MaterialElementMass extends MaterialElement {
     private double[] nextConcentration = new double[0];
 
     /**
+     * Amount of each material that stays inside the element in the current
+     * run because an outflow leaves with a lower concentration than the
+     * content. It is kept as a field only to avoid an allocation on each run.
+     */
+    private double[] retainedAmount = new double[0];
+
+    /**
      * Marks that nextConcentration was calculated in the current run. It
      * prevents a second calculation in the same run and makes repeated
      * prepareMaterialCalculation calls take over the value only once.
@@ -97,6 +105,7 @@ public class MaterialElementMass extends MaterialElement {
                 getMaterialCount());
         nextConcentration = MaterialNode.extendArray(nextConcentration,
                 getMaterialCount());
+        retainedAmount = new double[getMaterialCount()];
         return true;
     }
 
@@ -129,8 +138,8 @@ public class MaterialElementMass extends MaterialElement {
             if (flow == 0.0) {
                 didSomething = setOutflowNoConcentration(idx) || didSomething;
             } else if (flow < 0.0) {
-                didSomething = setOutflowConcentrations(idx, concentration)
-                        || didSomething;
+                didSomething = setOutflowConcentrations(idx,
+                        getOutflowConcentrations(idx)) || didSomething;
             }
         }
         if (concentrationPrepared || !allFlowsUpdated()
@@ -139,6 +148,7 @@ public class MaterialElementMass extends MaterialElement {
         }
         double inflowAmount = 0.0;
         double contentMass = getMass();
+        Arrays.fill(retainedAmount, 0.0);
         for (int mdx = 0; mdx < nextConcentration.length; mdx++) {
             nextConcentration[mdx] = contentMass * concentration[mdx];
         }
@@ -156,13 +166,29 @@ public class MaterialElementMass extends MaterialElement {
                                 .getConcentration(connectionIndex[idx], mdx);
             }
         }
+        // An outflow with a lower concentration than the content leaves the
+        // difference of the material inside the element, which enriches it.
+        double[] outflowConcentration;
+        for (int idx = 0; idx < materialNodes.length; idx++) {
+            flow = getInflow(idx);
+            if (flow >= 0.0) {
+                continue;
+            }
+            outflowConcentration = getOutflowConcentrations(idx);
+            for (int mdx = 0; mdx < retainedAmount.length; mdx++) {
+                retainedAmount[mdx] = retainedAmount[mdx] - flow * stepTime
+                        * (concentration[mdx] - outflowConcentration[mdx]);
+            }
+        }
         double manipulationAmount;
         for (int mdx = 0; mdx < nextConcentration.length; mdx++) {
             manipulationAmount = getActiveManipulationFlow(mdx) * stepTime;
             if (contentMass > 0.0
-                    && inflowAmount + manipulationAmount > 0.0) {
+                    && (inflowAmount + manipulationAmount > 0.0
+                    || retainedAmount[mdx] != 0.0)) {
                 nextConcentration[mdx] = (nextConcentration[mdx]
-                        + manipulationAmount * getManipulationTarget(mdx))
+                        + manipulationAmount * getManipulationTarget(mdx)
+                        + retainedAmount[mdx])
                         / (contentMass + inflowAmount + manipulationAmount);
             } else {
                 // No mass to mix with or nothing flows in, keep the value.
@@ -171,6 +197,19 @@ public class MaterialElementMass extends MaterialElement {
         }
         concentrationPrepared = true;
         return true;
+    }
+
+    /**
+     * Returns the concentrations of the flow that leaves the element through
+     * a node, which is the concentration of the content. Subclasses override
+     * this to let an outflow leave with a different concentration, the
+     * difference then stays inside the element.
+     *
+     * @param idx Index of the node on the element.
+     * @return Concentration of each material, must not be modified.
+     */
+    protected double[] getOutflowConcentrations(int idx) {
+        return concentration;
     }
 
     @Override
